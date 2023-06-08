@@ -1,0 +1,22 @@
+# https://taskfile.dev
+
+version: "3"
+
+env:
+  PYTHON_SRC: kurrawong
+
+tasks:
+  install:
+    cmds:
+      - poetry install
+
+  format:
+    desc: Format Python code.
+    cmds:
+      - .venv/bin/ruff check --fix $PYTHON_SRC
+      - .venv/bin/black $PYTHON_SRC
+
+  code:
+    desc: Alias of format.
+    cmds:
+      - task: format
