@@ -18,16 +18,13 @@ def upload_file(
     file: Path,
     http_client: httpx.Client,
     graph_name: str = None,
-    auth: tuple[str, str] = None,
 ) -> None:
     params = {"graph": graph_name} if graph_name else None
 
     headers = {"content-type": suffix_map[file.suffix]}
     with open(file, "r", encoding="utf-8") as f:
         data = f.read()
-        response = http_client.put(
-            url, params=params, headers=headers, data=data, auth=auth
-        )
+        response = http_client.put(url, params=params, headers=headers, data=data)
         status_code = response.status_code
 
         if status_code != 200 and status_code != 201 and status_code != 204:

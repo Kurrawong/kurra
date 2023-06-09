@@ -42,10 +42,10 @@ def upload(
 
     files = list(filter(lambda f: f.suffix in suffix_map.keys(), files))
 
-    with httpx.Client() as client:
+    with httpx.Client(auth=auth, timeout=120) as client:
         for file in track(files, description=f"Uploading {len(files)} files..."):
             try:
-                upload_file(fuseki_url, file, client, f"urn:file:{file.name}", auth)
+                upload_file(fuseki_url, file, client, f"urn:file:{file.name}")
             except Exception as err:
                 console.print(
                     f"[bold red]ERROR[/bold red] Failed to upload file {file}."
