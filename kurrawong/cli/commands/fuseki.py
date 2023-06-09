@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing_extensions import Annotated
 
 import httpx
 import typer
@@ -18,8 +19,15 @@ def upload(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki dataset URL. E.g. http://localhost:3030/ds"
     ),
-    username: str = typer.Argument(None, help="Fuseki username."),
-    password: str = typer.Argument(None, help="Fuseki password."),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     """Upload a file or a directory of files with an RDF file extension.
 
@@ -42,10 +50,10 @@ def upload(
 
     files = list(filter(lambda f: f.suffix in suffix_map.keys(), files))
 
-    with httpx.Client() as client:
+    with httpx.Client(auth=auth, timeout=timeout) as client:
         for file in track(files, description=f"Uploading {len(files)} files..."):
             try:
-                upload_file(fuseki_url, file, client, f"urn:file:{file.name}", auth)
+                upload_file(fuseki_url, file, client, f"urn:file:{file.name}")
             except Exception as err:
                 console.print(
                     f"[bold red]ERROR[/bold red] Failed to upload file {file}."
