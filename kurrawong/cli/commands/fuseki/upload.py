@@ -5,14 +5,13 @@ import httpx
 import typer
 from rich.progress import track
 
+from kurrawong.cli.commands.fuseki import app
 from kurrawong.cli.console import console
 from kurrawong.fuseki import upload_file, suffix_map
 
-app = typer.Typer()
 
-
-@app.command()
-def upload(
+@app.command(name="upload", help="Upload files to a Fuseki dataset.")
+def upload_command(
     path: Path = typer.Argument(
         ..., help="The path of a file or directory to be uploaded."
     ),
