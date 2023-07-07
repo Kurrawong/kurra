@@ -3,7 +3,7 @@ import sys
 import typer
 
 from kurrawong.cli import app
-from kurrawong.format import format_rdf, FailOnChangeError
+from kurrawong.format import FailOnChangeError, format_rdf
 
 
 @app.command(name="format", help="Format Turtle files using the longturtle format.")
