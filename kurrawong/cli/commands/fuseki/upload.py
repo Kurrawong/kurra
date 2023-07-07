@@ -1,13 +1,13 @@
 from pathlib import Path
-from typing_extensions import Annotated
 
 import httpx
 import typer
 from rich.progress import track
+from typing_extensions import Annotated
 
 from kurrawong.cli.commands.fuseki import app
 from kurrawong.cli.console import console
-from kurrawong.fuseki import upload_file, suffix_map
+from kurrawong.fuseki import suffix_map, upload_file
 
 
 @app.command(name="upload", help="Upload files to a Fuseki dataset.")

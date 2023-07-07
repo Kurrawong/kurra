@@ -1,10 +1,10 @@
 from typing import Annotated
 
-import typer
 import httpx
+import typer
 
 from kurrawong.cli.console import console
-from kurrawong.fuseki import dataset_list, dataset_create
+from kurrawong.fuseki import dataset_create, dataset_list
 
 app = typer.Typer()
 
