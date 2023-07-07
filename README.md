@@ -4,6 +4,10 @@ A Python library of common code and CLI apps shared across Kurrawong projects an
 
 ## CLI Features
 
+## `kurra format`
+
+Format Turtle files using RDFLib's `longturtle` format.
+
 ### `kurra fuseki`
 
 A set of commands to interface with a Fuseki server.
