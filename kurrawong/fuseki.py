@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import httpx
@@ -31,3 +32,34 @@ def upload_file(
             raise RuntimeError(
                 f"Received status code {status_code} for file {file} at url {url}. Message: {response.text}"
             )
+
+
+def dataset_list(
+    url: str,
+    http_client: httpx.Client,
+) -> str:
+    headers = {"accept": "application/json"}
+    response = http_client.get(f"{url}/$/datasets", headers=headers)
+    status_code = response.status_code
+
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Received status code {status_code}. Message: {response.text}"
+        )
+
+    return json.dumps(response.json(), indent=2)
+
+
+def dataset_create(
+    url: str, http_client: httpx.Client, dataset_name: str, dataset_type: str = "tdb2"
+) -> str:
+    data = {"dbName": dataset_name, "dbType": dataset_type}
+    response = http_client.post(f"{url}/$/datasets", data=data)
+    status_code = response.status_code
+
+    if response.status_code != 200 and response.status_code != 201:
+        raise RuntimeError(
+            f"Received status code {status_code}. Message: {response.text}"
+        )
+
+    return f"Dataset {dataset_name} created at {url}."

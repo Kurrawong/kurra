@@ -2,6 +2,24 @@
 
 A Python library of common code and CLI apps shared across Kurrawong projects and infrastructure.
 
+## CLI Features
+
+### `kurra fuseki`
+
+A set of commands to interface with a Fuseki server.
+
+#### `kurra fuseki dataset list`
+
+Get a list of Fuseki datasets.
+
+#### `kurra fuseki dataset create`
+
+Create a new Fuseki dataset.
+
+#### `kurra fuseki upload`
+
+Upload a file or a directory of files with an RDF file extension.
+
 ## Installation
 
 View the [releases](https://github.com/Kurrawong/kurrawong-python/releases) page and install using the source code (zip) link.
