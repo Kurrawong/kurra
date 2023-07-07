@@ -31,3 +31,18 @@ def upload_file(
             raise RuntimeError(
                 f"Received status code {status_code} for file {file} at url {url}. Message: {response.text}"
             )
+
+
+def dataset_list(
+    url: str,
+    http_client: httpx.Client,
+) -> str:
+    response = http_client.get(f"{url}/$/datasets")
+    status_code = response.status_code
+
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Received status code {status_code}. Message: {response.text}"
+        )
+
+    return response.text
