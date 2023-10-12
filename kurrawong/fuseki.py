@@ -42,7 +42,7 @@ def dataset_list(
     response = http_client.get(f"{url}/$/datasets", headers=headers)
     status_code = response.status_code
 
-    if response.status_code != 200:
+    if status_code != 200:
         raise RuntimeError(
             f"Received status code {status_code}. Message: {response.text}"
         )
@@ -63,3 +63,17 @@ def dataset_create(
         )
 
     return f"Dataset {dataset_name} created at {url}."
+
+
+def dataset_clear(url: str, http_client: httpx.Client, named_graph: str):
+    query = (
+        "CLEAR ALL" if named_graph == "all" else f"CLEAR GRAPH <{named_graph}>"
+    )
+    headers = {"content-type": "application/sparql-update"}
+    response = http_client.post(url, headers=headers, content=query)
+    status_code = response.status_code
+
+    if status_code != 204:
+        raise RuntimeError(
+            f"Received status code {status_code}. Message: {response.text}"
+        )
