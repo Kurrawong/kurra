@@ -20,6 +20,10 @@ Get a list of Fuseki datasets.
 
 Create a new Fuseki dataset.
 
+#### `kurra fuseki dataset clear`
+
+Clear a named graph or clear all graphs.
+
 #### `kurra fuseki upload`
 
 Upload a file or a directory of files with an RDF file extension.
