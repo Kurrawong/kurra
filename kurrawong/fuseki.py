@@ -65,10 +65,8 @@ def dataset_create(
     return f"Dataset {dataset_name} created at {url}."
 
 
-def dataset_clear(url: str, http_client: httpx.Client, named_graph: str):
-    query = (
-        "CLEAR ALL" if named_graph == "all" else f"CLEAR GRAPH <{named_graph}>"
-    )
+def clear_graph(url: str, http_client: httpx.Client, named_graph: str):
+    query = "CLEAR ALL" if named_graph == "all" else f"CLEAR GRAPH <{named_graph}>"
     headers = {"content-type": "application/sparql-update"}
     response = http_client.post(url, headers=headers, content=query)
     status_code = response.status_code
