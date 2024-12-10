@@ -20,7 +20,10 @@ def upload_file(
     http_client: httpx.Client,
     graph_name: str = None,
 ) -> None:
-    params = {"graph": graph_name} if graph_name else None
+    """This function uploads a file to a Fuseki server using the Graph Store Protocol.
+
+    It will replace the contents of a Named Graph, if it already exists, with the given contents."""
+    params = {"graph": graph_name} if graph_name else "default"
 
     headers = {"content-type": suffix_map[file.suffix]}
     with open(file, "r", encoding="utf-8") as f:
