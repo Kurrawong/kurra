@@ -1,7 +1,11 @@
 import json
 from pathlib import Path
+from typing import Union
+from textwrap import dedent
 
 import httpx
+
+from kurrawong.utils import _guess_rdf_data_format
 
 suffix_map = {
     ".nt": "application/n-triples",
@@ -14,27 +18,63 @@ suffix_map = {
 }
 
 
-def upload_file(
+def _guess_query_is_update(query: str) -> bool:
+    if any(x in query for x in ["DROP", "INSERT", "DELETE"]):
+        return True
+    else:
+        return False
+
+
+def _guess_return_type_for_sparql_query(query: str) -> str:
+    if any(x in query for x in ["SELECT", "INSERT", "ASK"]):
+        return "application/sparql-results+json"
+    elif "CONSTRUCT" in query:
+        return "text/turtle"
+    else:
+        return "application/sparql-results+json"
+
+
+def upload(
     url: str,
-    file: Path,
-    http_client: httpx.Client,
+    file_or_str: Union[Path, str],
     graph_name: str = None,
+    append: bool = False,
+    http_client: httpx.Client = None,
 ) -> None:
     """This function uploads a file to a Fuseki server using the Graph Store Protocol.
 
-    It will replace the contents of a Named Graph, if it already exists, with the given contents."""
+    It will upload it into a graphe named graph_name (an IRI). If no graph_name is given, it will be uploaded into
+    the Fuseki default graph.
+
+    By default, it will replace all content in the Named Graph or default graph. If append is set to True, it will
+    add it to existing content in the graph_name Named Graph.
+
+    An httpx Client may be supplied for efficient client reuse, else each call to this function will recreate a new
+    Client."""
+
+    if http_client is None:
+        http_client = httpx.Client()
+    
     params = {"graph": graph_name} if graph_name else "default"
 
-    headers = {"content-type": suffix_map[file.suffix]}
-    with open(file, "r", encoding="utf-8") as f:
-        data = f.read()
-        response = http_client.put(url, params=params, headers=headers, data=data)
-        status_code = response.status_code
+    if isinstance(file_or_str, Path):
+        data = file_or_str.read_text()
+        headers = {"content-type": suffix_map[file_or_str.suffix]}
+    else:
+        data = file_or_str
+        headers = {"content-type": _guess_rdf_data_format(data)}
 
-        if status_code != 200 and status_code != 201 and status_code != 204:
-            raise RuntimeError(
-                f"Received status code {status_code} for file {file} at url {url}. Message: {response.text}"
-            )
+    if append:
+        response = http_client.post(url, params=params, headers=headers, data=data)
+    else:
+        response = http_client.put(url, params=params, headers=headers, data=data)
+
+    status_code = response.status_code
+
+    if status_code != 200 and status_code != 201 and status_code != 204:
+        raise RuntimeError(
+            f"Received status code {status_code} for file {file_or_str} at url {url}. Message: {response.text}"
+        )
 
 
 def dataset_list(
@@ -78,3 +118,48 @@ def clear_graph(url: str, http_client: httpx.Client, named_graph: str):
         raise RuntimeError(
             f"Received status code {status_code}. Message: {response.text}"
         )
+
+
+def query(
+    sparql_endpoint: str,
+    query: str,
+    http_client: httpx.Client = None,
+    return_python: bool = False,
+    return_bindings_only: bool = False,
+):
+    """Poses a SPARQL query to the Fuseki server."""
+
+    if http_client is None:
+        http_client = httpx.Client()
+
+    if query is None:
+        raise ValueError("You must supply a query")
+
+    if _guess_query_is_update(query):
+        headers = {"Content-Type": "application/sparql-update"}
+    else:
+        headers = {"Content-Type": "application/sparql-query"}
+
+    headers["Accept"] = _guess_return_type_for_sparql_query(query)
+
+    response = http_client.post(
+        sparql_endpoint,
+        headers=headers,
+        data=query,
+    )
+
+    status_code = response.status_code
+
+    if status_code != 200 and status_code != 201 and status_code != 204:
+        raise RuntimeError(f"ERROR {status_code}: {response.text}")
+
+    match (return_python, return_bindings_only):
+        case (True, True):
+            return response.json()["results"]["bindings"]
+        case (True, False):
+            return response.json()
+        case (False, True):
+            return dedent(response.text.split('"bindings": [')[1].split(']')[0])
+        case _:
+            return response.text
+
