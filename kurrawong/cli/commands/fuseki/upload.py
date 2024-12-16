@@ -7,7 +7,7 @@ from typing_extensions import Annotated
 
 from kurrawong.cli.commands.fuseki import app
 from kurrawong.cli.console import console
-from kurrawong.fuseki import suffix_map, upload_file
+from kurrawong.fuseki import suffix_map, upload
 
 
 @app.command(name="upload", help="Upload files to a Fuseki dataset.")
@@ -52,7 +52,7 @@ def upload_command(
     with httpx.Client(auth=auth, timeout=timeout) as client:
         for file in track(files, description=f"Uploading {len(files)} files..."):
             try:
-                upload_file(fuseki_url, file, client, f"urn:file:{file.name}")
+                upload(fuseki_url, file, client, f"urn:file:{file.name}")
             except Exception as err:
                 console.print(
                     f"[bold red]ERROR[/bold red] Failed to upload file {file}."
