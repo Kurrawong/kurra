@@ -3,7 +3,7 @@ import sys
 import typer
 
 from kurrawong.cli import app
-from kurrawong.format import FailOnChangeError, format_rdf
+from kurrawong.format import FailOnChangeError, format_rdf, RDF_FILE_SUFFIXES
 
 
 @app.command(name="format", help="Format Turtle files using the longturtle format.")
@@ -16,7 +16,7 @@ def format_command(
     ),
     output_format: str = typer.Option(
         "longturtle",
-        help="Indicate the output RDF format. Available are 'turtle', 'longturtle', 'xml', 'n-triples' & 'json-ld'.",
+        help=f"Indicate the output RDF format. Available are {list(RDF_FILE_SUFFIXES.keys())}.",
     ),
     output_filename: str = typer.Option(
         None,
