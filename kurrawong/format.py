@@ -36,7 +36,7 @@ def get_topbraid_metadata(content: str) -> str:
         return ""
 
 
-def do_format(content: str, output_format: Literal[KNOWN_RDF_FORMATS] = "longturtle") -> Tuple[str, bool]:
+def do_format(content: str, output_format: KNOWN_RDF_FORMATS = "longturtle") -> Tuple[str, bool]:
     metadata = get_topbraid_metadata(content)
 
     graph = Graph()
@@ -50,7 +50,7 @@ def do_format(content: str, output_format: Literal[KNOWN_RDF_FORMATS] = "longtur
 def format_file(
     file: Path,
     check: bool = False,
-    output_format: Literal[KNOWN_RDF_FORMATS] = "longturtle",
+    output_format: KNOWN_RDF_FORMATS = "longturtle",
     output_filename: Path = None,
 ) -> bool:
     if not file.is_file():
@@ -84,7 +84,7 @@ def format_file(
     return changed
 
 
-def format_rdf(path: Path, check: bool, output_format: Literal[KNOWN_RDF_FORMATS] = "longturtle", output_filename: Path = None) -> None:
+def format_rdf(path: Path, check: bool, output_format: KNOWN_RDF_FORMATS = "longturtle", output_filename: Path = None) -> None:
     path = Path(path).resolve()
 
     if path.is_dir():
