@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Tuple, Literal
+from typing import Tuple, Literal, Union
 
-from rdflib import Graph
+from rdflib import Graph, URIRef, Dataset
 from kurrawong.utils import _guess_rdf_data_format
 
 KNOWN_RDF_FORMATS = Literal["turtle", "longturtle", "xml", "n-triples", "json-ld"]
@@ -128,3 +128,8 @@ def format_rdf(path: Path, check: bool, output_format: KNOWN_RDF_FORMATS = "long
             format_file(path, check, output_format=output_format, output_filename=output_filename)
         except FailOnChangeError as err:
             print(err)
+
+
+def make_quads(path_str_or_graph: Union[Path, str, Graph], graph_iri: URIRef) -> Dataset:
+    """Returns a given Graph, or string or file of triples, as a Dataset, with the supplied graph IRI"""
+    pass
