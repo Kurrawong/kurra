@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Union
 from textwrap import dedent
+from rdflib import Graph
 
 import httpx
 
@@ -36,7 +37,7 @@ def _guess_return_type_for_sparql_query(query: str) -> str:
 
 def upload(
     url: str,
-    file_or_str: Union[Path, str],
+    file_or_str_or_graph: Union[Path, str, Graph],
     graph_name: str = None,
     append: bool = False,
     http_client: httpx.Client = None,
@@ -57,11 +58,14 @@ def upload(
     
     params = {"graph": graph_name} if graph_name else "default"
 
-    if isinstance(file_or_str, Path):
-        data = file_or_str.read_text()
-        headers = {"content-type": suffix_map[file_or_str.suffix]}
+    if isinstance(file_or_str_or_graph, Path):
+        data = file_or_str_or_graph.read_text()
+        headers = {"content-type": suffix_map[file_or_str_or_graph.suffix]}
+    elif isinstance(file_or_str_or_graph, Graph):
+        data = file_or_str_or_graph.serialize(format="turtle")
+        headers = {"content-type": "text/turtle"}
     else:
-        data = file_or_str
+        data = file_or_str_or_graph
         headers = {"content-type": _guess_rdf_data_format(data)}
 
     if append:
@@ -73,7 +77,7 @@ def upload(
 
     if status_code != 200 and status_code != 201 and status_code != 204:
         raise RuntimeError(
-            f"Received status code {status_code} for file {file_or_str} at url {url}. Message: {response.text}"
+            f"Received status code {status_code} for file {file_or_str_or_graph} at url {url}. Message: {response.text}"
         )
 
 
