@@ -1,11 +1,14 @@
-from kurrawong.fuseki import query, upload
 from pathlib import Path
+
 import httpx
 
+from kurrawong.fuseki import query, upload
 
-def test_file_upload_ng_replacement():
+
+def test_file_upload_ng_replacement(fuseki_container):
+    port = fuseki_container.get_exposed_port(3030)
     with httpx.Client() as client:
-        SPARQL_ENDPOINT = "http://localhost:3030/mani"
+        SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
         minimalist_rdf = Path(__file__).parent / "minimal3.ttl"
 
         upload(
@@ -13,28 +16,24 @@ def test_file_upload_ng_replacement():
             minimalist_rdf,
             "https://example.com/demo-vocabs/language-test",
             False,
-            client
+            client,
         )
 
-def test_query():
+
+def test_query(fuseki_container):
+    port = fuseki_container.get_exposed_port(3030)
     with httpx.Client() as client:
-        SPARQL_ENDPOINT = "http://localhost:3030/mani"
+        SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
         TESTING_GRAPH = "https://example.com/testing-graph"
 
-        data =  """
+        data = """
                 PREFIX ex: <http://example.com/>
                 
                 ex:a ex:b ex:c .
                 ex:a2 ex:b2 ex:c2 .
                 """
 
-        upload(
-            SPARQL_ENDPOINT,
-            data,
-            TESTING_GRAPH,
-            False,
-            client
-        )
+        upload(SPARQL_ENDPOINT, data, TESTING_GRAPH, False, client)
 
         q = """
             SELECT (COUNT(*) AS ?count) 
@@ -43,9 +42,13 @@ def test_query():
                 ?s ?p ?o
               }
             }        
-            """.replace("XXX", TESTING_GRAPH)
+            """.replace(
+            "XXX", TESTING_GRAPH
+        )
 
-        r = query(SPARQL_ENDPOINT, q, client, return_python=True, return_bindings_only=True)
+        r = query(
+            SPARQL_ENDPOINT, q, client, return_python=True, return_bindings_only=True
+        )
 
         count = int(r[0]["count"]["value"])
 
@@ -60,4 +63,3 @@ def test_query():
         r = query(SPARQL_ENDPOINT, q, client)
 
         print(r)
-
