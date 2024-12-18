@@ -2,8 +2,9 @@ import sys
 
 import typer
 
-from kurrawong.cli import app
 from kurrawong.format import FailOnChangeError, format_rdf, RDF_FILE_SUFFIXES
+
+app = typer.Typer()
 
 
 @app.command(name="format", help="Format Turtle files using the longturtle format.")
