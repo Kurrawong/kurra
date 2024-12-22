@@ -44,7 +44,7 @@ def upload(
 ) -> None:
     """This function uploads a file to a Fuseki server using the Graph Store Protocol.
 
-    It will upload it into a graphe named graph_name (an IRI). If no graph_name is given, it will be uploaded into
+    It will upload it into a graph named graph_name (an IRI). If no graph_name is given, it will be uploaded into
     the Fuseki default graph.
 
     By default, it will replace all content in the Named Graph or default graph. If append is set to True, it will
@@ -53,8 +53,10 @@ def upload(
     An httpx Client may be supplied for efficient client reuse, else each call to this function will recreate a new
     Client."""
 
+    close_http_client = False
     if http_client is None:
         http_client = httpx.Client()
+        close_http_client = True
     
     params = {"graph": graph_name} if graph_name else "default"
 
@@ -76,9 +78,13 @@ def upload(
     status_code = response.status_code
 
     if status_code != 200 and status_code != 201 and status_code != 204:
+        message = str(file_or_str) if isinstance(file_or_str, Path) else "content"
         raise RuntimeError(
-            f"Received status code {status_code} for file {file_or_str_or_graph} at url {url}. Message: {response.text}"
+            f"Received status code {status_code} for file {message} at url {url}. Message: {response.text}"
         )
+
+    if close_http_client:
+        http_client.close()
 
 
 def dataset_list(
