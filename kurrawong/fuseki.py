@@ -6,7 +6,7 @@ from rdflib import Graph
 
 import httpx
 
-from kurrawong.utils import _guess_rdf_data_format
+from kurrawong.utils import guess_format_from_data, load_graph
 
 suffix_map = {
     ".nt": "application/n-triples",
@@ -60,25 +60,18 @@ def upload(
     
     params = {"graph": graph_name} if graph_name else "default"
 
-    if isinstance(file_or_str_or_graph, Path):
-        data = file_or_str_or_graph.read_text()
-        headers = {"content-type": suffix_map[file_or_str_or_graph.suffix]}
-    elif isinstance(file_or_str_or_graph, Graph):
-        data = file_or_str_or_graph.serialize(format="turtle")
-        headers = {"content-type": "text/turtle"}
-    else:
-        data = file_or_str_or_graph
-        headers = {"content-type": _guess_rdf_data_format(data)}
+    data = load_graph(file_or_str_or_graph).serialize(format="longturtle")
+    headers = {"content-type": "text/turtle"}
 
     if append:
-        response = http_client.post(url, params=params, headers=headers, data=data)
+        response = http_client.post(url, params=params, headers=headers, content=data)
     else:
-        response = http_client.put(url, params=params, headers=headers, data=data)
+        response = http_client.put(url, params=params, headers=headers, content=data)
 
     status_code = response.status_code
 
     if status_code != 200 and status_code != 201 and status_code != 204:
-        message = str(file_or_str) if isinstance(file_or_str, Path) else "content"
+        message = str(file_or_str_or_graph) if isinstance(file_or_str_or_graph, Path) else "content"
         raise RuntimeError(
             f"Received status code {status_code} for file {message} at url {url}. Message: {response.text}"
         )
@@ -155,7 +148,7 @@ def query(
     response = http_client.post(
         sparql_endpoint,
         headers=headers,
-        data=query,
+        content=query,
     )
 
     status_code = response.status_code
