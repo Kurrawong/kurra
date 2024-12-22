@@ -130,7 +130,7 @@ def format_rdf(path: Path, check: bool, output_format: KNOWN_RDF_FORMATS = "long
             print(err)
 
 
-def make_quads(path_str_or_graph: Union[Path, str, Graph], graph_iri) -> Dataset:
+def make_quads(path_str_or_graph: Union[Path, str, Graph], graph_iri: Union[str, URIRef]) -> Dataset:
     """Returns a given Graph, or string or file of triples, as a Dataset, with the supplied graph IRI"""
     if not isinstance(graph_iri, URIRef):
         graph_iri = URIRef(graph_iri)

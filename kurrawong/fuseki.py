@@ -63,16 +63,6 @@ def upload(
     data = load_graph(file_or_str_or_graph).serialize(format="longturtle")
     headers = {"content-type": "text/turtle"}
 
-    # if isinstance(file_or_str_or_graph, Path):
-    #     data = file_or_str_or_graph.read_text()
-    #     headers = {"content-type": suffix_map[file_or_str_or_graph.suffix]}
-    # elif isinstance(file_or_str_or_graph, Graph):
-    #     data = file_or_str_or_graph.serialize(format="turtle")
-    #     headers = {"content-type": "text/turtle"}
-    # else:
-    #     data = file_or_str_or_graph
-    #     headers = {"content-type": guess_format_from_data(data)}
-
     if append:
         response = http_client.post(url, params=params, headers=headers, content=data)
     else:
@@ -81,7 +71,7 @@ def upload(
     status_code = response.status_code
 
     if status_code != 200 and status_code != 201 and status_code != 204:
-        message = str(file_or_str) if isinstance(file_or_str, Path) else "content"
+        message = str(file_or_str_or_graph) if isinstance(file_or_str_or_graph, Path) else "content"
         raise RuntimeError(
             f"Received status code {status_code} for file {message} at url {url}. Message: {response.text}"
         )
