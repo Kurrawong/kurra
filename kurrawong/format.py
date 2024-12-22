@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Tuple, Literal, Union
 
 from rdflib import Graph, URIRef, Dataset
-from kurrawong.utils import _guess_rdf_data_format
+from kurrawong.utils import guess_format_from_data, load_graph
 
 KNOWN_RDF_FORMATS = Literal["turtle", "longturtle", "xml", "n-triples", "json-ld"]
 RDF_FILE_SUFFIXES = {
@@ -40,7 +40,7 @@ def do_format(content: str, output_format: Literal[KNOWN_RDF_FORMATS] = "longtur
     metadata = get_topbraid_metadata(content)
 
     graph = Graph()
-    graph.parse(data=content, format=_guess_rdf_data_format(content))
+    graph.parse(data=content, format=guess_format_from_data(content))
     new_content = graph.serialize(format=output_format)
     new_content = metadata + new_content
     changed = content != new_content
@@ -130,6 +130,15 @@ def format_rdf(path: Path, check: bool, output_format: Literal[KNOWN_RDF_FORMATS
             print(err)
 
 
-def make_quads(path_str_or_graph: Union[Path, str, Graph], graph_iri: URIRef) -> Dataset:
+def make_quads(path_str_or_graph: Union[Path, str, Graph], graph_iri) -> Dataset:
     """Returns a given Graph, or string or file of triples, as a Dataset, with the supplied graph IRI"""
-    pass
+    if not isinstance(graph_iri, URIRef):
+        graph_iri = URIRef(graph_iri)
+
+    g = load_graph(path_str_or_graph)
+
+    d = Dataset()
+    for s, p, o in g:
+        d.add((s, p, o, graph_iri))
+
+    return d
