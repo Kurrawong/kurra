@@ -5,7 +5,7 @@ import typer
 from rich.progress import track
 from typing_extensions import Annotated
 
-from kurrawong.cli.commands.fuseki import app
+from kurrawong.cli.commands.fuseki.app import app
 from kurrawong.cli.console import console
 from kurrawong.fuseki import suffix_map, upload
 
