@@ -1,18 +1,23 @@
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Literal, Union
 
-from rdflib import Graph
+from rdflib import Graph, URIRef, Dataset
+from kurrawong.utils import _guess_rdf_data_format
 
+KNOWN_RDF_FORMATS = Literal["turtle", "longturtle", "xml", "n-triples", "json-ld"]
+RDF_FILE_SUFFIXES = {
+    "turtle": ".ttl",
+    "longturtle": ".ttl",
+    "xml": ".rdf",
+    "n-triples": ".nt",
+    "json-ld": ".jsonld"
+}
 
 class FailOnChangeError(Exception):
     """
     This exception is raised when running format and the
     check bool is set to true and the file has resulted in a change.
     """
-
-
-def serialize(graph: Graph) -> str:
-    return graph.serialize(format="longturtle")
 
 
 def get_topbraid_metadata(content: str) -> str:
@@ -31,12 +36,12 @@ def get_topbraid_metadata(content: str) -> str:
         return ""
 
 
-def do_format(content: str) -> Tuple[str, bool]:
+def do_format(content: str, output_format: KNOWN_RDF_FORMATS = "longturtle") -> Tuple[str, bool]:
     metadata = get_topbraid_metadata(content)
 
     graph = Graph()
-    graph.parse(data=content, format="turtle")
-    new_content = serialize(graph)
+    graph.parse(data=content, format=_guess_rdf_data_format(content))
+    new_content = graph.serialize(format=output_format)
     new_content = metadata + new_content
     changed = content != new_content
     return new_content, changed
@@ -44,7 +49,8 @@ def do_format(content: str) -> Tuple[str, bool]:
 
 def format_file(
     file: Path,
-    check: bool,
+    check: bool = False,
+    output_format: KNOWN_RDF_FORMATS = "longturtle",
     output_filename: Path = None,
 ) -> bool:
     if not file.is_file():
@@ -54,10 +60,15 @@ def format_file(
     if not path.exists():
         raise FileNotFoundError(f"File not found: {path.absolute()}")
 
+    if output_filename is None:
+        output_filename = path.with_suffix(RDF_FILE_SUFFIXES[output_format])
+
+    Path(output_filename).touch(exist_ok=True)
+
     with open(path, "r", encoding="utf-8") as fread:
         content = fread.read()
 
-        content, changed = do_format(content)
+        content, changed = do_format(content, output_format)
         if changed:
             if check:
                 raise FailOnChangeError(
@@ -67,15 +78,13 @@ def format_file(
                 print(f"The file {path} has been formatted.")
 
             # Didn't fail and file has changed, so write to file.
-            with open(
-                output_filename if output_filename else path, "w", encoding="utf-8"
-            ) as fwrite:
+            with open(output_filename, "w", encoding="utf-8") as fwrite:
                 fwrite.write(content)
 
     return changed
 
 
-def format_rdf(path: Path, check: bool) -> None:
+def format_rdf(path: Path, check: bool, output_format: KNOWN_RDF_FORMATS = "longturtle", output_filename: Path = None) -> None:
     path = Path(path).resolve()
 
     if path.is_dir():
@@ -85,7 +94,7 @@ def format_rdf(path: Path, check: bool) -> None:
 
         for file in files:
             try:
-                changed = format_file(file, check)
+                changed = format_file(file, check, output_format=output_format)
                 if changed:
                     changed_files.append(file)
             except FailOnChangeError as err:
@@ -106,7 +115,21 @@ def format_rdf(path: Path, check: bool) -> None:
                 f"{len(changed_files)} out of {len(files)} files changed.",
             )
     else:
+        # single file reformatting
+        if bool(output_filename) and output_format is not None:
+            print("output_filename:")
+            print(output_filename)
+            output_filename = Path(output_filename)
+            output_filename = output_filename.resolve().with_suffix(RDF_FILE_SUFFIXES[output_format])
+
+        print(output_filename)
+
         try:
-            changed = format_file(path, check)
+            format_file(path, check, output_format=output_format, output_filename=output_filename)
         except FailOnChangeError as err:
             print(err)
+
+
+def make_quads(path_str_or_graph: Union[Path, str, Graph], graph_iri: URIRef) -> Dataset:
+    """Returns a given Graph, or string or file of triples, as a Dataset, with the supplied graph IRI"""
+    pass

@@ -1,0 +1,3 @@
+PREFIX ex: <http://example.com/>
+
+ex:a2 ex:b2 ex:c2 .
