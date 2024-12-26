@@ -22,7 +22,9 @@ ex:a
 
 
 def test_format_cli():
-    subprocess.check_output(['kurra', 'format', '--output-format', 'json-ld', 'tests/minimal1.ttl'])
+    subprocess.check_output(
+        ["kurra", "format", "--output-format", "json-ld", "tests/minimal1.ttl"]
+    )
 
     comaprison = """[
   {

@@ -26,4 +26,7 @@ def load_graph(file_or_str_or_graph: Union[Path, str, Graph]):
         return file_or_str_or_graph
 
     else:  # str (data)
-        return Graph().parse(data=file_or_str_or_graph, format=guess_format_from_data(file_or_str_or_graph))
+        return Graph().parse(
+            data=file_or_str_or_graph,
+            format=guess_format_from_data(file_or_str_or_graph),
+        )

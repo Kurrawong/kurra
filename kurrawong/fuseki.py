@@ -57,7 +57,7 @@ def upload(
     if http_client is None:
         http_client = httpx.Client()
         close_http_client = True
-    
+
     params = {"graph": graph_name} if graph_name else "default"
 
     data = load_graph(file_or_str_or_graph).serialize(format="longturtle")
@@ -71,7 +71,11 @@ def upload(
     status_code = response.status_code
 
     if status_code != 200 and status_code != 201 and status_code != 204:
-        message = str(file_or_str_or_graph) if isinstance(file_or_str_or_graph, Path) else "content"
+        message = (
+            str(file_or_str_or_graph)
+            if isinstance(file_or_str_or_graph, Path)
+            else "content"
+        )
         raise RuntimeError(
             f"Received status code {status_code} for file {message} at url {url}. Message: {response.text}"
         )
@@ -162,7 +166,6 @@ def query(
         case (True, False):
             return response.json()
         case (False, True):
-            return dedent(response.text.split('"bindings": [')[1].split(']')[0])
+            return dedent(response.text.split('"bindings": [')[1].split("]")[0])
         case _:
             return response.text
-

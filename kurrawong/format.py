@@ -10,8 +10,9 @@ RDF_FILE_SUFFIXES = {
     "longturtle": ".ttl",
     "xml": ".rdf",
     "n-triples": ".nt",
-    "json-ld": ".jsonld"
+    "json-ld": ".jsonld",
 }
+
 
 class FailOnChangeError(Exception):
     """
@@ -36,7 +37,9 @@ def get_topbraid_metadata(content: str) -> str:
         return ""
 
 
-def do_format(content: str, output_format: KNOWN_RDF_FORMATS = "longturtle") -> Tuple[str, bool]:
+def do_format(
+    content: str, output_format: KNOWN_RDF_FORMATS = "longturtle"
+) -> Tuple[str, bool]:
     metadata = get_topbraid_metadata(content)
 
     graph = Graph()
@@ -84,7 +87,12 @@ def format_file(
     return changed
 
 
-def format_rdf(path: Path, check: bool, output_format: KNOWN_RDF_FORMATS = "longturtle", output_filename: Path = None) -> None:
+def format_rdf(
+    path: Path,
+    check: bool,
+    output_format: KNOWN_RDF_FORMATS = "longturtle",
+    output_filename: Path = None,
+) -> None:
     path = Path(path).resolve()
 
     if path.is_dir():
@@ -120,17 +128,26 @@ def format_rdf(path: Path, check: bool, output_format: KNOWN_RDF_FORMATS = "long
             print("output_filename:")
             print(output_filename)
             output_filename = Path(output_filename)
-            output_filename = output_filename.resolve().with_suffix(RDF_FILE_SUFFIXES[output_format])
+            output_filename = output_filename.resolve().with_suffix(
+                RDF_FILE_SUFFIXES[output_format]
+            )
 
         print(output_filename)
 
         try:
-            format_file(path, check, output_format=output_format, output_filename=output_filename)
+            format_file(
+                path,
+                check,
+                output_format=output_format,
+                output_filename=output_filename,
+            )
         except FailOnChangeError as err:
             print(err)
 
 
-def make_dataset(path_str_or_graph: Union[Path, str, Graph], graph_iri: Union[str, URIRef]) -> Dataset:
+def make_dataset(
+    path_str_or_graph: Union[Path, str, Graph], graph_iri: Union[str, URIRef]
+) -> Dataset:
     """Returns a given Graph, or string or file of triples, as a Dataset, with the supplied graph IRI"""
 
     # TODO: make a Dataset from a Graph or Datatset
