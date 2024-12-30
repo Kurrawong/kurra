@@ -1,6 +1,6 @@
-# Kurrawong Python Library
+# Kurra Python Library
 
-A Python library of common code and CLI apps shared across Kurrawong projects and infrastructure.
+A Python library of RDF data manipulation functions.
 
 ## CLI Features
 
@@ -33,7 +33,7 @@ Clear a named graph or clear all graphs.
 View the [releases](https://github.com/Kurrawong/kurrawong-python/releases) page and install using the source code (zip) link.
 
 ```bash
-pip install https://github.com/Kurrawong/kurrawong-python/archive/refs/tags/0.1.0.zip
+pip install https://github.com/Kurrawong/kurra/archive/refs/tags/0.6.0.zip
 ```
 
 ## Development
