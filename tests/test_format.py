@@ -1,8 +1,10 @@
-from rdflib import Graph, Dataset, URIRef
-from kurrawong.format import format_rdf, format_file, do_format, make_dataset, export_quads
-from pathlib import Path
-import warnings
 import subprocess
+import warnings
+from pathlib import Path
+
+from rdflib import Graph, Dataset, URIRef
+
+from kurra.format import format_file, make_dataset, export_quads
 
 
 def test_format_rdf_one():
@@ -27,7 +29,7 @@ def test_format_cli():
         ["kurra", "format", "--output-format", "json-ld", "tests/minimal1.ttl"]
     )
 
-    comaprison = """[
+    comparison = """[
   {
     "@id": "http://example.com/a",
     "http://example.com/b": [
@@ -40,7 +42,7 @@ def test_format_cli():
 
     output_file = Path(__file__).parent / "minimal1.jsonld"
 
-    assert open(output_file).read() == comaprison
+    assert open(output_file).read() == comparison
 
     Path.unlink(output_file)
 

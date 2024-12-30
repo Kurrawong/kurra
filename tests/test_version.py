@@ -1,7 +1,7 @@
 from typer.testing import CliRunner
 
-from kurrawong.cli import app
-from kurrawong import __version__
+from kurra import __version__
+from kurra.cli import app
 
 runner = CliRunner()
 

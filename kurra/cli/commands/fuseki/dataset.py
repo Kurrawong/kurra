@@ -3,8 +3,8 @@ from typing import Annotated
 import httpx
 import typer
 
-from kurrawong.cli.console import console
-from kurrawong.fuseki import dataset_create, dataset_list
+from kurra.cli.console import console
+from kurra.fuseki import dataset_create, dataset_list
 
 app = typer.Typer()
 

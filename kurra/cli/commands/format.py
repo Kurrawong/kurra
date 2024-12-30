@@ -2,7 +2,7 @@ import sys
 
 import typer
 
-from kurrawong.format import FailOnChangeError, format_rdf, RDF_FILE_SUFFIXES
+from kurra.format import FailOnChangeError, format_rdf, RDF_FILE_SUFFIXES
 
 app = typer.Typer()
 

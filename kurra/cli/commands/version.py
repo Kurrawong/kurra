@@ -1,9 +1,9 @@
 import typer
 from typing_extensions import Annotated
 
-from kurrawong.cli import app as main_app
-from kurrawong import __version__
-from kurrawong.cli.console import console
+from kurra.cli import app as main_app
+from kurra import __version__
+from kurra.cli.console import console
 
 app = typer.Typer()
 
@@ -15,7 +15,7 @@ def version_command():
 
 def version_callback(value: bool):
     if value:
-        from kurrawong.cli.commands import version
+        from kurra.cli.commands import version
 
         version.version_command()
         raise typer.Exit()

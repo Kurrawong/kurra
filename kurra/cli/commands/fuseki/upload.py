@@ -5,9 +5,9 @@ import typer
 from rich.progress import track
 from typing_extensions import Annotated
 
-from kurrawong.cli.commands.fuseki.app import app
-from kurrawong.cli.console import console
-from kurrawong.fuseki import suffix_map, upload
+from kurra.cli.commands.fuseki.app import app
+from kurra.cli.console import console
+from kurra.fuseki import suffix_map, upload
 
 
 @app.command(name="upload", help="Upload files to a Fuseki dataset.")

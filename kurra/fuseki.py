@@ -6,7 +6,7 @@ from rdflib import Graph
 
 import httpx
 
-from kurrawong.utils import guess_format_from_data, load_graph
+from kurra.utils import guess_format_from_data, load_graph
 
 suffix_map = {
     ".nt": "application/n-triples",
