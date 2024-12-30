@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple, Literal, Union
+from typing import Tuple, Literal, Union, Optional
 
 from rdflib import Graph, URIRef, Dataset
 from kurrawong.utils import guess_format_from_data, load_graph
@@ -164,3 +164,31 @@ def make_dataset(
         d.add((s, p, o, graph_iri))
 
     return d
+
+
+def export_quads(
+    path_str_or_dataset: Union[Path, str, Dataset], destination: Optional[Path] = None
+) -> bool | str:
+    """Exports a given Dataset, or quads in trig format or a quads file specified by a path, either as
+    quads to a string, if no destination is given, or a file, if one is"""
+    if isinstance(path_str_or_dataset, Path):
+        d = Dataset()
+        d.print(str(path_str_or_dataset))
+    elif isinstance(path_str_or_dataset, str):
+        d = Dataset()
+        d.parse(data=path_str_or_dataset, format="trig")
+    else:  # Dataset
+        d = path_str_or_dataset
+
+    if destination is not None:
+        if Path(destination).is_file():
+            d2 = Dataset()
+            d2.parse(destination)
+            d3 = d + d2
+            d3.serialize(format="trig", destination=destination)
+        else:
+            d.serialize(format="trig", destination=destination)
+
+        return True
+    else:
+        return d.serialize(format="trig")

@@ -1,6 +1,7 @@
-from kurrawong.format import format_rdf, format_file, do_format
+from rdflib import Graph, Dataset, URIRef
+from kurrawong.format import format_rdf, format_file, do_format, make_dataset, export_quads
 from pathlib import Path
-
+import warnings
 import subprocess
 
 
@@ -42,3 +43,49 @@ def test_format_cli():
     assert open(output_file).read() == comaprison
 
     Path.unlink(output_file)
+
+
+def test_make_dataset():
+    g = Graph()
+    g.parse(
+        data="""
+            PREFIX ex: <http://example.com/>
+            
+            ex:a ex:b ex:c . 
+            """,
+        format="turtle",
+    )
+
+    d = make_dataset(g, "http://graph.com/a")
+
+    for t in d.quads():
+        assert t[0] == URIRef("http://example.com/a")
+        assert t[1] == URIRef("http://example.com/b")
+        assert t[2] == URIRef("http://example.com/c")
+        assert t[3] == URIRef("http://graph.com/a")
+
+
+def test_export_quads():
+    g = Graph()
+    g.parse(
+        data="""
+            PREFIX ex: <http://example.com/>
+
+            ex:a ex:b ex:c . 
+            """,
+        format="turtle",
+    )
+
+    d = make_dataset(g, "http://graph.com/a")
+
+    qds = export_quads(d)
+
+    warnings.filterwarnings("ignore", category=DeprecationWarning)  # ignore RDFLib's ConjunctiveGraph warning
+    d2 = Dataset()
+    d2.parse(data=qds, format="trig")
+
+    for t in d.quads():
+        assert t[0] == URIRef("http://example.com/a")
+        assert t[1] == URIRef("http://example.com/b")
+        assert t[2] == URIRef("http://example.com/c")
+        assert t[3] == URIRef("http://graph.com/a")

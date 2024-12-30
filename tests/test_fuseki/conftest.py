@@ -20,8 +20,6 @@ def fuseki_container(request: pytest.FixtureRequest):
     container.start()
     wait_for_logs(container, "Started")
 
-    upload("http://localhost:3030")
-
     def cleanup():
         container.stop()
 
