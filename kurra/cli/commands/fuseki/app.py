@@ -6,10 +6,9 @@ import typer
 from kurra.cli.console import console
 from kurra.fuseki import dataset_create, dataset_list
 from pathlib import Path
-from kurra.fuseki import suffix_map, upload, query
+from kurra.fuseki import suffix_map, upload, query, clear_graph
 from rich.progress import track
 from rich.table import Table
-from rich.console import RenderableType
 
 app = typer.Typer()
 
@@ -133,7 +132,7 @@ def query_command(
             raise err
 
 
-@app.command(name="upload", help="Upload files to a Fuseki dataset.")
+@app.command(name="upload", help="Upload files to a Fuseki dataset")
 def upload_command(
     path: Path = typer.Argument(
         ..., help="The path of a file or directory to be uploaded."
@@ -181,3 +180,35 @@ def upload_command(
                     f"[bold red]ERROR[/bold red] Failed to upload file {file}."
                 )
                 raise err
+
+
+@app.command(name="clear", help="Clear graph in the Fuseki dataset")
+def clear_command(
+    named_graph: str = typer.Argument(
+        ..., help="Named graph. If 'all' is supplied, it will remove all named graphs."
+    ),
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
+):
+    auth = (
+        (username, password) if username is not None and password is not None else None
+    )
+
+    with httpx.Client(auth=auth, timeout=timeout) as client:
+        try:
+            clear_graph(fuseki_url, named_graph, client)
+        except Exception as err:
+            console.print(
+                f"[bold red]ERROR[/bold red] Failed to run clear command with '{named_graph}' at {fuseki_url}."
+            )
+            raise err

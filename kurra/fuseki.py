@@ -101,7 +101,7 @@ def dataset_list(
 
 
 def dataset_create(
-    url: str, http_client: httpx.Client, dataset_name: str, dataset_type: str = "tdb2"
+    url: str, dataset_name: str, http_client: httpx.Client, dataset_type: str = "tdb2"
 ) -> str:
     data = {"dbName": dataset_name, "dbType": dataset_type}
     response = http_client.post(f"{url}/$/datasets", data=data)
@@ -115,7 +115,7 @@ def dataset_create(
     return f"Dataset {dataset_name} created at {url}."
 
 
-def clear_graph(url: str, http_client: httpx.Client, named_graph: str):
+def clear_graph(url: str, named_graph: str, http_client: httpx.Client):
     query = "CLEAR ALL" if named_graph == "all" else f"CLEAR GRAPH <{named_graph}>"
     headers = {"content-type": "application/sparql-update"}
     response = http_client.post(url, headers=headers, content=query)
