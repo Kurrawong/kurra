@@ -38,7 +38,8 @@ def get_topbraid_metadata(content: str) -> str:
 
 
 def do_format(
-    content: str, output_format: KNOWN_RDF_FORMATS = "longturtle"
+    content: str,
+    output_format: KNOWN_RDF_FORMATS = "longturtle"
 ) -> Tuple[str, bool]:
     metadata = get_topbraid_metadata(content)
 
@@ -72,14 +73,11 @@ def format_file(
         content = fread.read()
 
         content, changed = do_format(content, output_format)
-        if changed:
-            if check:
-                raise FailOnChangeError(
-                    f"The file {path} contains changes that can be formatted."
-                )
-            else:
-                print(f"The file {path} has been formatted.")
-
+        if check:
+            raise FailOnChangeError(
+                f"The file {path} contains changes that can be formatted."
+            )
+        else:
             # Didn't fail and file has changed, so write to file.
             with open(output_filename, "w", encoding="utf-8") as fwrite:
                 fwrite.write(content)
@@ -102,7 +100,7 @@ def format_rdf(
 
         for file in files:
             try:
-                changed = format_file(file, check, output_format=output_format)
+                changed = format_file(file, check, output_format=output_format, output_filename=output_filename)
                 if changed:
                     changed_files.append(file)
             except FailOnChangeError as err:
@@ -123,17 +121,6 @@ def format_rdf(
                 f"{len(changed_files)} out of {len(files)} files changed.",
             )
     else:
-        # single file reformatting
-        if bool(output_filename) and output_format is not None:
-            print("output_filename:")
-            print(output_filename)
-            output_filename = Path(output_filename)
-            output_filename = output_filename.resolve().with_suffix(
-                RDF_FILE_SUFFIXES[output_format]
-            )
-
-        print(output_filename)
-
         try:
             format_file(
                 path,
@@ -173,7 +160,7 @@ def export_quads(
     quads to a string, if no destination is given, or a file, if one is"""
     if isinstance(path_str_or_dataset, Path):
         d = Dataset()
-        d.print(str(path_str_or_dataset))
+        d.parse(str(path_str_or_dataset))
     elif isinstance(path_str_or_dataset, str):
         d = Dataset()
         d.parse(data=path_str_or_dataset, format="trig")
