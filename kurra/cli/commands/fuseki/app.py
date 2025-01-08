@@ -108,13 +108,20 @@ def query_command(
 
             if response_format == "table":
                 t = Table()
-                for x in result["head"]["vars"]:
-                    t.add_column(x)
-                for row in result["results"]["bindings"]:
-                    cols = []
-                    for k, v in row.items():
-                        cols.append(v["value"])
-                    t.add_row(*tuple(cols))
+
+                # ASK
+                if not result.get("results"):
+                    t.add_column("Ask")
+                    t.add_row(str(result["boolean"]))
+                else:
+                    # SELECT
+                    for x in result["head"]["vars"]:
+                        t.add_column(x)
+                    for row in result["results"]["bindings"]:
+                        cols = []
+                        for k, v in row.items():
+                            cols.append(v["value"])
+                        t.add_row(*tuple(cols))
 
                 console.print(t)
             else:
