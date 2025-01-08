@@ -1,32 +1,58 @@
-# Kurrawong Python Library
+# Kurra Python Library
 
-A Python library of common code and CLI apps shared across Kurrawong projects and infrastructure.
+A Python library of RDF data manipulation functions.
 
-## CLI Features
+This library uses the [RDFLib](https://pypi.org/project/rdflib/) under-the-hood to process 
+[RDF](https://www.w3.org/RDF/) data and supplies functions to:
 
-## `kurra format`
+* upload it to RDF databases - "triplestores" - and query them
+* manipulate it in a few commands - e.g. format conversion
 
-Format Turtle files using RDFLib's `longturtle` format.
+This toolkit provides a command line interface (CLI) for doing all of this as well as presenting its functions in a 
+library that other Python applications can use.
 
-### `kurra fuseki`
 
-A set of commands to interface with a Fuseki server.
+## Command Line Interface
 
-#### `kurra fuseki dataset list`
+kurra uses a Command Line Interface that can be inspected. Once you have installed kurra (see below), you can ask it to
+tell you want commands it supports with `--help`, e.g.:
 
-Get a list of Fuseki datasets.
+```bash
+kurra --help
+```
 
-#### `kurra fuseki dataset create`
+which will return something like:
 
-Create a new Fuseki dataset.
+```
+╭─ Options ───────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --install-completion          Install completion for the current shell.                                         │
+│ --show-completion             Show completion for the current shell, to copy it or customize the installation.  │
+│ --help                        Show this message and exit.                                                       │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ──────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ list      Get a list of Fuseki datasets                                                                         │
+│ create    Create a new Fuseki dataset                                                                           │
+│ query     Query a Fuseki database                                                                               │
+│ upload    Upload files to a Fuseki dataset.                                                                     │
+│ format    Format RDF files using one of several common RDF formats.                                             │
+│ version   Show the version of the kurra app.                                                                    │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
 
-#### `kurra fuseki upload`
+You can then run 
 
-Upload a file or a directory of files with an RDF file extension.
+```bash
+kurra format --help
+```
 
-#### `kurra fuseki clear`
+or
 
-Clear a named graph or clear all graphs.
+```bash
+kurra create --help
+```
+
+etc. to get further help for the particular commands.
+
 
 ## Installation
 
@@ -53,6 +79,12 @@ pip install kurra
 ```
 
 Use the relevant command to add dependencies to your project if you are using a tool like uv, poetry, or conda.
+
+Then import it and use in your code, e.g. for the format functions:
+
+```python
+from kurra.format import format_file, make_dataset, export_quads
+```
 
 ## Development
 

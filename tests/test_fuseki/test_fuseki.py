@@ -2,7 +2,7 @@ from pathlib import Path
 
 import httpx
 
-from kurrawong.fuseki import query, upload
+from kurra.fuseki import query, upload
 
 
 def test_file_upload_ng_replacement(fuseki_container):

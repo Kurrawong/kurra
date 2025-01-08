@@ -2,9 +2,9 @@ import httpx
 import typer
 from typing_extensions import Annotated
 
-from kurrawong.cli.commands.fuseki.app import app
-from kurrawong.cli.console import console
-from kurrawong.fuseki import clear_graph
+from kurra.cli.commands.fuseki.app import app
+from kurra.cli.console import console
+from kurra.fuseki import clear_graph
 
 
 @app.command(name="clear", help="Clear graph in the Fuseki dataset.")
