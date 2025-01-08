@@ -56,23 +56,35 @@ etc. to get further help for the particular commands.
 
 ## Installation
 
-For use as a Python library, simple installation from PIP/Poetry:
+Install the latest version of `kurra` from PyPI.
+
+### CLI App
+
+The recommended way to manage and run Python CLI apps is to use uv.
+
+```bash
+uv tool install kurra
+```
+
+Now you can invoke `kurra` anywhere in your terminal as long as `~/.local/bin` is in your `PATH`.
+
+See the uv documentation on [installing tools](https://docs.astral.sh/uv/guides/tools/#installing-tools) for more information.
+
+### Library
+
+You can also install `kurra` as a Python library.
 
 ```bash
 pip install kurra
 ```
 
-```bash
-poetry add kurra
-```
+Use the relevant command to add dependencies to your project if you are using a tool like uv, poetry, or conda.
 
 Then import it and use in your code, e.g. for the format functions:
 
-```bash
+```python
 from kurra.format import format_file, make_dataset, export_quads
 ```
-
-
 
 ## Development
 
