@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kurra"
-version = "0.6.2"
+version = "0.6.3"
 description = "A Python library of common code and CLI apps shared across Kurrawong projects and infrastructure."
 authors = ["Edmond Chuc <edmond@kurrawong.ai>"]
 readme = "README.md"
