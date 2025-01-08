@@ -30,11 +30,29 @@ Clear a named graph or clear all graphs.
 
 ## Installation
 
-View the [releases](https://github.com/Kurrawong/kurrawong-python/releases) page and install using the source code (zip) link.
+Install the latest version of `kurra` from PyPI.
+
+### CLI App
+
+The recommended way to manage and run Python CLI apps is to use uv.
 
 ```bash
-pip install https://github.com/Kurrawong/kurrawong-python/archive/refs/tags/0.1.0.zip
+uv tool install kurra
 ```
+
+Now you can invoke `kurra` anywhere in your terminal as long as `~/.local/bin` is in your `PATH`.
+
+See the uv documentation on [installing tools](https://docs.astral.sh/uv/guides/tools/#installing-tools) for more information.
+
+### Library
+
+You can also install `kurra` as a Python library.
+
+```bash
+pip install kurra
+```
+
+Use the relevant command to add dependencies to your project if you are using a tool like uv, poetry, or conda.
 
 ## Development
 
