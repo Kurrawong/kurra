@@ -23,6 +23,7 @@ kurra --help
 
 which will return something like:
 
+```
 ╭─ Options ───────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ --install-completion          Install completion for the current shell.                                         │
 │ --show-completion             Show completion for the current shell, to copy it or customize the installation.  │
@@ -36,6 +37,7 @@ which will return something like:
 │ format    Format RDF files using one of several common RDF formats.                                             │
 │ version   Show the version of the kurra app.                                                                    │
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
 
 You can then run 
 
