@@ -83,7 +83,7 @@ Use the relevant command to add dependencies to your project if you are using a 
 Then import it and use in your code, e.g. for the format functions:
 
 ```python
-from kurra.format import format_file, make_dataset, export_quads
+from kurra.file import format_file, make_dataset, export_quads
 ```
 
 ## Development
