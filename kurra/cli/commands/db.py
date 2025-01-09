@@ -11,7 +11,8 @@ from kurra.db import suffix_map, upload, sparql, clear_graph
 from rich.progress import track
 from kurra.cli.commands.sparql import sparql_command
 
-app = typer.Typer(help="RDF database commands")
+app = typer.Typer(help="RDF database commands. Currently only Fuseki is supported")
+
 
 @app.command(name="list", help="Get the list of database repositories")
 def repository_list_command(
@@ -173,7 +174,7 @@ def sparql_command3(
             "--response-format",
             "-f",
             help="The response format of the SPARQL query",
-        )
+        ),
     ] = "table",
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
