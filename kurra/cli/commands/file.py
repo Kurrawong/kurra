@@ -1,12 +1,12 @@
 import sys
-
-import typer
 from pathlib import Path
 from typing import Annotated
+
+import typer
+
 from kurra.cli.commands.db import upload_command
 from kurra.cli.commands.sparql import sparql_command
 from kurra.cli.console import console
-
 from kurra.file import (
     FailOnChangeError,
     format_rdf,

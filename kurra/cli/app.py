@@ -1,5 +1,7 @@
-import typer
 from typing import Annotated
+
+import typer
+
 from kurra import __version__
 from kurra.cli.console import console
 

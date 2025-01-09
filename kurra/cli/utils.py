@@ -1,6 +1,7 @@
+from json import loads
+
 from rdflib.plugins.sparql.processor import SPARQLResult
 from rich.table import Table
-from json import loads
 
 
 def format_sparql_response_as_rich_table(response):

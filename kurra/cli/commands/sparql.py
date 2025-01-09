@@ -1,14 +1,16 @@
 from pathlib import Path
+from typing import Annotated
+
 import httpx
 import typer
-from typing import Annotated
+
 from kurra.cli.console import console
 from kurra.cli.utils import (
     format_sparql_response_as_rich_table,
     format_sparql_response_as_json,
 )
-from kurra.utils import load_graph
 from kurra.db import sparql
+from kurra.utils import load_graph
 
 app = typer.Typer()
 

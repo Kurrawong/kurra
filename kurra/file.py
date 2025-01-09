@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Tuple, Literal, Union, Optional
 
 from rdflib import Graph, URIRef, Dataset
+
 from kurra.utils import guess_format_from_data, load_graph
 
 KNOWN_RDF_FORMATS = Literal["turtle", "longturtle", "xml", "n-triples", "json-ld"]

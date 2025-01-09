@@ -1,6 +1,6 @@
 from kurra.cli.app import app
-from kurra.cli.commands.file import app as file_app
 from kurra.cli.commands.db import app as db_app
+from kurra.cli.commands.file import app as file_app
 from kurra.cli.commands.sparql import app as sparql_app
 
 app.add_typer(db_app, name="db")

@@ -1,15 +1,14 @@
+from pathlib import Path
 from typing import Annotated
 
 import httpx
 import typer
-
-from kurra.cli.console import console
-from kurra.cli.utils import format_sparql_response_as_rich_table
-from kurra.db import dataset_create, dataset_list
-from pathlib import Path
-from kurra.db import suffix_map, upload, sparql, clear_graph
 from rich.progress import track
+
 from kurra.cli.commands.sparql import sparql_command
+from kurra.cli.console import console
+from kurra.db import dataset_create, dataset_list
+from kurra.db import suffix_map, upload, clear_graph
 
 app = typer.Typer(help="RDF database commands. Currently only Fuseki is supported")
 

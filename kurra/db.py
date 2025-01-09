@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
-from typing import Union
 from textwrap import dedent
-from rdflib import Graph
+from typing import Union
 
 import httpx
+from rdflib import Graph
 
-from kurra.utils import guess_format_from_data, load_graph
+from kurra.utils import load_graph
 
 suffix_map = {
     ".nt": "application/n-triples",

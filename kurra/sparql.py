@@ -1,5 +1,7 @@
 from pathlib import Path
+
 from rdflib import Graph
+
 from kurra.db import sparql
 from kurra.utils import load_graph
 
