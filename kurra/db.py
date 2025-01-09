@@ -42,7 +42,7 @@ def upload(
     append: bool = False,
     http_client: httpx.Client = None,
 ) -> None:
-    """This function uploads a file to a Fuseki server using the Graph Store Protocol.
+    """This function uploads a file to a SPARQL Endpoint using the Graph Store Protocol.
 
     It will upload it into a graph named graph_name (an IRI). If no graph_name is given, it will be uploaded into
     the Fuseki default graph.
@@ -127,7 +127,7 @@ def clear_graph(url: str, named_graph: str, http_client: httpx.Client):
         )
 
 
-def query(
+def sparql(
     sparql_endpoint: str,
     query: str,
     http_client: httpx.Client = None,

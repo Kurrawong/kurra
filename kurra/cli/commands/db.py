@@ -4,16 +4,17 @@ import httpx
 import typer
 
 from kurra.cli.console import console
-from kurra.fuseki import dataset_create, dataset_list
+from kurra.cli.utils import format_sparql_response_as_rich_table
+from kurra.db import dataset_create, dataset_list
 from pathlib import Path
-from kurra.fuseki import suffix_map, upload, query, clear_graph
+from kurra.db import suffix_map, upload, sparql, clear_graph
 from rich.progress import track
-from rich.table import Table
+from kurra.cli.commands.sparql import sparql_command
 
-app = typer.Typer()
+app = typer.Typer(help="RDF database commands")
 
-@app.command(name="list", help="Get a list of Fuseki datasets")
-def dataset_list_command(
+@app.command(name="list", help="Get the list of database repositories")
+def repository_list_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
@@ -37,17 +38,17 @@ def dataset_list_command(
             console.print(result)
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to list Fuseki datasets at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to list repositories at {fuseki_url}."
             )
             raise err
 
 
-@app.command(name="create", help="Create a new Fuseki dataset")
-def dataset_create_command(
+@app.command(name="create", help="Create a new database repository")
+def repository_create_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
-    dataset_name: str = typer.Argument(..., help="Fuseki dataset name"),
+    dataset_name: str = typer.Argument(..., help="repository name"),
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
     ] = None,
@@ -68,77 +69,18 @@ def dataset_create_command(
             console.print(result)
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to create Fuseki dataset {dataset_name} at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to create repository {dataset_name} at {fuseki_url}."
             )
             raise err
 
 
-@app.command(name="query", help="Query a Fuseki database")
-def query_command(
-    fuseki_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
-    ),
-    q: str = typer.Argument(..., help="The SPARQL query to sent to the database"),
-    response_format: Annotated[
-        str,
-        typer.Option(
-            "--response-format",
-            "-f",
-            help="The response format of the SPARQL query",
-        )
-    ] = "table",
-    username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
-    ] = None,
-    password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
-    ] = None,
-    timeout: Annotated[
-        int, typer.Option("--timeout", "-t", help="Timeout per request")
-    ] = 60,
-) -> None:
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx.Client(auth=auth, timeout=timeout) as client:
-        try:
-            result = query(fuseki_url, q, client, return_python=True, return_bindings_only=False)
-
-            if response_format == "table":
-                t = Table()
-
-                # ASK
-                if not result.get("results"):
-                    t.add_column("Ask")
-                    t.add_row(str(result["boolean"]))
-                else:
-                    # SELECT
-                    for x in result["head"]["vars"]:
-                        t.add_column(x)
-                    for row in result["results"]["bindings"]:
-                        cols = []
-                        for k, v in row.items():
-                            cols.append(v["value"])
-                        t.add_row(*tuple(cols))
-
-                console.print(t)
-            else:
-                console.print(result)
-        except Exception as err:
-            console.print(
-                f"[bold red]ERROR[/bold red] Failed to query Fuseki at {fuseki_url}."
-            )
-            raise err
-
-
-@app.command(name="upload", help="Upload files to a Fuseki dataset")
+@app.command(name="upload", help="Upload files to a database repository")
 def upload_command(
     path: Path = typer.Argument(
         ..., help="The path of a file or directory to be uploaded."
     ),
     fuseki_url: str = typer.Argument(
-        ..., help="Fuseki dataset URL. E.g. http://localhost:3030/ds"
+        ..., help="Repository SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
     ),
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
@@ -182,8 +124,8 @@ def upload_command(
                 raise err
 
 
-@app.command(name="clear", help="Clear graph in the Fuseki dataset")
-def clear_command(
+@app.command(name="clear", help="Clear a database repository")
+def repository_clear_command(
     named_graph: str = typer.Argument(
         ..., help="Named graph. If 'all' is supplied, it will remove all named graphs."
     ),
@@ -212,3 +154,35 @@ def clear_command(
                 f"[bold red]ERROR[/bold red] Failed to run clear command with '{named_graph}' at {fuseki_url}."
             )
             raise err
+
+
+@app.command(name="delete", help="Delete a database repository")
+def repository_delete_command():
+    pass
+
+
+@app.command(name="sparql", help="Query a database repository")
+def sparql_command3(
+    path_or_url: Path = typer.Argument(
+        ..., help="Repository SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
+    ),
+    q: str = typer.Argument(..., help="The SPARQL query to sent to the database"),
+    response_format: Annotated[
+        str,
+        typer.Option(
+            "--response-format",
+            "-f",
+            help="The response format of the SPARQL query",
+        )
+    ] = "table",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
+) -> None:
+    sparql_command(path_or_url, q, response_format, username, password, timeout)

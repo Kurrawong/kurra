@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "kurra"
-version = "0.6.3"
-description = "A Python library of common code and CLI apps shared across Kurrawong projects and infrastructure."
+version = "1.0.0"
+description = "A Python package of RDF data manipulation functions that can be called from the command line or other software"
 authors = ["Edmond Chuc <edmond@kurrawong.ai>"]
 readme = "README.md"
 

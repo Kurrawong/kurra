@@ -4,7 +4,7 @@ from pathlib import Path
 
 from rdflib import Graph, Dataset, URIRef
 
-from kurra.format import format_file, make_dataset, export_quads
+from kurra.file import format_file, make_dataset, export_quads
 
 
 def test_format_rdf_one():
@@ -37,7 +37,7 @@ ex:a
 
 def test_format_cli():
     subprocess.check_output(
-        ["kurra", "format", "--output-format", "json-ld", "tests/minimal1.ttl"]
+        ["kurra", "file", "format", "--output-format", "json-ld", "tests/minimal1.ttl"]
     )
 
     comparison = """[
@@ -102,3 +102,12 @@ def test_export_quads():
         assert t[1] == URIRef("http://example.com/b")
         assert t[2] == URIRef("http://example.com/c")
         assert t[3] == URIRef("http://graph.com/a")
+
+
+def test_sparql():
+    # x = subprocess.check_output(
+    #     ["kurra", "query", "--f", "table", "tests/minimal1.ttl", "ASK { ?s ?p ?o}"]
+    # )
+    #
+    # print(x)
+    pass
