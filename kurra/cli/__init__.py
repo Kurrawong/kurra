@@ -6,4 +6,3 @@ from kurra.cli.commands.sparql import app as sparql_app
 app.add_typer(db_app, name="db")
 app.add_typer(file_app, name="file")
 app.add_typer(sparql_app)
-

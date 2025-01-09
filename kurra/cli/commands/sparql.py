@@ -3,7 +3,10 @@ import httpx
 import typer
 from typing import Annotated
 from kurra.cli.console import console
-from kurra.cli.utils import format_sparql_response_as_rich_table, format_sparql_response_as_json
+from kurra.cli.utils import (
+    format_sparql_response_as_rich_table,
+    format_sparql_response_as_json,
+)
 from kurra.utils import load_graph
 from kurra.db import sparql
 
@@ -12,23 +15,23 @@ app = typer.Typer()
 
 @app.command(name="sparql", help="SPARQL queries to local RDF files or a database")
 def sparql_command(
-        path_or_url: Path,
-        q: str,
-        response_format: str = typer.Option(
-            "table",
-            "--response-format",
-            "-f",
-            help="The response format of the SPARQL query. Either 'table' (default) or 'json'",
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    path_or_url: Path,
+    q: str,
+    response_format: str = typer.Option(
+        "table",
+        "--response-format",
+        "-f",
+        help="The response format of the SPARQL query. Either 'table' (default) or 'json'",
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     """SPARQL queries a local file or SPARQL Endpoint"""
     auth = (

@@ -85,10 +85,12 @@ def test_load_graph():
     assert isomorphic(g3, g)
 
     # load data
-    g4 = load_graph("""
+    g4 = load_graph(
+        """
             PREFIX ex: <http://example.com/>
             
             ex:a ex:b ex:c .
-            """)
+            """
+    )
 
     assert isomorphic(g4, g)

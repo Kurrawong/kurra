@@ -93,7 +93,9 @@ def test_export_quads():
 
     qds = export_quads(d)
 
-    warnings.filterwarnings("ignore", category=DeprecationWarning)  # ignore RDFLib's ConjunctiveGraph warning
+    warnings.filterwarnings(
+        "ignore", category=DeprecationWarning
+    )  # ignore RDFLib's ConjunctiveGraph warning
     d2 = Dataset()
     d2.parse(data=qds, format="trig")
 

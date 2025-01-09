@@ -7,12 +7,20 @@ from kurra.cli.commands.db import upload_command
 from kurra.cli.commands.sparql import sparql_command
 from kurra.cli.console import console
 
-from kurra.file import FailOnChangeError, format_rdf, RDF_FILE_SUFFIXES, make_dataset, export_quads
+from kurra.file import (
+    FailOnChangeError,
+    format_rdf,
+    RDF_FILE_SUFFIXES,
+    make_dataset,
+    export_quads,
+)
 
 app = typer.Typer(help="RDF file commands")
 
 
-@app.command(name="format", help="Format RDF files using one of several common RDF formats")
+@app.command(
+    name="format", help="Format RDF files using one of several common RDF formats"
+)
 def format_command(
     file_or_dir: str = typer.Argument(
         ..., help="The file or directory of RDF files to be formatted"
@@ -21,7 +29,7 @@ def format_command(
         False,
         "--check",
         "-c",
-        help="Check whether files will be formatted without applying the effect."
+        help="Check whether files will be formatted without applying the effect.",
     ),
     output_format: str = typer.Option(
         "longturtle",
@@ -64,12 +72,11 @@ def upload_command2(
     upload_command(path, fuseki_url, username, password, timeout)
 
 
-@app.command(name="quads", help="Exports (prints or saves) triples as quads with a given identifier")
-def quads_command(
-    path_or_str: Path,
-    identifier: str,
-    destination: Path = None
-):
+@app.command(
+    name="quads",
+    help="Exports (prints or saves) triples as quads with a given identifier",
+)
+def quads_command(path_or_str: Path, identifier: str, destination: Path = None):
     r = export_quads(make_dataset(path_or_str, identifier), destination)
     if not destination:
         console.print(r)
@@ -77,22 +84,22 @@ def quads_command(
 
 @app.command(name="sparql", help="SPARQL queries to local RDF files or a database")
 def query_command2(
-        path_or_url: Path,
-        q: str,
-        response_format: str = typer.Option(
-            False,
-            "--response-format",
-            "-f",
-            help="The response format of the SPARQL query. Either 'table' (default) or 'json'",
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    path_or_url: Path,
+    q: str,
+    response_format: str = typer.Option(
+        False,
+        "--response-format",
+        "-f",
+        help="The response format of the SPARQL query. Either 'table' (default) or 'json'",
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     sparql_command(path_or_url, q, response_format, username, password, timeout)

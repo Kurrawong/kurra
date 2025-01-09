@@ -38,8 +38,7 @@ def get_topbraid_metadata(content: str) -> str:
 
 
 def do_format(
-    content: str,
-    output_format: KNOWN_RDF_FORMATS = "longturtle"
+    content: str, output_format: KNOWN_RDF_FORMATS = "longturtle"
 ) -> Tuple[str, bool]:
     metadata = get_topbraid_metadata(content)
 
@@ -100,7 +99,12 @@ def format_rdf(
 
         for file in files:
             try:
-                changed = format_file(file, check, output_format=output_format, output_filename=output_filename)
+                changed = format_file(
+                    file,
+                    check,
+                    output_format=output_format,
+                    output_filename=output_filename,
+                )
                 if changed:
                     changed_files.append(file)
             except FailOnChangeError as err:
