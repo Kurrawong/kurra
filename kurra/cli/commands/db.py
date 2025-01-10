@@ -7,8 +7,7 @@ from rich.progress import track
 
 from kurra.cli.commands.sparql import sparql_command
 from kurra.cli.console import console
-from kurra.db import dataset_create, dataset_list
-from kurra.db import suffix_map, upload, clear_graph
+from kurra.db import clear_graph, dataset_create, dataset_list, suffix_map, upload
 
 app = typer.Typer(help="RDF database commands. Currently only Fuseki is supported")
 
@@ -116,7 +115,7 @@ def upload_command(
     with httpx.Client(auth=auth, timeout=timeout) as client:
         for file in track(files, description=f"Uploading {len(files)} files..."):
             try:
-                upload(fuseki_url, file, client, f"urn:file:{file.name}")
+                upload(fuseki_url, file, f"urn:file:{file.name}", http_client=client)
             except Exception as err:
                 console.print(
                     f"[bold red]ERROR[/bold red] Failed to upload file {file}."

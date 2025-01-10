@@ -8,11 +8,11 @@ from kurra.cli.commands.db import upload_command
 from kurra.cli.commands.sparql import sparql_command
 from kurra.cli.console import console
 from kurra.file import (
-    FailOnChangeError,
-    format_rdf,
     RDF_FILE_SUFFIXES,
-    make_dataset,
+    FailOnChangeError,
     export_quads,
+    format_rdf,
+    make_dataset,
 )
 
 app = typer.Typer(help="RDF file commands")
