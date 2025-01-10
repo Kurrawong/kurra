@@ -1,33 +1,55 @@
-[tool.poetry]
+[project.urls]
+Homepage = "https://github.com/kurrawong/kurra"
+Documentation = "https://docs.kurrawong.ai/tools/kurra"
+Source = "https://github.com/kurrawong/kurra"
+Changelog = "https://github.com/Kurrawong/kurra/releases"
+
+[project]
 name = "kurra"
 version = "1.0.2"
 description = "A Python package of RDF data manipulation functions that can be called from the command line or other software"
-authors = ["Edmond Chuc <edmond@kurrawong.ai>"]
+authors = [
+    { name="Edmond Chuc", email="edmond@kurrawong.ai" },
+    { name="Nicholas Car", email="nick@kurrawong.ai"}
+]
 readme = "README.md"
+requires-python = ">=3.11"
+license = "BSD-3-Clause"
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Information Technology',
+    "License :: OSI Approved :: BSD License",
+    'Operating System :: OS Independent',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: Internet',
+]
+dependencies = [
+    "httpx>=0.28.1",
+    "rdflib>=7.1.1",
+    "rich>=13.9.4",
+    "typer>=0.15.1",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.11,<4.0.0"
-httpx = ">=0.24.1,<1.0.0"
-rdflib = ">=6.3.2,<8.0.0"
-typer = ">=0.9.0,<1.0.0"
-rich = ">=13.4.1,<14.0.0"
-
-
-[tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
-pytest = "^7.3.1"
-ruff = "^0.0.272"
-testcontainers = "^4.9.0"
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "ruff>=0.9.0",
+    "testcontainers>=4.9.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.scripts]
-kurra = 'kurra.cli:app'
+[project.scripts]
+kurra = "kurra.cli:app"
 
-[tool.ruff]
-select = [
-    "I001",
-    "I002"
-]
+[tool.ruff.lint]
+extend-select = ["I"]
