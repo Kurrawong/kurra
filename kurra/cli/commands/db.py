@@ -116,7 +116,7 @@ def upload_command(
     with httpx.Client(auth=auth, timeout=timeout) as client:
         for file in track(files, description=f"Uploading {len(files)} files..."):
             try:
-                upload(fuseki_url, file, client, f"urn:file:{file.name}")
+                upload(fuseki_url, file, f"urn:file:{file.name}", http_client=client)
             except Exception as err:
                 console.print(
                     f"[bold red]ERROR[/bold red] Failed to upload file {file}."
