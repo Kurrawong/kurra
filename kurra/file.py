@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Tuple, Literal, Union, Optional
+from typing import Literal, Optional, Tuple, Union
 
-from rdflib import Graph, URIRef, Dataset
+from rdflib import Dataset, Graph, URIRef
 
 from kurra.utils import guess_format_from_data, load_graph
 

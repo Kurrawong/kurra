@@ -6,8 +6,8 @@ import typer
 
 from kurra.cli.console import console
 from kurra.cli.utils import (
-    format_sparql_response_as_rich_table,
     format_sparql_response_as_json,
+    format_sparql_response_as_rich_table,
 )
 from kurra.db import sparql
 from kurra.utils import load_graph
