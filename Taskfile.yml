@@ -13,7 +13,7 @@ tasks:
   format:
     desc: Format Python code.
     cmds:
-      - uv run ruff check --fix $PYTHON_SRC
+      - uv run ruff format $PYTHON_SRC
       - uv run ruff check --fix $PYTHON_SRC
 
   code:
