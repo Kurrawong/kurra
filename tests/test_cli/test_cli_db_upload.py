@@ -5,7 +5,7 @@ from kurra.cli import app
 runner = CliRunner()
 
 
-def test_db_upload_file(fuseki_container):
+def test_cli_db_upload_file(fuseki_container):
     port = fuseki_container.get_exposed_port(3030)
     result = runner.invoke(
         app,

@@ -7,9 +7,19 @@ from rich.progress import track
 
 from kurra.cli.commands.sparql import sparql_command
 from kurra.cli.console import console
-from kurra.db import clear_graph, dataset_create, dataset_list, suffix_map, upload
+from kurra.db import (
+    FusekiError,
+    clear_graph,
+    create_dataset,
+    delete_dataset,
+    list_dataset,
+    suffix_map,
+    upload,
+)
 
 app = typer.Typer(help="RDF database commands. Currently only Fuseki is supported")
+
+dataset_type_options = ["mem", "tdb", "tdb1", "tdb2"]
 
 
 @app.command(name="list", help="Get the list of database repositories")
@@ -33,7 +43,7 @@ def repository_list_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as client:
         try:
-            result = dataset_list(fuseki_url, client)
+            result = list_dataset(fuseki_url, client)
             console.print(result)
         except Exception as err:
             console.print(
@@ -42,12 +52,19 @@ def repository_list_command(
             raise err
 
 
-@app.command(name="create", help="Create a new database repository")
+@app.command(
+    name="create",
+    help="Create a new database repository. Provide either the dataset name and optionally the dataset type or provide the assembler file with --config.",
+)
 def repository_create_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
-    dataset_name: str = typer.Argument(..., help="repository name"),
+    dataset_name: str | None = typer.Argument(None, help="repository name"),
+    dataset_type: str = typer.Option(
+        "tdb2", help=f"dataset type. Options: {dataset_type_options}"
+    ),
+    config: Path | None = typer.Option(None, help="assembler file"),
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
     ] = None,
@@ -62,15 +79,38 @@ def repository_create_command(
         (username, password) if username is not None and password is not None else None
     )
 
-    with httpx.Client(auth=auth, timeout=timeout) as client:
-        try:
-            result = dataset_create(fuseki_url, client, dataset_name)
-            console.print(result)
-        except Exception as err:
-            console.print(
-                f"[bold red]ERROR[/bold red] Failed to create repository {dataset_name} at {fuseki_url}."
+    if dataset_name and config:
+        raise typer.BadParameter("Only dataset name or --config is allowed, not both.")
+
+    if dataset_name and dataset_type not in dataset_type_options:
+        raise typer.BadParameter(
+            f"Invalid dataset type '{dataset_type}'. Options: {dataset_type_options}"
+        )
+
+    if dataset_name:
+        with httpx.Client(auth=auth, timeout=timeout) as client:
+            try:
+                result = create_dataset(fuseki_url, dataset_name, dataset_type, client)
+                console.print(result)
+            except Exception as err:
+                console.print(
+                    f"[bold red]ERROR[/bold red] Failed to create repository {dataset_name} at {fuseki_url}."
+                )
+                raise err
+    else:
+        if config is None:
+            raise typer.BadParameter(
+                "Either dataset name or assembler config file must be provided."
             )
-            raise err
+        with httpx.Client(auth=auth, timeout=timeout) as client:
+            try:
+                result = create_dataset(fuseki_url, config, http_client=client)
+                console.print(result)
+            except Exception as err:
+                console.print(
+                    f"[bold red]ERROR[/bold red] Failed to create repository {dataset_name} at {fuseki_url}."
+                )
+                raise err
 
 
 @app.command(name="upload", help="Upload files to a database repository")
@@ -156,8 +196,31 @@ def repository_clear_command(
 
 
 @app.command(name="delete", help="Delete a database repository")
-def repository_delete_command():
-    pass
+def repository_delete_command(
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    dataset_name: str = typer.Argument(..., help="The name of the dataset to delete."),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
+):
+    auth = (
+        (username, password) if username is not None and password is not None else None
+    )
+
+    with httpx.Client(auth=auth, timeout=timeout) as client:
+        try:
+            success_message = delete_dataset(fuseki_url, dataset_name, client)
+            console.print(success_message)
+        except FusekiError as err:
+            console.print(err)
 
 
 @app.command(name="sparql", help="Query a database repository")
