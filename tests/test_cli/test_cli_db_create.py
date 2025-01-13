@@ -68,4 +68,30 @@ def test_cli_db_create_with_config_file(fuseki_container):
         ],
     )
     assert result.exit_code == 0
-    assert f"Dataset myds created using assembler config at http://localhost:{port}." in result.output
+    assert (
+        f"Dataset myds created using assembler config at http://localhost:{port}."
+        in result.output
+    )
+
+
+def test_cli_db_create_existing_dataset(fuseki_container):
+    port = fuseki_container.get_exposed_port(3030)
+    dataset_name = "ds"
+    result = runner.invoke(
+        app,
+        [
+            "db",
+            "create",
+            f"http://localhost:{port}",
+            dataset_name,
+            "--username",
+            "admin",
+            "--password",
+            "admin",
+        ],
+    )
+    assert result.exit_code == 1
+    assert (
+        f"Failed to create repository {dataset_name} at http://localhost:{port}"
+        in result.output
+    )

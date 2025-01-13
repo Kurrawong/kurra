@@ -148,8 +148,10 @@ def create_dataset(
         response = http_client.post(f"{url}/$/datasets", data=data)
         status_code = response.status_code
         if response.status_code != 200 and response.status_code != 201:
-            raise RuntimeError(
-                f"Received status code {status_code}. Message: {response.text}"
+            raise FusekiError(
+                f"Failed to create dataset {dataset_name_or_config_file} at {url}",
+                response.text,
+                status_code,
             )
         msg = f"{dataset_name_or_config_file} created at"
     else:
@@ -158,16 +160,6 @@ def create_dataset(
         else:
             with open(dataset_name_or_config_file, "r") as file:
                 data = file.read()
-        response = http_client.post(
-            f"{url}/$/datasets",
-            content=data,
-            headers={"Content-Type": "text/turtle"},
-        )
-        status_code = response.status_code
-        if response.status_code != 200 and response.status_code != 201:
-            raise RuntimeError(
-                f"Received status code {status_code}. Message: {response.text}"
-            )
 
         graph = Graph().parse(data=data, format="turtle")
         fuseki_service = graph.value(
@@ -176,6 +168,20 @@ def create_dataset(
         dataset_name = graph.value(
             fuseki_service, URIRef("http://jena.apache.org/fuseki#name")
         )
+
+        response = http_client.post(
+            f"{url}/$/datasets",
+            content=data,
+            headers={"Content-Type": "text/turtle"},
+        )
+        status_code = response.status_code
+        if response.status_code != 200 and response.status_code != 201:
+            raise FusekiError(
+                f"Failed to create dataset {dataset_name} at {url}",
+                response.text,
+                status_code,
+            )
+
         msg = f"{dataset_name} created using assembler config at"
 
     if close_http_client:
