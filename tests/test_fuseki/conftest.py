@@ -7,7 +7,7 @@ from testcontainers.core.waiting_utils import wait_for_logs
 FUSEKI_IMAGE = "ghcr.io/kurrawong/fuseki-geosparql:git-main-e642d849"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def fuseki_container(request: pytest.FixtureRequest):
     container = DockerContainer(FUSEKI_IMAGE)
     container.with_volume_mapping(
