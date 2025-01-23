@@ -1,10 +1,10 @@
-import json
+from io import TextIOBase
 from pathlib import Path
 from textwrap import dedent
 from typing import Union
 
 import httpx
-from rdflib import Graph
+from rdflib import RDF, Graph, URIRef
 
 from kurra.utils import load_graph
 
@@ -17,6 +17,14 @@ suffix_map = {
     ".jsonld": "application/ld+json",
     ".xml": "application/rdf+xml",
 }
+
+
+class FusekiError(Exception):
+    """An error that occurred while interacting with Fuseki."""
+
+    def __init__(self, message_context: str, message: str, status_code: int) -> None:
+        self.message = f"{status_code} {message_context}. {message}"
+        super().__init__(self.message)
 
 
 def _guess_query_is_update(query: str) -> bool:
@@ -40,7 +48,7 @@ def upload(
     file_or_str_or_graph: Union[Path, str, Graph],
     graph_name: str = None,
     append: bool = False,
-    http_client: httpx.Client = None,
+    http_client: httpx.Client | None = None,
 ) -> None:
     """This function uploads a file to a SPARQL Endpoint using the Graph Store Protocol.
 
@@ -84,35 +92,102 @@ def upload(
         http_client.close()
 
 
-def dataset_list(
-    url: str,
-    http_client: httpx.Client,
-) -> str:
+def list_dataset(
+    base_url: str,
+    http_client: httpx.Client | None = None,
+) -> dict:
+    """
+    List the datasets in a Fuseki server.
+
+    :param base_url: The base URL of the Fuseki server. E.g., http://localhost:3030
+    :param http_client: The synchronous httpx client to be used. If this is not provided, a temporary one will be created.
+    :raises FusekiError: If the datasets fail to list or the server responds with an invalid data structure.
+    :returns: The Fuseki listing of datasets as a dictionary.
+    """
+    close_http_client = False
+    if http_client is None:
+        http_client = httpx.Client()
+        close_http_client = True
+
     headers = {"accept": "application/json"}
-    response = http_client.get(f"{url}/$/datasets", headers=headers)
+    response = http_client.get(f"{base_url}/$/datasets", headers=headers)
     status_code = response.status_code
 
     if status_code != 200:
-        raise RuntimeError(
-            f"Received status code {status_code}. Message: {response.text}"
+        raise FusekiError(
+            f"Failed to list datasets at {base_url}", response.text, status_code
         )
 
-    return json.dumps(response.json(), indent=2)
+    if close_http_client:
+        http_client.close()
+
+    try:
+        datasets = response.json()["datasets"]
+        return datasets
+    except KeyError:
+        raise FusekiError(
+            f"Failed to parse datasets response from {base_url}",
+            response.text,
+            status_code,
+        )
 
 
-def dataset_create(
-    url: str, dataset_name: str, http_client: httpx.Client, dataset_type: str = "tdb2"
+def create_dataset(
+    url: str,
+    dataset_name_or_config_file: str | TextIOBase | Path,
+    dataset_type: str = "tdb2",
+    http_client: httpx.Client | None = None,
 ) -> str:
-    data = {"dbName": dataset_name, "dbType": dataset_type}
-    response = http_client.post(f"{url}/$/datasets", data=data)
-    status_code = response.status_code
+    close_http_client = False
+    if http_client is None:
+        http_client = httpx.Client()
+        close_http_client = True
 
-    if response.status_code != 200 and response.status_code != 201:
-        raise RuntimeError(
-            f"Received status code {status_code}. Message: {response.text}"
+    if isinstance(dataset_name_or_config_file, str):
+        data = {"dbName": dataset_name_or_config_file, "dbType": dataset_type}
+        response = http_client.post(f"{url}/$/datasets", data=data)
+        status_code = response.status_code
+        if response.status_code != 200 and response.status_code != 201:
+            raise FusekiError(
+                f"Failed to create dataset {dataset_name_or_config_file} at {url}",
+                response.text,
+                status_code,
+            )
+        msg = f"{dataset_name_or_config_file} created at"
+    else:
+        if isinstance(dataset_name_or_config_file, TextIOBase):
+            data = dataset_name_or_config_file.read()
+        else:
+            with open(dataset_name_or_config_file, "r") as file:
+                data = file.read()
+
+        graph = Graph().parse(data=data, format="turtle")
+        fuseki_service = graph.value(
+            None, RDF.type, URIRef("http://jena.apache.org/fuseki#Service")
+        )
+        dataset_name = graph.value(
+            fuseki_service, URIRef("http://jena.apache.org/fuseki#name")
         )
 
-    return f"Dataset {dataset_name} created at {url}."
+        response = http_client.post(
+            f"{url}/$/datasets",
+            content=data,
+            headers={"Content-Type": "text/turtle"},
+        )
+        status_code = response.status_code
+        if response.status_code != 200 and response.status_code != 201:
+            raise FusekiError(
+                f"Failed to create dataset {dataset_name} at {url}",
+                response.text,
+                status_code,
+            )
+
+        msg = f"{dataset_name} created using assembler config at"
+
+    if close_http_client:
+        http_client.close()
+
+    return f"Dataset {msg} {url}."
 
 
 def clear_graph(url: str, named_graph: str, http_client: httpx.Client):
@@ -125,6 +200,40 @@ def clear_graph(url: str, named_graph: str, http_client: httpx.Client):
         raise RuntimeError(
             f"Received status code {status_code}. Message: {response.text}"
         )
+
+
+def delete_dataset(
+    base_url: str, dataset_name: str, http_client: httpx.Client | None = None
+) -> str:
+    """
+    Delete a Fuseki dataset.
+
+    :param base_url: The base URL of the Fuseki server. E.g., http://localhost:3030
+    :param dataset_name: The dataset to be deleted
+    :param http_client: The synchronous httpx client to be used. If this is not provided, a temporary one will be created.
+    :raises FusekiError: If the dataset fails to delete.
+    :returns: A message indicating the successful deletion of the dataset.
+    """
+    if not dataset_name:
+        raise ValueError("You must supply a dataset name")
+
+    close_http_client = False
+    if http_client is None:
+        http_client = httpx.Client()
+        close_http_client = True
+
+    response = http_client.delete(f"{base_url}/$/datasets/{dataset_name}")
+    status_code = response.status_code
+
+    if status_code != 200:
+        raise FusekiError(
+            f"Failed to delete dataset '{dataset_name}'", response.text, status_code
+        )
+
+    if close_http_client:
+        http_client.close()
+
+    return f"Dataset {dataset_name} deleted."
 
 
 def sparql(
