@@ -130,6 +130,15 @@ def upload_command(
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
+    disable_ssl_verification: Annotated[
+        bool,
+        typer.Option(
+            "--disable-ssl-verification", "-k", help="Disable SSL verification."
+        ),
+    ] = False,
+    host_header: Annotated[
+        str | None, typer.Option("--host-header", "-h", help="Override the Host header")
+    ] = None,
 ) -> None:
     """Upload a file or a directory of files with an RDF file extension.
 
@@ -152,7 +161,16 @@ def upload_command(
 
     files = list(filter(lambda f: f.suffix in suffix_map.keys(), files))
 
-    with httpx.Client(auth=auth, timeout=timeout) as client:
+    headers = {}
+    if host_header is not None:
+        headers["Host"] = host_header
+
+    with httpx.Client(
+        auth=auth,
+        timeout=timeout,
+        headers=headers,
+        verify=False if disable_ssl_verification else True,
+    ) as client:
         for file in track(files, description=f"Uploading {len(files)} files..."):
             try:
                 upload(fuseki_url, file, f"urn:file:{file.name}", http_client=client)
