@@ -1,0 +1,63 @@
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix dt: <http://resource.geosciml.org/datatype/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://linked.data.gov.au/org/cgi-gtwg> a schema:Organization ;
+    schema:affiliation <https://linked.data.gov.au/org/cgi> ;
+    schema:name "CGI Geoscience Terminology Working Group" ;
+    schema:url "http://www.cgi-iugs.org/tech_collaboration/geoscience_terminology_working_group.html"^^xsd:anyURI .
+
+
+# <https://linked.data.gov.au/org/cgi> a schema:Organization ;
+#    schema:name "Commission for the Management and Application of Geoscience Information" ;
+#    schema:url "http://www.cgi-iugs.org"^^xsd:anyURI .
+
+
+<http://resource.geosciml.org/classifierscheme/cgi/2016.01/faulttype> a skos:ConceptScheme ;
+    schema:keywords <http://example.com/theme/geoscience> ;
+    dcterms:created "2009-07-14"^^xsd:date ;
+    dcterms:creator <https://linked.data.gov.au/org/cgi-gtwg> ;
+    dcterms:modified "2020-06-23"^^xsd:date ;
+    dcterms:provenance "Original set of terms from the GeosciML standard" ;
+    dcterms:publisher <https://linked.data.gov.au/org/cgi> ;
+    dcterms:source "http://www.opengis.net/doc/geosciml/4.1"^^xsd:anyURI ;
+    skos:changeNote "2010-02-11 Add narrower relationship links by adding skos:narrower link in Protege, defining skos:narrower as inverse of skos:broader, calculating with Pellet reasoner to add inferred axioms, and using 'file/Export inferred axioms as ontology' in Protege."@en,
+        "2010-11-27 SMR update URN to http URI, create version 201202"@en,
+        "2012-02-07 SMR update URI to replace numeric final token with English-language string as in original URN scheme."@en,
+        "2012-10-22 SJDC adjust ConceptScheme and Collection individuals, and Concept membership, to match Best Practice emerging from ISO Ontology work. Add some version metadata."@en,
+        "2012-11-24 SMR Update to 201211 version; add collection entity, check all pref labels are lower case, remove owl:NamedIndividual and Owl:Thing rdf:types."@en,
+        "2016-10-19 OLR regenerate SKOS-RDF file as part of migration to new vocabulary server. No changes to terms from the previous 2012 version."@en,
+        "2020-06-23 NJC Added properties to ensure vocab matched Geoscience Australia's vocab profile (http://linked.data.gov.au/def/ga-skos-profile). Just annotation properties, no new content. Agents (creator/publisher) now not text but RDF resource. Dates (create/modified) derived from editorial notes & existing date properties."@en,
+        "2021-12-17 R.Heaven BGS Added alignments to INSPIRE registry codelists using alignment datasets created and reviewed in 2015 by James Passmore, Marcus Sen and Stephen Richard."@en,
+        "2021-12-17 R.Heaven BGS Added prefLabel and altLabel in non English languages, obtained from previously determined alignments between @en labels in CGI and Multi-lingual Thesaurus of Geosciences (MulTG) and Asian Multi-lingual Thesaurus of Geosciences (AMTG). Note that specific language packs are required to render the fonts.  Known issues: @lo and @fi labels were incorrectly encoded in the digitised source datasets; they have been included regardless of this in case the encoding can be corrected."@en ;
+    skos:definition "This scheme specifies terms used to summarise the overall character of faults (ie, a summary of movement type and orientation) as defined by the IUGS Commission for Geoscience Information (CGI) Geoscience Terminology Working Group. Although the terms in this vocabulary are in common usage with definitions in standard texts or glossaries like Neuendorf et al. (2005), the definitions here attempt to establish unambiguous criteria to distinguish the categories, and are thus listed with this vocabulary as the source. By extension, this vocabulary includes all concepts in this conceptScheme, as well as concepts in any previous versions of the scheme. Designed for use in the faultType property in GeoSciML ShearDisplacementStructure elements."@en ;
+    skos:editorialNote "This file contains the 2016 SKOS-RDF version of the CGI Fault Type vocabulary. Compilation and review in MS Excel spreadsheet, converted to MS Excel for SKOS generation using SKOS_for_GA_from_XLS_2016.03.xslt"@en ;
+    skos:hasTopConcept <http://resource.geosciml.org/classifier/cgi/faulttype/fault> ;
+    skos:prefLabel "Fault Type"@en ;
+.
+
+
+<http://resource.geosciml.org/classifier/cgi/faulttype/fault> a skos:Concept ;
+    dcterms:provenance "this vocabulary"@en ;
+    rdfs:isDefinedBy <http://resource.geosciml.org/classifierscheme/cgi/2016.01/faulttype> ;
+    # skos:definition "A discrete surface, or zone of discrete surfaces, with some thickness, separating two rock masses across which one mass has slid past the other and characterized by brittle deformation."@en ;
+    skos:exactMatch <http://inspire.ec.europa.eu/codelist/FaultTypeValue/fault> ;
+    skos:inScheme <http://resource.geosciml.org/classifierscheme/cgi/2016.01/faulttype> ;
+    skos:prefLabel "fault"@en ;
+    skos:topConceptOf <http://resource.geosciml.org/classifierscheme/cgi/2016.01/faulttype> .
+
+
+<http://resource.geosciml.org/classifier/cgi/faulttype/detachment_fault> a skos:Concept ;
+    dcterms:provenance "this vocabulary"@en ;
+    rdfs:isDefinedBy <http://resource.geosciml.org/classifierscheme/cgi/2016.01/faulttype> ;
+    skos:broader <http://resource.geosciml.org/classifier/cgi/faulttype/fault> ;
+    skos:definition "A regional-scale, large displacement, low-angle normal fault."@en ;
+    skos:inScheme <http://resource.geosciml.org/classifierscheme/cgi/2016.01/faulttype> ;
+    # skos:prefLabel "detachment fault"@en ;
+.
+

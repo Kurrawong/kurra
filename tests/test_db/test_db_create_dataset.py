@@ -1,7 +1,7 @@
 from io import StringIO
 from pathlib import Path
 
-from rdflib import Graph, RDF, URIRef
+from rdflib import RDF, Graph, URIRef
 
 from kurra.db import create_dataset, list_dataset
 
@@ -142,23 +142,35 @@ PREFIX text:      <http://jena.apache.org/text#>
         text:uidField      "uid" ."""
     )
     return_value = create_dataset(base_url, config_file, http_client=http_client)
-    assert return_value == f"Dataset {dataset_name} created using assembler config at {base_url}."
+    assert (
+        return_value
+        == f"Dataset {dataset_name} created using assembler config at {base_url}."
+    )
 
     result = list_dataset(base_url, http_client=http_client)
     assert f"/{dataset_name}" in list(map(lambda x: x["ds.name"], result))
 
 
-def test_db_create_dataset_by_config_file_with_existing_dataset(fuseki_container, http_client):
+def test_db_create_dataset_by_config_file_with_existing_dataset(
+    fuseki_container, http_client
+):
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}"
     current_dir = Path(__file__).parent
     file = current_dir / "config.ttl"
     graph = Graph().parse(file, format="turtle")
-    fuseki_service = graph.value(None, RDF.type, URIRef("http://jena.apache.org/fuseki#Service"))
-    dataset_name = graph.value(fuseki_service, URIRef("http://jena.apache.org/fuseki#name"))
+    fuseki_service = graph.value(
+        None, RDF.type, URIRef("http://jena.apache.org/fuseki#Service")
+    )
+    dataset_name = graph.value(
+        fuseki_service, URIRef("http://jena.apache.org/fuseki#name")
+    )
     return_value = create_dataset(base_url, file, http_client=http_client)
 
-    assert return_value == f"Dataset {dataset_name} created using assembler config at {base_url}."
+    assert (
+        return_value
+        == f"Dataset {dataset_name} created using assembler config at {base_url}."
+    )
 
     result = list_dataset(base_url, http_client=http_client)
     assert f"/{dataset_name}" in list(map(lambda x: x["ds.name"], result))

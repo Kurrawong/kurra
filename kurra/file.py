@@ -3,7 +3,7 @@ from typing import Literal, Optional, Tuple, Union
 
 from rdflib import Dataset, Graph, URIRef
 
-from kurra.utils import guess_format_from_data, load_graph
+from kurra.utils import load_graph
 
 KNOWN_RDF_FORMATS = Literal["turtle", "longturtle", "xml", "n-triples", "json-ld"]
 RDF_FILE_SUFFIXES = {
@@ -43,8 +43,7 @@ def do_format(
 ) -> Tuple[str, bool]:
     metadata = get_topbraid_metadata(content)
 
-    graph = Graph()
-    graph.parse(data=content, format=guess_format_from_data(content))
+    graph = load_graph(content)
     new_content = graph.serialize(format=output_format)
     new_content = metadata + new_content
     changed = content != new_content

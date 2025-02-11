@@ -1,6 +1,6 @@
 import pytest
 
-from kurra.db import delete_dataset, FusekiError
+from kurra.db import FusekiError, delete_dataset
 
 
 def test_db_delete_dataset(fuseki_container, http_client):

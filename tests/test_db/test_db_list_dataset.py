@@ -1,6 +1,6 @@
 import pytest
 
-from kurra.db import list_dataset, FusekiError
+from kurra.db import FusekiError, list_dataset
 
 
 def test_db_list_datasets(fuseki_container, http_client):

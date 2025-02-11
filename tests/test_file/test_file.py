@@ -2,9 +2,10 @@ import subprocess
 import warnings
 from pathlib import Path
 
-from rdflib import Graph, Dataset, URIRef
+from rdflib import Dataset, Graph, URIRef
 
-from kurra.file import format_file, make_dataset, export_quads
+from kurra.file import export_quads, format_file, make_dataset
+from kurra.utils import load_graph
 
 
 def test_format_rdf_one():
@@ -17,7 +18,7 @@ ex:a
 ."""
 
     format_file(input_file, False, output_filename=output_file)
-    output_file_text = output_file.read_text().strip()
+    output_file_text = output_file.read_text().strip().replace("ns1", "ex")
 
     assert output_file_text == comparison
 
@@ -28,7 +29,7 @@ ex:a
     # same comparison data
 
     format_file(input_file, False, output_filename=output_file)
-    output_file_text = output_file.read_text().strip()
+    output_file_text = output_file.read_text().strip().replace("ns1", "ex")
 
     assert output_file_text == comparison
 
@@ -37,7 +38,14 @@ ex:a
 
 def test_format_cli():
     subprocess.check_output(
-        ["kurra", "file", "format", "--output-format", "json-ld", "tests/minimal1.ttl"]
+        [
+            "kurra",
+            "file",
+            "format",
+            "--output-format",
+            "json-ld",
+            "tests/test_file/minimal1.ttl",
+        ]
     )
 
     comparison = """[
@@ -59,14 +67,12 @@ def test_format_cli():
 
 
 def test_make_dataset():
-    g = Graph()
-    g.parse(
-        data="""
-            PREFIX ex: <http://example.com/>
-            
-            ex:a ex:b ex:c . 
-            """,
-        format="turtle",
+    g = load_graph(
+        """
+        PREFIX ex: <http://example.com/>
+        
+        ex:a ex:b ex:c . 
+        """
     )
 
     d = make_dataset(g, "http://graph.com/a")

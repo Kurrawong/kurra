@@ -2,7 +2,7 @@ from pathlib import Path
 
 import httpx
 
-from kurra.db import sparql, upload, clear_graph
+from kurra.db import clear_graph, sparql, upload
 
 
 def test_file_upload_ng_replacement(fuseki_container):
@@ -42,9 +42,7 @@ def test_query(fuseki_container):
                 ?s ?p ?o
               }
             }        
-            """.replace(
-            "XXX", TESTING_GRAPH
-        )
+            """.replace("XXX", TESTING_GRAPH)
 
         r = sparql(
             SPARQL_ENDPOINT, q, client, return_python=True, return_bindings_only=True
@@ -87,9 +85,7 @@ def test_clear(fuseki_container):
                 ?s ?p ?o
               }
             }        
-            """.replace(
-            "XXX", TESTING_GRAPH
-        )
+            """.replace("XXX", TESTING_GRAPH)
 
         r = sparql(
             SPARQL_ENDPOINT, q, client, return_python=True, return_bindings_only=True

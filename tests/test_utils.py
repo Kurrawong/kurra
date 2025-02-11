@@ -1,7 +1,9 @@
+from pathlib import Path
+
 from rdflib import Graph
 from rdflib.compare import isomorphic
+
 from kurra.utils import guess_format_from_data, load_graph
-from pathlib import Path
 
 
 def test_guess_format_from_data():
