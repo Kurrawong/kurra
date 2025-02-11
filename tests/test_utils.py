@@ -80,7 +80,7 @@ def test_load_graph():
     assert isomorphic(g2, g)
 
     # load an RDF file
-    g3 = load_graph(Path(__file__).parent / "minimal1.ttl")
+    g3 = load_graph(Path(__file__).parent / "test_file" / "minimal1.ttl")
 
     assert isomorphic(g3, g)
 
@@ -94,3 +94,21 @@ def test_load_graph():
     )
 
     assert isomorphic(g4, g)
+
+
+def test_load_graph_dir():
+    DIR_OF_RDF = Path(__file__).parent / "dir_of_rdf"
+    g = Graph()
+    g.parse(DIR_OF_RDF / "rdf_1.ttl")
+    g.parse(DIR_OF_RDF / "rdf_2.ttl")
+    g.parse(DIR_OF_RDF / "rdf_3.ttl")
+
+    g2 = load_graph(DIR_OF_RDF)
+
+    assert len(g2) == len(g)
+
+    g.parse(DIR_OF_RDF / "subdir" / "rdf_4.ttl")
+
+    g3 = load_graph(DIR_OF_RDF, recursive=True)
+
+    assert len(g3) == len(g)

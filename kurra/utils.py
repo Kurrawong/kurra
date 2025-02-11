@@ -21,10 +21,21 @@ def guess_format_from_data(rdf: str) -> str | None:
         return None
 
 
-def load_graph(file_or_str_or_graph: Union[Path, str, Graph]) -> Graph:
+def load_graph(file_or_str_or_graph: Union[Path, str, Graph], recursive=False) -> Graph:
     """Presents an RDFLib Graph object from a parses source or a wrapper SPARQL Endpoint"""
     if isinstance(file_or_str_or_graph, Path):
-        return Graph().parse(str(file_or_str_or_graph))
+        if Path(file_or_str_or_graph).is_file():
+            return Graph().parse(str(file_or_str_or_graph))
+        elif Path(file_or_str_or_graph).is_dir():
+            g = Graph()
+            if recursive:
+                gl = Path(file_or_str_or_graph).rglob("*.ttl")
+            else:
+                gl = Path(file_or_str_or_graph).glob("*.ttl")
+            for f in gl:
+                if f.is_file():
+                    g.parse(f)
+            return g
 
     elif isinstance(file_or_str_or_graph, Graph):
         return file_or_str_or_graph
