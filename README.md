@@ -30,8 +30,9 @@ The hierarchy of functions provided is:
   * upload
   * quads
   * sparql
-* **sparql** - SPARQL query files of databases
-
+* **shacl**
+  * validate - SHACL validate a file
+* **sparql** - SPARQL query files or databases
 
 Once you have installed kurra (see below), you can ask it to tell you what each command does and what inputs are needed by using the `--help` or just `-h`, command, e.g.:
 
@@ -67,11 +68,7 @@ or
 kurra file -h
 ```
 
-or
-
-```bash
-kurra sparql -h
-```
+etc. for `shacl` & `sparql`
 
 To get further help for the particular commands. For `db`, you will see something like this:
 
@@ -124,17 +121,29 @@ from kurra.file import format_file, make_dataset, export_quads
 
 ## Development
 
-Install the Poetry project and its dependencies.
+Install the Poetry project and its dependencies:
 
 ```bash
 task install
 ```
 
-Format code.
+Format code:
 
 ```bash
 task code
 ```
+
+To build a new release:
+
+1. commit & push all changes
+2. update the version in pyproject.toml
+3. git tag with the same version number
+4. push the tag - `git push --tags`
+5. build the release - `uv build`
+6. publish the release on PyPI - `uv publish` - username `__token__`, pwd is an actual token
+7. make the release on GitHub - https://github.com/Kurrawong/kurra/releases
+  * don't forget to add the dist zips & wheels to it
+8. update version number in pyproject.toml to next alpha & push
 
 ## License
 
