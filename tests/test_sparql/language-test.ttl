@@ -1,0 +1,145 @@
+PREFIX : <https://example.com/demo-vocabs/language-test/>
+PREFIX astatus: <https://linked.data.gov.au/def/reg-statuses/>
+PREFIX cs: <https://example.com/demo-vocabs/language-test>
+PREFIX droles: <https://linked.data.gov.au/def/data-roles/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX reg: <http://purl.org/linked-data/registry#>
+PREFIX schema: <https://schema.org/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX unggim: <https://linked.data.gov.au/def/unggim-themes/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+:en-only
+    a skos:Concept ;
+    skos:definition "This is an English definition"@en  ;
+    skos:historyNote "Made for system testing in 2024"@en  ;
+    skos:inScheme cs: ;
+    skos:prefLabel "English only"@en ;
+.
+
+:no-lang
+    a skos:Concept ;
+    skos:definition "This is a no-language definition"  ;
+    skos:historyNote "Made for system testing in 2024"  ;
+    skos:inScheme cs: ;
+    skos:prefLabel "No-language prefLabel" ;
+.
+
+
+:lang-and-no-lang
+    a skos:Concept ;
+    skos:definition
+        "English definition nolang"  ,
+        "English definition en"@en  ,
+        "polska definicja"@pl  ;
+    skos:historyNote
+        "Made for system testing in 2024"  ,
+        "Made for system testing in 2024"@en  ,
+        "Wykonano do testów systemowych w 2024 r."@pl  ;
+    skos:inScheme cs: ;
+    skos:prefLabel
+        "English prefLabel" ,
+        "English prefLabel"@en ,
+        "Polski prefLabel"@pl ;
+.
+
+
+:en-variant
+    a skos:Concept ;
+    skos:definition
+        "English definition en"@en  ,
+        "English definition eng"@eng  ,
+        "English definition en-au"@en-au  ;
+    skos:historyNote
+        "Made for system testing in 2024 en"@en  ,
+        "Made for system testing in 2024 eng"@eng  ,
+        "Made for system testing in 2024 en-au"@en-au  ;
+    skos:inScheme cs: ;
+    skos:prefLabel
+        "English prefLabel en"@en ,
+        "English prefLabel eng"@eng ,
+        "English prefLabel en-au"@en-au ;
+.
+
+:altlabels
+    a skos:Concept ;
+    skos:altLabel
+        "Polski prefLabel"@pl ,
+        "العربيةالعلامة المفضلة"@ar ;
+    skos:definition
+        "English definition"@en  ,
+        "polska definicja"@pl  ,
+        "التعريف العربي"@ar  ;
+    skos:historyNote
+        "Made for system testing in 2024"@en  ,
+        "Wykonano do testów systemowych w 2024 r."@pl  ,
+        "مُصمم لاختبار النظام في عام 2024"@ar  ;
+    skos:inScheme cs: ;
+    skos:prefLabel "English prefLabel"@en ;
+.
+
+:en-id-labels
+    a skos:Concept ;
+    skos:altLabel
+        "Bioinvasion"@en ,
+        "Bioinvasi"@id ;
+
+    skos:inScheme cs: ;
+    skos:prefLabel
+        "Biological invasions"@en ,
+        "Invasi hayati"@id ;
+.
+
+:three-lang
+    a skos:Concept ;
+    skos:definition
+        """Arabic definition padded out with meaningless text just so we can include some linebreaks.
+
+Like this one!
+
+Yes, ans this is indeed a third paragraph of meaningless text to show off linebreaks. We can even demo *bold* text using Markdown. And [hyperlinks](https://example.com) too."""@en  ,
+        """Definicja arabska uzupełniona bezsensownym tekstem, tylko po to, abyśmy mogli dodać podziały wierszy.
+
+Tak jak ten!
+
+Tak, to rzeczywiście trzeci akapit bezsensownego tekstu, aby pokazać podziały wierszy. Możemy nawet zademonstrować *pogrubiony* tekst za pomocą Markdown. I [hiperłącza](https://example.com) również."""@pl  ,
+        """تعريف اللغة العربية مملوء بنص لا معنى له فقط حتى نتمكن من تضمين بعض فواصل الأسطر.
+
+مثل هذا!
+
+نعم، وهذه بالفعل فقرة ثالثة من نص لا معنى له لإظهار فواصل الأسطر. يمكننا حتى عرض نص *غامق* باستخدام Markdown. و[الارتباطات التشعبية](https://example.com) أيضًا."""@ar  ;
+    skos:historyNote
+        "Made for system testing in 2024"@en  ,
+        "Wykonano do testów systemowych w 2024 r."@pl  ,
+        "مُصمم لاختبار النظام في عام 2024"@ar  ;
+    skos:inScheme cs: ;
+    skos:prefLabel
+        "English prefLabel"@en ,
+        "Polski prefLabel"@en ,
+        "العربيةالعلامة المفضلة"@ar ;
+.
+
+
+:1.0 rdfs:label "1.0" .
+
+cs:
+    a skos:ConceptScheme ;
+    reg:status astatus:experimental ;
+    skos:definition "This vocabulary is a test vocabulary showing the use of multimple languages"@en ;
+    skos:hasTopConcept
+        :en-only ,
+        :no-lang ,
+        :lang-and-no-lang ,
+        :en-variant ,
+        :altlabels ,
+        :en-id-labels ,
+        :three-lang ;
+    skos:historyNote "Made in Nov 2024 just for testing" ;
+    skos:prefLabel "Image Languages Vocabulary"@en ;
+    schema:creator <https://kurrawong.ai> ;
+    schema:dateCreated "2024-11-21"^^xsd:date ;
+    schema:dateModified "2024-11-21"^^xsd:date ;
+    schema:publisher <https://kurrawong.ai> ;
+.

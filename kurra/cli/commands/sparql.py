@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Annotated
 
-import httpx
 import typer
 
 from kurra.cli.console import console
@@ -9,8 +8,7 @@ from kurra.cli.utils import (
     format_sparql_response_as_json,
     format_sparql_response_as_rich_table,
 )
-from kurra.db import sparql
-from kurra.utils import load_graph
+from kurra.sparql import query
 
 app = typer.Typer()
 
@@ -36,26 +34,23 @@ def sparql_command(
     ] = 60,
 ) -> None:
     """SPARQL queries a local file or SPARQL Endpoint"""
-    auth = (
-        (username, password) if username is not None and password is not None else None
+    if str(path_or_url).startswith("http"):
+        path_or_url = str(path_or_url).replace(":/", "://")
+
+    r = query(
+        path_or_url,
+        q,
+        username,
+        password,
+        timeout,
     )
 
-    with httpx.Client(auth=auth, timeout=timeout) as client:
-        try:
-            r = None
-            if str(path_or_url).startswith("http"):
-                path_or_url = str(path_or_url).replace(":/", "://")
-                r = sparql(str(path_or_url), q, client, True, False)
-
-            if r is None:
-                r = load_graph(path_or_url).query(q)
-
-            if response_format == "table":
-                console.print(format_sparql_response_as_rich_table(r))
-            else:
-                console.print(format_sparql_response_as_json(r))
-        except Exception as err:
-            console.print(
-                f"[bold red]ERROR[/bold red] SPARQL query to {path_or_url} failed: {err}."
-            )
-            raise err
+    if response_format == "table":
+        console.print(format_sparql_response_as_rich_table(r))
+    else:
+        console.print(format_sparql_response_as_json(r))
+    # except Exception as err:
+    #     console.print(
+    #         f"[bold red]ERROR[/bold red] SPARQL query to {path_or_url} failed: {err}."
+    #     )
+    #     raise err
