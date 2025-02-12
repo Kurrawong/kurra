@@ -152,7 +152,7 @@ def test_render_sparql_result():
         },
     }
 
-    assert "--- | ---" in render_sparql_result(r1)
+    assert "| --- | --- |" in render_sparql_result(r1)
 
     # simple JSON
     r2 = """
@@ -314,7 +314,7 @@ def test_render_sparql_result():
   }
 }        
         """
-    assert "--- | --- | ---" in render_sparql_result(r2)
+    assert "| --- | --- | --- |" in render_sparql_result(r2)
 
     # OPTIONAL values / no values
     # multiple language literals
@@ -405,7 +405,7 @@ def test_render_sparql_result():
 }        
         """
 
-    assert "--- | --- | --- | ---" in render_sparql_result(r3)
+    assert "| --- | --- | --- | --- |" in render_sparql_result(r3)
 
     r4 = """
         {

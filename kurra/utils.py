@@ -106,7 +106,7 @@ def render_sparql_result(
                     for col in r["head"]["vars"]:
                         header[0] += f"{col} | "
                         header[1] += f"--- | "
-                    output = header[0].strip(" |") + "\n" + header[1].strip(" |") + "\n"
+                    output = "| " + header[0].strip() + "\n| " + header[1].strip() + "\n"
 
             if r.get("results"):
                 if r["results"].get("bindings"):
@@ -121,7 +121,7 @@ def render_sparql_result(
                                 row_cols.append("")
                         body.append(" | ".join(row_cols))
 
-                output += "\n".join(body) + "\n"
+                output += "\n| ".join(body) + " |\n"
 
             if r.get("boolean") is not None:
                 output = str(bool(r.get("boolean")))
