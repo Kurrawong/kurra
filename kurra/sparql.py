@@ -51,7 +51,7 @@ def query(
                                 val["datatype"] = v.datatype
                             new_row[str(k)] = val
 
-                    r["results"]["bindings"].append(new_row)
+                r["results"]["bindings"].append(new_row)
         else:
             r = {
                 "head" : { } ,

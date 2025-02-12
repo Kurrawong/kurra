@@ -61,3 +61,43 @@ def test_query_file():
 
     q = "ASK {?s ?p ?o}"
     assert render_sparql_result(query(LANG_TEST_VOC, q)) == "True"
+
+
+def test_duplicates():
+    rdf_data = """
+    PREFIX people: <https://linked.data.gov.au/dataset/people/>
+    PREFIX schema: <https://schema.org/>
+
+    people:nick
+        a
+            schema:Person , 
+            schema:Patient ;
+        schema:name "Nick" ;
+        schema:age 42 ;
+        schema:parent people:george ;
+    .
+
+    people:george
+        a schema:Person ; 
+        schema:name "George" ;
+        schema:age 70 ;    
+    .
+    """
+
+    q = """
+    PREFIX people: <https://linked.data.gov.au/dataset/people/>
+    PREFIX schema: <https://schema.org/>
+
+    SELECT ?p ?name
+    WHERE {
+        ?p 
+            a schema:Person ;
+            schema:name ?name ;
+            schema:age ?age ;
+        .
+
+        FILTER (?age < 50)
+    }
+    """
+
+    assert len(query(rdf_data, q)["results"]["bindings"]) == 1
