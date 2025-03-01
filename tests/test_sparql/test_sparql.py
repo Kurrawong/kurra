@@ -36,6 +36,38 @@ def test_query_db(fuseki_container):
         q = "ASK {?s ?p ?o}"
         assert render_sparql_result(query(LANG_TEST_VOC, q)) == "True"
 
+        # test return format options
+
+        q = """
+            PREFIX skos: <http://www.w3.org/2004/02/skos/core#> 
+            SELECT * 
+            WHERE {
+                GRAPH ?g {
+                    ?c a skos:Concept ;
+                        skos:prefLabel "English only"@en ;
+                    .
+                }
+            }"""
+
+        r = query(SPARQL_ENDPOINT, q, return_python=True, return_bindings_only=True)
+        assert r[0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+
+        r = query(SPARQL_ENDPOINT, q, return_python=True, return_bindings_only=False)
+        assert r["results"]["bindings"][0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+
+        r = query(SPARQL_ENDPOINT, q, return_python=False, return_bindings_only=False)
+        assert isinstance(r, str)
+        r2 = json.loads(r)
+        assert r2["results"]["bindings"][0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+
+        r = query(SPARQL_ENDPOINT, q, return_python=False, return_bindings_only=True)
+        assert isinstance(r, str)
+        r2 = json.loads(r)
+        assert r2[0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+
+        q = "ASK {?s ?p ?o}"
+        r = query(SPARQL_ENDPOINT, q, return_python=True, return_bindings_only=True)
+        assert r["boolean"]
 
 def test_query_file():
     q = """
@@ -61,6 +93,42 @@ def test_query_file():
 
     q = "ASK {?s ?p ?o}"
     assert render_sparql_result(query(LANG_TEST_VOC, q)) == "True"
+
+    # test return format options
+
+    q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#> 
+        SELECT * 
+        WHERE {
+            ?c a skos:Concept ;
+                skos:prefLabel ?pl ;
+            .
+
+            OPTIONAL {
+                ?c skos:altLabel ?al .
+            }
+        }
+        LIMIT 3"""
+
+    r = query(LANG_TEST_VOC, q, return_python=True, return_bindings_only=True)
+    assert r[0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+
+    r = query(LANG_TEST_VOC, q, return_python=True, return_bindings_only=False)
+    assert r["results"]["bindings"][0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+
+    r = query(LANG_TEST_VOC, q, return_python=False, return_bindings_only=False)
+    assert isinstance(r, str)
+    r2 = json.loads(r)
+    assert r2["results"]["bindings"][0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+
+    r = query(LANG_TEST_VOC, q, return_python=False, return_bindings_only=True)
+    assert isinstance(r, str)
+    r2 = json.loads(r)
+    assert r2[0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+
+    q = "ASK {?s ?p ?o}"
+    r = query(LANG_TEST_VOC, q, return_python=True, return_bindings_only=True)
+    assert r["boolean"]
 
 
 def test_duplicates():
@@ -100,4 +168,4 @@ def test_duplicates():
     }
     """
 
-    assert len(query(rdf_data, q)["results"]["bindings"]) == 1
+    assert len(query(rdf_data, q, return_python=True, return_bindings_only=True)) == 1

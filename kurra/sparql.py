@@ -1,3 +1,4 @@
+import json
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent
@@ -58,13 +59,18 @@ def query(
                 "boolean" : True if x.askAnswer else False,
             }
 
-
     match (return_python, return_bindings_only):
         case (True, True):
-            return r.json()["results"]["bindings"]
+            if r.get("results"):
+                return r["results"]["bindings"]
+            else:
+                return r
         case (True, False):
-            return r.json()
+            return r
         case (False, True):
-            return dedent(r.text.split('"bindings": [')[1].split("]")[0])
+            if r.get("results"):
+                return json.dumps(r["results"]["bindings"])
+            else:
+                return json.dumps(r)
         case _:
-            return dict(r)
+            return json.dumps(r)

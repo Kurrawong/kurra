@@ -135,8 +135,8 @@ task code
 
 To build a new release:
 
-1. commit & push all changes
-2. update the version in pyproject.toml
+1. update the version in pyproject.toml
+2. commit & push all changes
 3. git tag with the same version number
 4. push the tag - `git push --tags`
 5. build the release - `uv build`
