@@ -55,6 +55,9 @@ def load_graph(file_or_str_or_graph: Union[Path, str, Graph], recursive=False) -
     elif isinstance(file_or_str_or_graph, Graph):
         return file_or_str_or_graph
 
+    elif file_or_str_or_graph.startswith("http"):
+        return Graph().parse(file_or_str_or_graph)
+
     else:  # str - data or SPARQL Endpoint
         return Graph().parse(
             data=file_or_str_or_graph,

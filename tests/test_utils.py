@@ -103,6 +103,10 @@ def test_load_graph():
 
     assert isomorphic(g4, g)
 
+    g5 = load_graph("https://raw.githubusercontent.com/RDFLib/prez/refs/heads/main/prez/reference_data/profiles/ogc_records_profile.ttl")
+
+    assert len(g5) > 10
+
 
 def test_load_graph_dir():
     DIR_OF_RDF = Path(__file__).parent / "dir_of_rdf"
