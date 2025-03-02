@@ -87,7 +87,7 @@ def query_command2(
     path_or_url: Path,
     q: str,
     response_format: str = typer.Option(
-        False,
+        "table",
         "--response-format",
         "-f",
         help="The response format of the SPARQL query. Either 'table' (default) or 'json'",

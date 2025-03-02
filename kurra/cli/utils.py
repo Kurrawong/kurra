@@ -9,11 +9,6 @@ from rich.table import Table
 def format_sparql_response_as_rich_table(response):
     t = Table()
 
-    # if it's a SPARQL query to a Graph() object
-    # first de-serialize it into a dict
-    if isinstance(response, SPARQLResult):
-        response = loads(response.serialize(format="json").decode())
-
     # ASK
     if not response.get("results"):
         t.add_column("Ask")

@@ -43,6 +43,7 @@ def sparql_command(
         username,
         password,
         timeout,
+        return_python=True
     )
 
     if response_format == "table":
