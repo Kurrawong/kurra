@@ -81,6 +81,11 @@ def test_query_db(fuseki_container):
         r = query(SPARQL_ENDPOINT, q, return_bindings_only=True)
         assert r == "true"
 
+        q = "ASK {?s ?p <http://nothing.com/x>}"
+        r = query(SPARQL_ENDPOINT, q, return_python=True, return_bindings_only=True)
+        assert not r
+
+
 def test_query_file():
     q = """
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#> 
@@ -153,6 +158,11 @@ def test_query_file():
     q = "ASK {?s ?p ?o}"
     r = query(LANG_TEST_VOC, q, return_bindings_only=True)
     assert r == "true"
+
+    q = "ASK {?s ?p <http://nothing.com/x>}"
+    r = query(LANG_TEST_VOC, q, return_python=True, return_bindings_only=True)
+    assert not r
+
 
 def test_duplicates():
     rdf_data = """

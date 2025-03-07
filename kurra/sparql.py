@@ -61,18 +61,18 @@ def query(
 
     match (return_python, return_bindings_only):
         case (True, True):
-            if r.get("results"):
+            if r.get("results") is not None:
                 return r["results"]["bindings"]
-            elif r.get("boolean"):  # ASK
+            elif r.get("boolean") is not None:  # ASK
                 return r["boolean"]
             else:
                 return r
         case (True, False):
             return r
         case (False, True):
-            if r.get("results"):
+            if r.get("results") is not None:
                 return json.dumps(r["results"]["bindings"])
-            elif r.get("boolean"):  # ASK
+            elif r.get("boolean") is not None:  # ASK
                 return json.dumps(r["boolean"])
             else:
                 return json.dumps(r)
