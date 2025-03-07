@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Annotated
-
+import httpx
 import typer
 
 from kurra.cli.console import console
@@ -37,21 +37,14 @@ def sparql_command(
     if str(path_or_url).startswith("http"):
         path_or_url = str(path_or_url).replace(":/", "://")
 
-    r = query(
-        path_or_url,
-        q,
-        username,
-        password,
-        timeout,
-        return_python=True
+    auth = (
+        (username, password) if username is not None and password is not None else None
     )
+    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+        r = query(path_or_url, q, http_client, return_python=True)
 
-    if response_format == "table":
-        console.print(format_sparql_response_as_rich_table(r))
-    else:
-        console.print(format_sparql_response_as_json(r))
-    # except Exception as err:
-    #     console.print(
-    #         f"[bold red]ERROR[/bold red] SPARQL query to {path_or_url} failed: {err}."
-    #     )
-    #     raise err
+        if response_format == "table":
+            console.print(format_sparql_response_as_rich_table(r))
+        else:
+            console.print(format_sparql_response_as_json(r))
+

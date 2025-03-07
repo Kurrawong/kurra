@@ -2,7 +2,6 @@ import json
 from enum import Enum
 from pathlib import Path
 from typing import Union
-from xml.etree.ElementTree import indent
 
 from rdflib import Graph
 
@@ -109,7 +108,9 @@ def render_sparql_result(
                     for col in r["head"]["vars"]:
                         header[0] += f"{col} | "
                         header[1] += f"--- | "
-                    output = "| " + header[0].strip() + "\n| " + header[1].strip() + "\n"
+                    output = (
+                        "| " + header[0].strip() + "\n| " + header[1].strip() + "\n"
+                    )
 
             if r.get("results"):
                 if r["results"].get("bindings"):

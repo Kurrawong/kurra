@@ -1,7 +1,5 @@
 import json
-from enum import Enum
 from pathlib import Path
-from textwrap import dedent
 
 import httpx
 from rdflib import BNode, Graph, Literal, URIRef
@@ -54,8 +52,8 @@ def query(
                 r["results"]["bindings"].append(new_row)
         else:
             r = {
-                "head" : { } ,
-                "boolean" : True if x.askAnswer else False,
+                "head": {},
+                "boolean": True if x.askAnswer else False,
             }
 
     if close_http_client:

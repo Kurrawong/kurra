@@ -1,19 +1,12 @@
 from pathlib import Path
-from typing import Annotated
 
-import httpx
 import typer
-from rdflib import Graph
 
 from kurra.cli.console import console
 from kurra.cli.utils import (
     format_shacl_graph_as_rich_table,
-    format_sparql_response_as_json,
-    format_sparql_response_as_rich_table,
 )
-from kurra.db import sparql
 from kurra.shacl import validate
-from kurra.utils import load_graph
 
 app = typer.Typer(help="SHACL commands")
 

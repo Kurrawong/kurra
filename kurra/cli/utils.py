@@ -1,7 +1,7 @@
 from json import loads
 
 from rdflib import Graph
-from rdflib.namespace import RDF, RDFS, SH
+from rdflib.namespace import RDF, SH
 from rdflib.plugins.sparql.processor import SPARQLResult
 from rich.table import Table
 

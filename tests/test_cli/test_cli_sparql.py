@@ -59,9 +59,5 @@ def test_query_file():
 
     result = runner.invoke(
         app,
-        [
-            "sparql",
-            LANG_TEST_VOC,
-            q
-        ],
+        ["sparql", LANG_TEST_VOC, q],
     )
