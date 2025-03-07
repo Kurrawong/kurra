@@ -13,20 +13,19 @@ from kurra.utils import load_graph
 def query(
     path_str_graph_or_sparql_endpoint: Path | str | Graph,
     q: str,
-    username: str = None,
-    password: str = None,
-    timeout: int = None,
+    http_client: httpx.Client = None,
     return_python: bool = False,
     return_bindings_only: bool = False,
 ):
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
+    close_http_client = False
+    if http_client is None:
+        http_client = httpx.Client()
+        close_http_client = True
+
     r = None
     if str(path_str_graph_or_sparql_endpoint).startswith("http"):
-        with httpx.Client(auth=auth, timeout=timeout) as client:
-            p = str(path_str_graph_or_sparql_endpoint)
-            r = sparql(p, q, client, True, False)
+        p = str(path_str_graph_or_sparql_endpoint)
+        r = sparql(p, q, http_client, True, False)
 
     if r is None:
         r = {"head": {"vars": []}, "results": {"bindings": []}}
@@ -58,6 +57,9 @@ def query(
                 "head" : { } ,
                 "boolean" : True if x.askAnswer else False,
             }
+
+    if close_http_client:
+        http_client.close()
 
     match (return_python, return_bindings_only):
         case (True, True):
