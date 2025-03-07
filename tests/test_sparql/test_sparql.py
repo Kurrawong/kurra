@@ -66,8 +66,20 @@ def test_query_db(fuseki_container):
         assert r2[0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
 
         q = "ASK {?s ?p ?o}"
-        r = query(SPARQL_ENDPOINT, q, return_python=True, return_bindings_only=True)
+        r = query(SPARQL_ENDPOINT, q)  # False, False
+        assert r == '{"head": {}, "boolean": true}'
+
+        q = "ASK {?s ?p ?o}"
+        r = query(SPARQL_ENDPOINT, q, return_python=True)
         assert r["boolean"]
+
+        q = "ASK {?s ?p ?o}"
+        r = query(SPARQL_ENDPOINT, q, return_python=True, return_bindings_only=True)
+        assert r
+
+        q = "ASK {?s ?p ?o}"
+        r = query(SPARQL_ENDPOINT, q, return_bindings_only=True)
+        assert r == "true"
 
 def test_query_file():
     q = """
@@ -127,9 +139,20 @@ def test_query_file():
     assert r2[0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
 
     q = "ASK {?s ?p ?o}"
-    r = query(LANG_TEST_VOC, q, return_python=True, return_bindings_only=True)
+    r = query(LANG_TEST_VOC, q)  # False, False
+    assert r == '{"head": {}, "boolean": true}'
+
+    q = "ASK {?s ?p ?o}"
+    r = query(LANG_TEST_VOC, q, return_python=True)
     assert r["boolean"]
 
+    q = "ASK {?s ?p ?o}"
+    r = query(LANG_TEST_VOC, q, return_python=True, return_bindings_only=True)
+    assert r
+
+    q = "ASK {?s ?p ?o}"
+    r = query(LANG_TEST_VOC, q, return_bindings_only=True)
+    assert r == "true"
 
 def test_duplicates():
     rdf_data = """

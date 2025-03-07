@@ -63,6 +63,8 @@ def query(
         case (True, True):
             if r.get("results"):
                 return r["results"]["bindings"]
+            elif r.get("boolean"):  # ASK
+                return r["boolean"]
             else:
                 return r
         case (True, False):
@@ -70,6 +72,8 @@ def query(
         case (False, True):
             if r.get("results"):
                 return json.dumps(r["results"]["bindings"])
+            elif r.get("boolean"):  # ASK
+                return json.dumps(r["boolean"])
             else:
                 return json.dumps(r)
         case _:
