@@ -6,6 +6,7 @@ from rdflib import Dataset, Graph, URIRef
 
 from kurra.file import export_quads, format_file, make_dataset
 from kurra.utils import load_graph
+from textwrap import dedent
 
 
 def test_format_rdf_one():
@@ -119,3 +120,32 @@ def test_sparql():
     #
     # print(x)
     pass
+
+
+# TODO: NC: solution not found yet to carry the namespaces from the graph through to serialization
+def test_prefixes():
+    input_file = Path(__file__).parent / "prefixes-test.ttl"
+    output_file = Path(__file__).parent / "prefixes-test-out.ttl"
+    comparison = dedent(
+        """
+        PREFIX ex: <http://example.com/>
+        PREFIX other: <http://other.com/>
+        PREFIX sss: <https://schema.org/>
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        
+        ex:a
+            ex:b other:c ;
+        .
+        
+        ex:x 
+            a skos:ConceptScheme ; 
+            ex:b sss:y ;
+        .
+        """
+    )
+
+    format_file(input_file, False, output_filename=output_file)
+
+    assert output_file == comparison
+
+    output_file.unlink(missing_ok=True)

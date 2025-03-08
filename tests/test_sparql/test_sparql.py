@@ -5,9 +5,10 @@ import pytest
 
 from kurra.db import upload
 from kurra.sparql import query
-from kurra.utils import RenderFormat, render_sparql_result
+from kurra.utils import RenderFormat, render_sparql_result, make_httpx_client
 
 LANG_TEST_VOC = Path(__file__).parent / "language-test.ttl"
+TESTING_GRAPH = "https://example.com/testing-graph"
 
 
 def test_query_db(fuseki_container, http_client):
@@ -235,11 +236,8 @@ def test_duplicates():
 
 
 def test_auth(fuseki_container, http_client):
-    port = fuseki_container.get_exposed_port(3030)
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
-
-    TESTING_GRAPH = "https://example.com/testing-graph"
     upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
 
     q = "ASK {?s ?p ?o}"
@@ -252,3 +250,41 @@ def test_auth(fuseki_container, http_client):
         r = query(
             SPARQL_ENDPOINT, q, None, return_python=True, return_bindings_only=True
         )
+
+
+def test_construct(fuseki_container, http_client):
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+
+    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
+
+    q = """
+        CONSTRUCT { ?s ?p ?o }
+        WHERE {
+            GRAPH ?g {
+                ?s ?p ?o
+            }
+        }
+        LIMIT 3       
+        """
+
+    r = query(SPARQL_ENDPOINT, q, http_client)
+    assert len(r) == 3
+
+
+def test_insert(fuseki_container, http_client):
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+
+    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
+
+    q = """
+        INSERT { ?s ?p ?o }
+        WHERE {
+            GRAPH ?g {
+                ?s ?p ?o
+            }
+        }
+        LIMIT 3       
+        """
+
+    with pytest.raises(NotImplementedError):
+        r = query(SPARQL_ENDPOINT, q, http_client)

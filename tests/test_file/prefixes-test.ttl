@@ -1,0 +1,8 @@
+PREFIX ex: <http://example.com/>
+PREFIX other: <http://other.com/>
+PREFIX sss: <https://schema.org/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+ex:a ex:b other:c .
+
+ex:x a skos:ConceptScheme ; ex:b sss:y .

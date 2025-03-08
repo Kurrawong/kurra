@@ -243,7 +243,7 @@ def sparql(
     return_python: bool = False,
     return_bindings_only: bool = False,
 ):
-    """Poses a SPARQL query to the Fuseki server."""
+    """Poses a SPARQL query to a SPARQL Endpoint"""
 
     if http_client is None:
         http_client = httpx.Client()

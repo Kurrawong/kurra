@@ -1,3 +1,4 @@
+import httpx
 import json
 from enum import Enum
 from pathlib import Path
@@ -131,3 +132,14 @@ def render_sparql_result(
                 output = str(bool(r.get("boolean")))
 
         return output
+
+
+def make_httpx_client(
+    sparql_username: str = None,
+    sparql_password: str = None,
+):
+    auth = None
+    if sparql_username:
+        if sparql_password:
+            auth = httpx.BasicAuth(sparql_username, sparql_password)
+    return httpx.Client(auth=auth)
