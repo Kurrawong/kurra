@@ -44,19 +44,19 @@ def _guess_return_type_for_sparql_query(query: str) -> str:
 
 
 def upload(
-    url: str,
+    sparql_endpoint: str,
     file_or_str_or_graph: Union[Path, str, Graph],
-    graph_name: str = None,
+    graph_id: str = None,
     append: bool = False,
     http_client: httpx.Client | None = None,
 ) -> None:
     """This function uploads a file to a SPARQL Endpoint using the Graph Store Protocol.
 
-    It will upload it into a graph named graph_name (an IRI). If no graph_name is given, it will be uploaded into
-    the Fuseki default graph.
+    It will upload it into a graph identified by graph_id (an IRI or Blank Node). If no graph_id is given, it will be
+    uploaded into the Fuseki default graph.
 
     By default, it will replace all content in the Named Graph or default graph. If append is set to True, it will
-    add it to existing content in the graph_name Named Graph.
+    add it to existing content in the graph_id Named Graph.
 
     An httpx Client may be supplied for efficient client reuse, else each call to this function will recreate a new
     Client."""
@@ -66,15 +66,15 @@ def upload(
         http_client = httpx.Client()
         close_http_client = True
 
-    params = {"graph": graph_name} if graph_name else "default"
+    params = {"graph": graph_id} if graph_id else "default"
 
     data = load_graph(file_or_str_or_graph).serialize(format="longturtle")
     headers = {"content-type": "text/turtle"}
 
     if append:
-        response = http_client.post(url, params=params, headers=headers, content=data)
+        response = http_client.post(sparql_endpoint, params=params, headers=headers, content=data)
     else:
-        response = http_client.put(url, params=params, headers=headers, content=data)
+        response = http_client.put(sparql_endpoint, params=params, headers=headers, content=data)
 
     status_code = response.status_code
 
@@ -85,7 +85,7 @@ def upload(
             else "content"
         )
         raise RuntimeError(
-            f"Received status code {status_code} for file {message} at url {url}. Message: {response.text}"
+            f"Received status code {status_code} for file {message} at url {sparql_endpoint}. Message: {response.text}"
         )
 
     if close_http_client:
@@ -133,7 +133,7 @@ def list_dataset(
 
 
 def create_dataset(
-    url: str,
+    sparql_endpoint: str,
     dataset_name_or_config_file: str | TextIOBase | Path,
     dataset_type: str = "tdb2",
     http_client: httpx.Client | None = None,
@@ -145,11 +145,11 @@ def create_dataset(
 
     if isinstance(dataset_name_or_config_file, str):
         data = {"dbName": dataset_name_or_config_file, "dbType": dataset_type}
-        response = http_client.post(f"{url}/$/datasets", data=data)
+        response = http_client.post(f"{sparql_endpoint}/$/datasets", data=data)
         status_code = response.status_code
         if response.status_code != 200 and response.status_code != 201:
             raise FusekiError(
-                f"Failed to create dataset {dataset_name_or_config_file} at {url}",
+                f"Failed to create dataset {dataset_name_or_config_file} at {sparql_endpoint}",
                 response.text,
                 status_code,
             )
@@ -170,14 +170,14 @@ def create_dataset(
         )
 
         response = http_client.post(
-            f"{url}/$/datasets",
+            f"{sparql_endpoint}/$/datasets",
             content=data,
             headers={"Content-Type": "text/turtle"},
         )
         status_code = response.status_code
         if response.status_code != 200 and response.status_code != 201:
             raise FusekiError(
-                f"Failed to create dataset {dataset_name} at {url}",
+                f"Failed to create dataset {dataset_name} at {sparql_endpoint}",
                 response.text,
                 status_code,
             )
@@ -187,13 +187,19 @@ def create_dataset(
     if close_http_client:
         http_client.close()
 
-    return f"Dataset {msg} {url}."
+    return f"Dataset {msg} {sparql_endpoint}."
 
 
-def clear_graph(url: str, named_graph: str, http_client: httpx.Client):
-    query = "CLEAR ALL" if named_graph == "all" else f"CLEAR GRAPH <{named_graph}>"
+def clear_graph(
+        sparql_endpoint: str,
+        graph_id: str,
+        http_client: httpx.Client):
+    """
+    Clears - remove all triples from - an identified graph or from all graphs if "all" is given as the graph_id
+    """
+    query = "CLEAR ALL" if graph_id == "all" else f"CLEAR GRAPH <{graph_id}>"
     headers = {"content-type": "application/sparql-update"}
-    response = http_client.post(url, headers=headers, content=query)
+    response = http_client.post(sparql_endpoint, headers=headers, content=query)
     status_code = response.status_code
 
     if status_code != 204:
