@@ -3,7 +3,7 @@ import json
 from enum import Enum
 from pathlib import Path
 from typing import Union
-
+import pickle
 from rdflib import Graph
 
 
@@ -36,32 +36,46 @@ def guess_format_from_data(rdf: str) -> str | None:
         return None
 
 
-def load_graph(file_or_str_or_graph: Union[Path, str, Graph], recursive=False) -> Graph:
-    """Presents an RDFLib Graph object from a parses source or a wrapper SPARQL Endpoint"""
-    if isinstance(file_or_str_or_graph, Path):
-        if Path(file_or_str_or_graph).is_file():
-            return Graph().parse(str(file_or_str_or_graph))
-        elif Path(file_or_str_or_graph).is_dir():
+def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> Graph:
+    """
+    Presents an RDFLib Graph object from a pre-existing Graph, a pickle file, an RDF file or directory of files or RDF
+    data in a string
+    """
+    # Pre-existing Graph
+    if isinstance(graph_path_or_str, Graph):
+        return graph_path_or_str
+
+    # Pickle file
+    if isinstance(graph_path_or_str, Path):
+        if graph_path_or_str.is_file():
+            pkl_path = graph_path_or_str.with_suffix(".pkl")
+            if pkl_path.is_file():
+                return pickle.load(open(pkl_path, "rb"))
+
+    # Serialized RDF file or dir of files
+    if isinstance(graph_path_or_str, Path):
+        if Path(graph_path_or_str).is_file():
+            return Graph().parse(str(graph_path_or_str))
+        elif Path(graph_path_or_str).is_dir():
             g = Graph()
             if recursive:
-                gl = Path(file_or_str_or_graph).rglob("*.ttl")
+                gl = Path(graph_path_or_str).rglob("*.ttl")
             else:
-                gl = Path(file_or_str_or_graph).glob("*.ttl")
+                gl = Path(graph_path_or_str).glob("*.ttl")
             for f in gl:
                 if f.is_file():
                     g.parse(f)
             return g
 
-    elif isinstance(file_or_str_or_graph, Graph):
-        return file_or_str_or_graph
+    # A remote file via HTTP
+    elif isinstance(graph_path_or_str, str) and graph_path_or_str.startswith("http"):
+        return Graph().parse(graph_path_or_str)
 
-    elif file_or_str_or_graph.startswith("http"):
-        return Graph().parse(file_or_str_or_graph)
-
-    else:  # str - data or SPARQL Endpoint
+    # RDF data in a string
+    else:
         return Graph().parse(
-            data=file_or_str_or_graph,
-            format=guess_format_from_data(file_or_str_or_graph),
+            data=graph_path_or_str,
+            format=guess_format_from_data(graph_path_or_str),
         )
 
 
