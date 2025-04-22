@@ -85,7 +85,9 @@ def quads_command(path_or_str: Path, identifier: str, destination: Path = None):
 @app.command(name="sparql", help="SPARQL queries to local RDF files or a database")
 def query_command2(
     path_or_url: Path,
-    q: str,
+    q: Annotated[
+        str, typer.Option(help="A SPARQL query in a string on the command line or the path to a file containing a SPARQL query")
+    ],
     response_format: str = typer.Option(
         "table",
         "--response-format",
@@ -102,4 +104,9 @@ def query_command2(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    try:
+        if Path(q).is_file():
+            q = Path(q).read_text()
+    except:
+        pass
     sparql_command(path_or_url, q, response_format, username, password, timeout)
