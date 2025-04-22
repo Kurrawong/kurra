@@ -137,7 +137,7 @@ def upload_command(
         ),
     ] = False,
     host_header: Annotated[
-        str | None, typer.Option("--host-header", "-h", help="Override the Host header")
+        str | None, typer.Option("--host-header", "-e", help="Override the Host header")
     ] = None,
 ) -> None:
     """Upload a file or a directory of files with an RDF file extension.
