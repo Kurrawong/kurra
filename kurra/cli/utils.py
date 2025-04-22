@@ -7,6 +7,9 @@ from rich.table import Table
 
 
 def format_sparql_response_as_rich_table(response):
+    if isinstance(response, Graph):
+        return response.serialize(format="longturtle")
+
     t = Table()
 
     # ASK
