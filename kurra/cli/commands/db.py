@@ -113,10 +113,10 @@ def repository_create_command(
                 raise err
 
 
-@app.command(name="upload", help="Upload files to a database repository")
+@app.command(name="upload", help="Upload file(s) to a database repository")
 def upload_command(
     path: Path = typer.Argument(
-        ..., help="The path of a file or directory to be uploaded."
+        ..., help="The path of a file or directory of files to be uploaded."
     ),
     fuseki_url: str = typer.Argument(
         ..., help="Repository SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
@@ -126,6 +126,9 @@ def upload_command(
     ] = None,
     password: Annotated[
         str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    graph_id: Annotated[
+        str | None, typer.Option("--graph", "-g", help="ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string \"file\", the URN urn:file:\{FILE_NAME} will be used per file")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -173,7 +176,10 @@ def upload_command(
     ) as client:
         for file in track(files, description=f"Uploading {len(files)} files..."):
             try:
-                upload(fuseki_url, file, f"urn:file:{file.name}", http_client=client)
+                if graph_id == "file":
+                    upload(fuseki_url, file, f"urn:file:{file.name}", http_client=client)
+                else:
+                    upload(fuseki_url, file, graph_id, http_client=client)  # str and None handled by upload()
             except Exception as err:
                 console.print(
                     f"[bold red]ERROR[/bold red] Failed to upload file {file}."

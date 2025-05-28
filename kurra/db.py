@@ -46,7 +46,7 @@ def _guess_return_type_for_sparql_query(query: str) -> str:
 def upload(
     sparql_endpoint: str,
     file_or_str_or_graph: Union[Path, str, Graph],
-    graph_id: str = None,
+    graph_id: str | None = None,
     append: bool = False,
     http_client: httpx.Client | None = None,
 ) -> None:
@@ -66,15 +66,19 @@ def upload(
         http_client = httpx.Client()
         close_http_client = True
 
-    params = {"graph": graph_id} if graph_id else "default"
-
     data = load_graph(file_or_str_or_graph).serialize(format="longturtle")
     headers = {"content-type": "text/turtle"}
 
     if append:
-        response = http_client.post(sparql_endpoint, params=params, headers=headers, content=data)
+        if graph_id is not None:
+            response = http_client.post(sparql_endpoint, params={"graph": graph_id}, headers=headers, content=data)
+        else:
+            response = http_client.post(sparql_endpoint + "?default", headers=headers, content=data)
     else:
-        response = http_client.put(sparql_endpoint, params=params, headers=headers, content=data)
+        if graph_id is not None:
+            response = http_client.put(sparql_endpoint, params={"graph": graph_id}, headers=headers, content=data)
+        else:
+            response = http_client.put(sparql_endpoint + "?default", headers=headers, content=data)
 
     status_code = response.status_code
 
