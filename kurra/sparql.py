@@ -2,14 +2,14 @@ import json
 from pathlib import Path
 
 import httpx
-from rdflib import BNode, Graph, Literal, URIRef
+from rdflib import BNode, Graph, Literal, URIRef, Dataset
 
 from kurra.db import sparql
-from kurra.utils import load_graph, make_httpx_client
+from kurra.utils import load_graph
 
 
 def query(
-    p: Path | str | Graph,
+    p: Path | str | Graph | Dataset,
     q: str,
     http_client: httpx.Client = None,
     return_python: bool = False,
@@ -45,6 +45,15 @@ def query(
     elif "INSERT" in q or "DELETE" in q:
         raise NotImplementedError("INSERT & DELETE queries are not yet implemented by this interface. Try kurra.db.sparql")
 
+    elif "DROP" in q:
+        if isinstance(p, str) and p.startswith("http"):
+            r = sparql(p, q, http_client, True, False)
+
+            if r == "":
+                return ""
+        else:
+            raise NotImplementedError("DROP commands are not yet implemented for files")
+
     else:  # SELECT or ASK
         close_http_client = False
         if http_client is None:
@@ -54,9 +63,6 @@ def query(
         r = None
         if isinstance(p, str) and p.startswith("http"):
             r = sparql(p, q, http_client, True, False)
-
-        if r ==  "":
-            return ""
 
         if r is None:
             r = {"head": {"vars": []}, "results": {"bindings": []}}

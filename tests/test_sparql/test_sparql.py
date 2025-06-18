@@ -4,6 +4,8 @@ from pathlib import Path
 import httpx
 import pytest
 
+from rdflib import Dataset
+
 from kurra.db import upload, clear_graph
 from kurra.sparql import query
 from kurra.utils import RenderFormat, render_sparql_result, make_httpx_client
@@ -292,12 +294,16 @@ def test_insert(fuseki_container, http_client):
 
 
 def test_204_response(fuseki_container, http_client):
-    # DROP data
+    # DROP data from SPARQL Endpoint
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
     r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=httpx.Client(auth=("admin", "admin")), return_python=True, return_bindings_only=True)
     assert r == ""
+
+    # DROP data from a file
+    with pytest.raises(NotImplementedError):
+        query(Path(__file__).parent / "vocab.nq", "DROP ALL", return_python=True, return_bindings_only=True)
 
     # DROP no data
     clear_graph(SPARQL_ENDPOINT, "all", http_client)

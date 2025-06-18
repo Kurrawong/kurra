@@ -43,6 +43,10 @@ def sparql_command(
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
         r = query(path_or_url, q, http_client, return_python=True)
 
+        if r == "":
+            console.print("Operation completed successfully")
+            return
+
         if response_format == "table":
             console.print(format_sparql_response_as_rich_table(r))
         else:
