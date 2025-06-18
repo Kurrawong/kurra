@@ -279,6 +279,9 @@ def sparql(
     if status_code != 200 and status_code != 201 and status_code != 204:
         raise RuntimeError(f"ERROR {status_code}: {response.text}")
 
+    if status_code == 204:
+        return ""
+
     match (return_python, return_bindings_only):
         case (True, True):
             return response.json()["results"]["bindings"]

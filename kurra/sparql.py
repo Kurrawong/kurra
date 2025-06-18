@@ -55,6 +55,9 @@ def query(
         if isinstance(p, str) and p.startswith("http"):
             r = sparql(p, q, http_client, True, False)
 
+        if r ==  "":
+            return ""
+
         if r is None:
             r = {"head": {"vars": []}, "results": {"bindings": []}}
             x = load_graph(p).query(q)
