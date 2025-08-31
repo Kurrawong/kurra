@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import httpx
 import pytest
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.waiting_utils import wait_for_logs
@@ -27,3 +28,14 @@ def fuseki_container(request: pytest.FixtureRequest):
 
     request.addfinalizer(cleanup)
     return container
+
+
+@pytest.fixture(scope="function")
+def http_client(request: pytest.FixtureRequest):
+    _http_client = httpx.Client(auth=("admin", "admin"))
+
+    def cleanup():
+        _http_client.close()
+
+    request.addfinalizer(cleanup)
+    return _http_client
