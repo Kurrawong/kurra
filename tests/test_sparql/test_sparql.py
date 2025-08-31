@@ -309,3 +309,15 @@ def test_204_response(fuseki_container, http_client):
     clear_graph(SPARQL_ENDPOINT, "all", http_client)
     r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=httpx.Client(auth=("admin", "admin")), return_python=True, return_bindings_only=True)
     assert r == ""
+
+
+def test_describe(fuseki_container, http_client):
+    # DROP data from SPARQL Endpoint
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+
+    query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client)
+    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
+
+    g = query(SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>", http_client=http_client)
+    # print(g.serialize(format="longturtle"))
+    assert len(g) == 16

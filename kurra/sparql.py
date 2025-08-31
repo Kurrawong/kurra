@@ -15,7 +15,7 @@ def query(
     return_python: bool = False,
     return_bindings_only: bool = False,
 ):
-    if "CONSTRUCT" in q:
+    if "CONSTRUCT" in q or "DESCRIBE" in q:
         if isinstance(p, str) and p.startswith("http"):
             if http_client is None:
                 http_client = httpx.Client()

@@ -13,6 +13,7 @@ runner = CliRunner()
 LANG_TEST_VOC = (
     Path(__file__).parent.parent.resolve() / "test_sparql" / "language-test.ttl"
 )
+TESTING_GRAPH = "https://example.com/testing-graph"
 
 
 def test_query_db(fuseki_container):
@@ -61,3 +62,29 @@ def test_query_file():
         app,
         ["sparql", LANG_TEST_VOC, q],
     )
+
+
+def test_select(fuseki_container, http_client):
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+
+    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
+
+    result = runner.invoke(
+        app,
+        ["sparql", SPARQL_ENDPOINT, "SELECT * WHERE { <https://example.com/demo-vocabs/language-test> ?p ?o }"]
+    )
+    # print(result.stdout)
+    assert "https://example.com/demo-vocabs/language-test/three-lang" in result.stdout
+
+
+
+def test_describe(fuseki_container, http_client):
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+
+    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
+
+    result = runner.invoke(
+        app,
+        ["sparql", SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>"]
+    )
+    assert "Made in Nov 2024 just for testing" in result.stdout
