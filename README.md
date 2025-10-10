@@ -1,6 +1,6 @@
-# Kurra Python Library
+# Kurra
 
-A Python package of RDF data manipulation functions that can be called from the command line or other software.
+A Python package of RDF data manipulation and data management functions that can be called from the command line or other software.
 
 This library uses the [RDFLib](https://pypi.org/project/rdflib/) under-the-hood to process 
 [RDF](https://www.w3.org/RDF/) data. It supplies functions to:
@@ -45,18 +45,17 @@ which will return something like:
 ```
 ╭─ Options ─────────────────────────────────────────────────────────────────────────────────╮
 │ --version             -v                                                                  │
-│ --install-completion            Install completion for the current shell.                 │
-│ --show-completion               Show completion for the current shell, to copy it or ...  │
 │ --help                -h        Show this message and exit.                               │
 ╰───────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ────────────────────────────────────────────────────────────────────────────────╮
 │ db       RDF database commands                                                            │
 │ file     RDF file commands                                                                │
+│ shacl    SHACL commands                                                                   │
 │ sparql   SPARQL queries to local RDF files or a database                                  │
 ╰───────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-To find out more about the specific options within `db`, `file` & `sparql`, run the help command at the lext level, like this:
+To find out more about the specific options within `db`, `file`, `shacl` & `sparql`, run the help command at the next level, like this:
 
 ```bash
 kurra db -h
@@ -73,19 +72,21 @@ etc. for `shacl` & `sparql`
 To get further help for the particular commands. For `db`, you will see something like this:
 
 ```bash
-Usage: kurra db [OPTIONS] COMMAND [ARGS]...                                                                                                                                 
- RDF database commands                                                                                                                                                      
-╭─ Options ─────────────────────────────────────────────────────────────────────────────────────╮
-│ --help  -h        Show this message and exit.                                                 │
-╰───────────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Commands ────────────────────────────────────────────────────────────────────────────────────╮
-│ list     Get the list of database repositories                                                │
-│ create   Create a new database repository                                                     │
-│ upload   Upload files to a database repository                                                │
-│ clear    Clear a database repository                                                          │
-│ delete   Delete a database repository                                                         │
-│ sparql   Query a database repository                                                          │
-╰───────────────────────────────────────────────────────────────────────────────────────────────╯
+ Usage: kurra db [OPTIONS] COMMAND [ARGS]...
+                                
+ RDF database commands. Currently only Fuseki is supported 
+ 
+╭─ Options ─────────────────────────────────────────────────────────────────────────╮
+│ --help  -h        Show this message and exit.                                     │
+╰───────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ────────────────────────────────────────────────────────────────────────╮
+│ list     Get the list of database repositories                                    │
+│ create   Create a new database repository. Provide either the dataset name and... │
+│ upload   Upload file(s) to a database repository                                  │
+│ clear    Clear a database repository                                              │
+│ delete   Delete a database repository                                             │
+│ sparql   Query a database repository                                              │
+╰───────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 
