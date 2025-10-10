@@ -37,11 +37,7 @@ def query(
 
         # if we are here, path_str_graph_or_sparql_endpoint is a Graph
         r = p.query(q)
-        g = Graph()
-        for s, p, o in r:
-            g.add((s, p, o))
-
-        return g
+        return r.graph
     elif "INSERT" in q or "DELETE" in q:
         raise NotImplementedError("INSERT & DELETE queries are not yet implemented by this interface. Try kurra.db.sparql")
 
