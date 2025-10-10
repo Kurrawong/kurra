@@ -4,9 +4,6 @@ on:
   pull_request:
     types: [opened, edited, synchronize]
 
-env:
-  FORCE_COLOR: 1
-
 jobs:
   test:
     runs-on: ubuntu-latest
