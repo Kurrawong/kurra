@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 import httpx
-from rdflib import BNode, Graph, Literal, URIRef, Dataset
+from rdflib import Graph, Dataset
 
 from kurra.db import sparql
 from kurra.utils import load_graph
@@ -37,11 +37,7 @@ def query(
 
         # if we are here, path_str_graph_or_sparql_endpoint is a Graph
         r = p.query(q)
-        g = Graph()
-        for s, p, o in r:
-            g.add((s, p, o))
-
-        return g
+        return r.graph
     elif "INSERT" in q or "DELETE" in q:
         raise NotImplementedError("INSERT & DELETE queries are not yet implemented by this interface. Try kurra.db.sparql")
 
@@ -65,35 +61,8 @@ def query(
             r = sparql(p, q, http_client, True, False)
 
         if r is None:
-            r = {"head": {"vars": []}, "results": {"bindings": []}}
             x = load_graph(p).query(q)
-            if x.vars is not None:
-                for var in x.vars:
-                    r["head"]["vars"].append(str(var))
-
-                for row in x.bindings:
-                    new_row = {}
-                    for k in r["head"]["vars"]:
-                        v = row.get(k)
-                        if v is not None:
-                            if isinstance(v, URIRef):
-                                new_row[str(k)] = {"type": "uri", "value": str(v)}
-                            elif isinstance(v, BNode):
-                                new_row[str(k)] = {"type": "bnode", "value": str(v)}
-                            elif isinstance(v, Literal):
-                                val = {"type": "literal", "value": str(v)}
-                                if v.language is not None:
-                                    val["xml:lang"] = v.language
-                                if v.datatype is not None:
-                                    val["datatype"] = v.datatype
-                                new_row[str(k)] = val
-
-                    r["results"]["bindings"].append(new_row)
-            else:
-                r = {
-                    "head": {},
-                    "boolean": True if x.askAnswer else False,
-                }
+            r = json.loads(x.serialize(format="json"))
 
         if close_http_client:
             http_client.close()

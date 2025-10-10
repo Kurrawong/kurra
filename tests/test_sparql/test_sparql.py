@@ -250,7 +250,7 @@ def test_auth(fuseki_container, http_client):
     assert r
 
     with pytest.raises(RuntimeError):
-        r = query(
+        query(
             SPARQL_ENDPOINT, q, None, return_python=True, return_bindings_only=True
         )
 

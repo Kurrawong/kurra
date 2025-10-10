@@ -53,5 +53,8 @@ build-backend = "hatchling.build"
 [project.scripts]
 kurra = "kurra.cli:app"
 
+[tool.uv]
+required-version = ">=0.7.9"
+
 [tool.ruff.lint]
 extend-select = ["I"]
