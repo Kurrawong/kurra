@@ -157,7 +157,7 @@ def test_db_create_dataset_by_config_file_with_existing_dataset(
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}"
     current_dir = Path(__file__).parent
-    file = current_dir / "config.ttl"
+    file = current_dir.parent / "test_cli/config.ttl"
     graph = Graph().parse(file, format="turtle")
     fuseki_service = graph.value(
         None, RDF.type, URIRef("http://jena.apache.org/fuseki#Service")

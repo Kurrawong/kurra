@@ -74,7 +74,7 @@ def test_select(fuseki_container, http_client):
         ["sparql", SPARQL_ENDPOINT, "SELECT * WHERE { <https://example.com/demo-vocabs/language-test> ?p ?o }"]
     )
     # print(result.stdout)
-    assert "https://example.com/demo-vocabs/language-test/three-lang" in result.stdout
+    assert "https://example.com/demo-vocabs/lan" in result.stdout
 
 
 

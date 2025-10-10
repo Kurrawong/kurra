@@ -12,7 +12,7 @@ FUSEKI_IMAGE = "ghcr.io/kurrawong/fuseki-geosparql:git-main-e642d849"
 def fuseki_container(request: pytest.FixtureRequest):
     container = DockerContainer(FUSEKI_IMAGE)
     container.with_volume_mapping(
-        str(Path(__file__).parent.parent / "test_fuseki" / "shiro.ini"),
+        str(Path(__file__).parent.parent / "test_sparql" / "shiro.ini"),
         "/fuseki/shiro.ini",
     )
     container.with_volume_mapping(

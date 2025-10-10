@@ -8,7 +8,7 @@ def test_db_upload(fuseki_container):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
     TESTING_GRAPH = "https://example.com/testing-graph"
 
-    upload(SPARQL_ENDPOINT, Path(__file__).parent / "config.ttl", TESTING_GRAPH)
+    upload(SPARQL_ENDPOINT, Path(__file__).parent.parent / "test_fuseki/config.ttl", TESTING_GRAPH)
 
     q = """
         SELECT (COUNT(?s) AS ?c)
@@ -27,7 +27,7 @@ def test_db_upload(fuseki_container):
 def test_db_upload_no_graph(fuseki_container):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    upload(SPARQL_ENDPOINT, Path(__file__).parent / "config.ttl", None)
+    upload(SPARQL_ENDPOINT, Path(__file__).parent.parent / "test_fuseki/config.ttl", None)
 
     q = """
         SELECT (COUNT(?s) AS ?c)
