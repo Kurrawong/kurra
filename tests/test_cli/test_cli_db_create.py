@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -26,6 +27,11 @@ def test_cli_db_create(fuseki_container):
     assert f"Dataset myds created at http://localhost:{port}." in result.output
 
 
+def strip_ansi(text):
+    ansi_escape = re.compile(r"\x1b\[[0-9;]*m")
+    return ansi_escape.sub("", text)
+
+
 def test_cli_db_create_with_both_dataset_name_and_config_file(fuseki_container):
     port = fuseki_container.get_exposed_port(3030)
     current_dir = Path(__file__).parent
@@ -46,7 +52,9 @@ def test_cli_db_create_with_both_dataset_name_and_config_file(fuseki_container):
         ],
     )
     assert result.exit_code == 2
-    assert "Only dataset name or --config is allowed, not both." in result.output
+    assert "Only dataset name or --config is allowed, not both." in strip_ansi(
+        result.output
+    )
 
 
 def test_cli_db_create_with_config_file(fuseki_container):
