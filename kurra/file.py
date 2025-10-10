@@ -44,7 +44,7 @@ def do_format(
     metadata = get_topbraid_metadata(content)
 
     graph = load_graph(content)
-    new_content = graph.serialize(format=output_format)
+    new_content = graph.serialize(format=output_format, canon=True)
     new_content = metadata + new_content
     changed = content != new_content
     return new_content, changed
