@@ -45,7 +45,7 @@ def test_format_cli():
             "format",
             "--output-format",
             "json-ld",
-            "test_file/minimal1.ttl",
+            "tests/test_file/minimal1.ttl",
         ]
     )
 
