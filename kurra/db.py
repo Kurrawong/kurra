@@ -276,6 +276,16 @@ def sparql(
 
     status_code = response.status_code
 
+    # in case the endpoint doesn't allow POST
+    if status_code == 405 or status_code == 422:
+        response = http_client.get(
+            sparql_endpoint,
+            headers=headers,
+            params={"query": query},
+        )
+
+        status_code = response.status_code
+
     if status_code != 200 and status_code != 201 and status_code != 204:
         raise RuntimeError(f"ERROR {status_code}: {response.text}")
 
