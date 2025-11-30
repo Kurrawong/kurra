@@ -7,6 +7,7 @@ import httpx
 from rdflib import RDF, Graph, URIRef
 
 from kurra.utils import load_graph
+from typing import Literal
 
 suffix_map = {
     ".nt": "application/n-triples",
@@ -246,58 +247,94 @@ def delete_dataset(
     return f"Dataset {dataset_name} deleted."
 
 
+def make_sparql_dataframe(sparql_result: dict):
+    try:
+        from pandas import DataFrame
+    except ImportError:
+        raise ValueError("You selected the output format \"dataframe\" by the pandas Python package is not installed.")
+
+    if sparql_result.get("results") is not None:  # SELECT
+        df = DataFrame(columns=sparql_result["head"]["vars"])
+        for i, row in enumerate(sparql_result["results"]["bindings"]):
+            new_row = {}
+            for k, v in row.items():
+                new_row[k] = v['value']
+            df.loc[i] = new_row
+        return df
+    else:  # ASK
+        df = DataFrame(columns=["boolean"])
+        df.loc[0] = sparql_result["boolean"]
+
+    return df
+
+
 def sparql(
     sparql_endpoint: str,
-    query: str,
+    q: str,
     http_client: httpx.Client = None,
-    return_python: bool = False,
+    return_format: Literal["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
 ):
     """Poses a SPARQL query to a SPARQL Endpoint"""
+    if return_format not in ["original", "python", "dataframe"]:
+        raise ValueError("return_format must be either 'original', 'python' or 'dataframe'")
+
+    if return_format == "dataframe":
+        if "CONSTRUCT" in q or "DESCRIBE" in q or "INSERT" in q or "DELETE" in q or "DROP" in q:
+            raise ValueError("Only SELECT and ASK queries can have return_format set to \"dataframe\"")
+
+        try:
+            from pandas import DataFrame
+        except ImportError:
+            raise ValueError("You selected the output format \"dataframe\" by the pandas Python package is not installed.")
 
     if http_client is None:
         http_client = httpx.Client()
 
-    if query is None:
+    if q is None:
         raise ValueError("You must supply a query")
 
-    if _guess_query_is_update(query):
+    if _guess_query_is_update(q):
         headers = {"Content-Type": "application/sparql-update"}
     else:
         headers = {"Content-Type": "application/sparql-query"}
 
-    headers["Accept"] = _guess_return_type_for_sparql_query(query)
+    headers["Accept"] = _guess_return_type_for_sparql_query(q)
 
-    response = http_client.post(
+    r = http_client.post(
         sparql_endpoint,
         headers=headers,
-        content=query,
+        content=q,
     )
 
-    status_code = response.status_code
+    status_code = r.status_code
 
     # in case the endpoint doesn't allow POST
     if status_code == 405 or status_code == 422:
-        response = http_client.get(
+        r = http_client.get(
             sparql_endpoint,
             headers=headers,
-            params={"query": query},
+            params={"query": q},
         )
 
-        status_code = response.status_code
+        status_code = r.status_code
 
     if status_code != 200 and status_code != 201 and status_code != 204:
-        raise RuntimeError(f"ERROR {status_code}: {response.text}")
+        raise RuntimeError(f"ERROR {status_code}: {r.text}")
 
     if status_code == 204:
         return ""
 
-    match (return_python, return_bindings_only):
-        case (True, True):
-            return response.json()["results"]["bindings"]
-        case (True, False):
-            return response.json()
-        case (False, True):
-            return dedent(response.text.split('"bindings": [')[1].split("]")[0])
-        case _:
-            return response.text
+    if return_format == "python" or return_format == "dataframe":
+        r = r.json()
+
+    if return_format == "dataframe":
+        return make_sparql_dataframe(r)
+
+    if return_bindings_only:
+        if r.get("results") is not None:  # SELECT
+            return r["results"]["bindings"]
+        elif r.get("boolean") is not None:  # ASK
+            return r["boolean"]
+
+    return r

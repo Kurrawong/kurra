@@ -45,7 +45,7 @@ def test_query(fuseki_container):
             """.replace("XXX", TESTING_GRAPH)
 
         r = sparql(
-            SPARQL_ENDPOINT, q, client, return_python=True, return_bindings_only=True
+            SPARQL_ENDPOINT, q, client, return_format="python", return_bindings_only=True
         )
 
         count = int(r[0]["count"]["value"])
@@ -88,7 +88,7 @@ def test_clear(fuseki_container):
             """.replace("XXX", TESTING_GRAPH)
 
         r = sparql(
-            SPARQL_ENDPOINT, q, client, return_python=True, return_bindings_only=True
+            SPARQL_ENDPOINT, q, client, return_format="python", return_bindings_only=True
         )
 
         count = int(r[0]["count"]["value"])
@@ -98,7 +98,7 @@ def test_clear(fuseki_container):
         clear_graph(SPARQL_ENDPOINT, TESTING_GRAPH, client)
 
         r = sparql(
-            SPARQL_ENDPOINT, q, client, return_python=True, return_bindings_only=True
+            SPARQL_ENDPOINT, q, client, return_format="python", return_bindings_only=True
         )
 
         count = int(r[0]["count"]["value"])

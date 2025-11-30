@@ -53,6 +53,11 @@ build-backend = "hatchling.build"
 [project.scripts]
 kurra = "kurra.cli:app"
 
+[project.optional-dependencies]
+dataframe = [
+    "pandas>=2.3.3",
+]
+
 [tool.uv]
 required-version = ">=0.7.9"
 

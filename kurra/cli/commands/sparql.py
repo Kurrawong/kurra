@@ -41,7 +41,7 @@ def sparql_command(
         (username, password) if username is not None and password is not None else None
     )
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
-        r = query(path_or_url, q, http_client, return_python=True)
+        r = query(path_or_url, q, http_client, return_format="python")
 
         if r == "":
             console.print("Operation completed successfully")

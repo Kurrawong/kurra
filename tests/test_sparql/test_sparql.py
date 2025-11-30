@@ -5,6 +5,7 @@ import httpx
 import pytest
 
 from rdflib import Dataset
+from typing_extensions import assert_type
 
 from kurra.db import upload, clear_graph
 from kurra.sparql import query
@@ -30,14 +31,14 @@ def test_query_db(fuseki_container, http_client):
             } 
         }"""
 
-    assert "--- | ---" in render_sparql_result(query(SPARQL_ENDPOINT, q, http_client))
+    assert "--- | ---" in render_sparql_result(query(SPARQL_ENDPOINT, q, http_client, "python"))
 
     assert (
         "c"
         in json.loads(
             (
                 render_sparql_result(
-                    query(SPARQL_ENDPOINT, q, http_client), RenderFormat.json
+                    query(SPARQL_ENDPOINT, q, http_client, "python"), RenderFormat.json
                 )
             )
         )["head"]["vars"]
@@ -57,12 +58,12 @@ def test_query_db(fuseki_container, http_client):
         }"""
 
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_python=True, return_bindings_only=True
+        SPARQL_ENDPOINT, q, http_client, return_format="python", return_bindings_only=True
     )
     assert r[0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
 
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_python=True, return_bindings_only=False
+        SPARQL_ENDPOINT, q, http_client, return_format="python", return_bindings_only=False
     )
     assert (
         r["results"]["bindings"][0]["c"]["value"]
@@ -70,7 +71,7 @@ def test_query_db(fuseki_container, http_client):
     )
 
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_python=False, return_bindings_only=False
+        SPARQL_ENDPOINT, q, http_client, return_format="original", return_bindings_only=False
     )
     assert isinstance(r, str)
     r2 = json.loads(r)
@@ -80,7 +81,7 @@ def test_query_db(fuseki_container, http_client):
     )
 
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_python=False, return_bindings_only=True
+        SPARQL_ENDPOINT, q, http_client, return_format="original", return_bindings_only=True
     )
     assert isinstance(r, str)
     r2 = json.loads(r)
@@ -93,12 +94,12 @@ def test_query_db(fuseki_container, http_client):
     assert r == '{"head": {}, "boolean": true}'
 
     q = "ASK {?s ?p ?o}"
-    r = query(SPARQL_ENDPOINT, q, http_client, return_python=True)
+    r = query(SPARQL_ENDPOINT, q, http_client, return_format="python")
     assert r["boolean"]
 
     q = "ASK {?s ?p ?o}"
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_python=True, return_bindings_only=True
+        SPARQL_ENDPOINT, q, http_client, return_format="python", return_bindings_only=True
     )
     assert r
 
@@ -108,7 +109,7 @@ def test_query_db(fuseki_container, http_client):
 
     q = "ASK {?s ?p <http://nothing.com/x>}"
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_python=True, return_bindings_only=True
+        SPARQL_ENDPOINT, q, http_client, return_format="python", return_bindings_only=True
     )
     assert not r
 
@@ -153,16 +154,16 @@ def test_query_file():
         }
         LIMIT 3"""
 
-    r = query(LANG_TEST_VOC, q, return_python=True, return_bindings_only=True)
+    r = query(LANG_TEST_VOC, q, return_format="python", return_bindings_only=True)
     assert r[0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
 
-    r = query(LANG_TEST_VOC, q, return_python=True, return_bindings_only=False)
+    r = query(LANG_TEST_VOC, q, return_format="python", return_bindings_only=False)
     assert (
         r["results"]["bindings"][0]["c"]["value"]
         == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
-    r = query(LANG_TEST_VOC, q, return_python=False, return_bindings_only=False)
+    r = query(LANG_TEST_VOC, q, return_format="original", return_bindings_only=False)
     assert isinstance(r, str)
     r2 = json.loads(r)
     assert (
@@ -170,7 +171,7 @@ def test_query_file():
         == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
-    r = query(LANG_TEST_VOC, q, return_python=False, return_bindings_only=True)
+    r = query(LANG_TEST_VOC, q, return_format="original", return_bindings_only=True)
     assert isinstance(r, str)
     r2 = json.loads(r)
     assert (
@@ -182,11 +183,11 @@ def test_query_file():
     assert r == '{"head": {}, "boolean": true}'
 
     q = "ASK {?s ?p ?o}"
-    r = query(LANG_TEST_VOC, q, return_python=True)
+    r = query(LANG_TEST_VOC, q, return_format="python")
     assert r["boolean"]
 
     q = "ASK {?s ?p ?o}"
-    r = query(LANG_TEST_VOC, q, return_python=True, return_bindings_only=True)
+    r = query(LANG_TEST_VOC, q, return_format="python", return_bindings_only=True)
     assert r
 
     q = "ASK {?s ?p ?o}"
@@ -194,7 +195,7 @@ def test_query_file():
     assert r == "true"
 
     q = "ASK {?s ?p <http://nothing.com/x>}"
-    r = query(LANG_TEST_VOC, q, return_python=True, return_bindings_only=True)
+    r = query(LANG_TEST_VOC, q, return_format="python", return_bindings_only=True)
     assert not r
 
 
@@ -235,7 +236,7 @@ def test_duplicates():
     }
     """
 
-    assert len(query(rdf_data, q, return_python=True, return_bindings_only=True)) == 1
+    assert len(query(rdf_data, q, return_format="python", return_bindings_only=True)) == 1
 
 
 def test_auth(fuseki_container, http_client):
@@ -245,13 +246,13 @@ def test_auth(fuseki_container, http_client):
 
     q = "ASK {?s ?p ?o}"
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_python=True, return_bindings_only=True
+        SPARQL_ENDPOINT, q, http_client, return_format="python", return_bindings_only=True
     )
     assert r
 
     with pytest.raises(RuntimeError):
         query(
-            SPARQL_ENDPOINT, q, None, return_python=True, return_bindings_only=True
+            SPARQL_ENDPOINT, q, None, return_format="python", return_bindings_only=True
         )
 
 
@@ -298,16 +299,16 @@ def test_204_response(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
-    r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=httpx.Client(auth=("admin", "admin")), return_python=True, return_bindings_only=True)
+    r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=httpx.Client(auth=("admin", "admin")), return_format="python", return_bindings_only=True)
     assert r == ""
 
     # DROP data from a file
     with pytest.raises(NotImplementedError):
-        query(Path(__file__).parent / "vocab.nq", "DROP ALL", return_python=True, return_bindings_only=True)
+        query(Path(__file__).parent / "vocab.nq", "DROP ALL", return_format="python", return_bindings_only=True)
 
     # DROP no data
     clear_graph(SPARQL_ENDPOINT, "all", http_client)
-    r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=httpx.Client(auth=("admin", "admin")), return_python=True, return_bindings_only=True)
+    r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=httpx.Client(auth=("admin", "admin")), return_format="python", return_bindings_only=True)
     assert r == ""
 
 
@@ -321,3 +322,47 @@ def test_describe(fuseki_container, http_client):
     g = query(SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>", http_client=http_client)
     # print(g.serialize(format="longturtle"))
     assert len(g) == 16
+
+
+def test_return_formats(fuseki_container, http_client):
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+
+    query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client)
+    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
+
+    with pytest.raises(ValueError, match="return_format must be either 'original', 'python' or 'dataframe'"):
+        g = query(SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>", http_client=http_client, return_format="json")
+
+    with pytest.raises(ValueError, match="Only SELECT and ASK queries can have return_format set to \"dataframe\""):
+        g = query(SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>", http_client=http_client, return_format="dataframe")
+
+    q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        
+        SELECT *
+        WHERE {
+            ?c
+                a skos:Concept ;
+                skos:prefLabel ?pl ;
+            .
+        
+            OPTIONAL {
+                ?c skos:altLabel ?al
+            }
+        }
+        """
+    g = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
+
+    from pandas import DataFrame
+    assert type(g) == DataFrame
+
+    q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+        ASK 
+        WHERE {
+            <https://example.com/demo-vocabs/language-test> a skos:ConceptScheme .
+        }
+        """
+    g = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
+    print(g)

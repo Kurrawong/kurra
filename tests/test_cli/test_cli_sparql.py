@@ -77,7 +77,6 @@ def test_select(fuseki_container, http_client):
     assert "https://example.com/demo-vocabs/lan" in result.stdout
 
 
-
 def test_describe(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 

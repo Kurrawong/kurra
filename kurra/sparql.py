@@ -6,15 +6,28 @@ from rdflib import Graph, Dataset
 
 from kurra.db import sparql
 from kurra.utils import load_graph
-
+from typing import Literal
+from kurra.db import make_sparql_dataframe
 
 def query(
     p: Path | str | Graph | Dataset,
     q: str,
     http_client: httpx.Client = None,
-    return_python: bool = False,
+    return_format: Literal["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
 ):
+    if return_format not in ["original", "python", "dataframe"]:
+        raise ValueError("return_format must be either 'original', 'python' or 'dataframe'")
+
+    if return_format == "dataframe":
+        if "CONSTRUCT" in q or "DESCRIBE" in q or "INSERT" in q or "DELETE" in q or "DROP" in q:
+            raise ValueError("Only SELECT and ASK queries can have return_format set to \"dataframe\"")
+
+        try:
+            from pandas import DataFrame
+        except ImportError:
+            raise ValueError("You selected the output format \"dataframe\" by the pandas Python package is not installed.")
+
     if "CONSTRUCT" in q or "DESCRIBE" in q:
         if isinstance(p, str) and p.startswith("http"):
             if http_client is None:
@@ -40,16 +53,14 @@ def query(
         return r.graph
     elif "INSERT" in q or "DELETE" in q:
         raise NotImplementedError("INSERT & DELETE queries are not yet implemented by this interface. Try kurra.db.sparql")
-
     elif "DROP" in q:
         if isinstance(p, str) and p.startswith("http"):
-            r = sparql(p, q, http_client, True, False)
+            r = sparql(p, q, http_client, return_format, False)
 
             if r == "":
                 return ""
         else:
             raise NotImplementedError("DROP commands are not yet implemented for files")
-
     else:  # SELECT or ASK
         close_http_client = False
         if http_client is None:
@@ -58,7 +69,7 @@ def query(
 
         r = None
         if isinstance(p, str) and p.startswith("http"):
-            r = sparql(p, q, http_client, True, False)
+            r = sparql(p, q, http_client, "python", False)
 
         if r is None:
             x = load_graph(p).query(q)
@@ -67,22 +78,17 @@ def query(
         if close_http_client:
             http_client.close()
 
-        match (return_python, return_bindings_only):
-            case (True, True):
-                if r.get("results") is not None:
-                    return r["results"]["bindings"]
-                elif r.get("boolean") is not None:  # ASK
-                    return r["boolean"]
-                else:
-                    return r
-            case (True, False):
-                return r
-            case (False, True):
-                if r.get("results") is not None:
-                    return json.dumps(r["results"]["bindings"])
-                elif r.get("boolean") is not None:  # ASK
-                    return json.dumps(r["boolean"])
-                else:
-                    return json.dumps(r)
-            case _:
-                return json.dumps(r)
+        if return_bindings_only:
+            if r.get("results") is not None:
+                r = r["results"]["bindings"]
+            elif r.get("boolean") is not None:  # ASK
+                r = r["boolean"]
+            else:
+                pass
+
+        if return_format == "python":
+            return r
+        elif return_format == "dataframe":
+            return make_sparql_dataframe(r)
+        else:  # original
+            return json.dumps(r)

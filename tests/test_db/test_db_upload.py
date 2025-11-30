@@ -18,7 +18,7 @@ def test_db_upload(fuseki_container):
             }
         }
         """
-    r = query(SPARQL_ENDPOINT, q, return_python=True, return_bindings_only=True)
+    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
 
     assert r[0]["c"]["value"] == "142"
 
@@ -35,7 +35,7 @@ def test_db_upload_no_graph(fuseki_container):
             ?s ?p ?o
         }
         """
-    r = query(SPARQL_ENDPOINT, q, return_python=True, return_bindings_only=True)
+    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
 
     print(r)
 

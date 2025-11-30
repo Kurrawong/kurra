@@ -13,7 +13,7 @@ def test_gswa():
     } LIMIT 10
     """
 
-    r = query(SPARQL_ENDPOINT, q, return_python=True, return_bindings_only=True)
+    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
     assert len(r) == 10
 
 
@@ -29,5 +29,5 @@ def test_idn():
     } LIMIT 10
     """
 
-    r = query(SPARQL_ENDPOINT, q, return_python=True, return_bindings_only=True)
+    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
     assert len(r) == 10
