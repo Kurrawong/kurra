@@ -1,13 +1,14 @@
 import json
 from pathlib import Path
+from typing import Literal
 
 import httpx
 from rdflib import Graph, Dataset
 
+from kurra.db import make_sparql_dataframe
 from kurra.db import sparql
 from kurra.utils import load_graph
-from typing import Literal
-from kurra.db import make_sparql_dataframe
+
 
 def query(
     p: Path | str | Graph | Dataset,

@@ -1,12 +1,12 @@
 import subprocess
 import warnings
 from pathlib import Path
+from textwrap import dedent
 
 from rdflib import Dataset, Graph, URIRef
 
 from kurra.file import export_quads, format_file, make_dataset
 from kurra.utils import load_graph
-from textwrap import dedent
 
 
 def test_format_rdf_one():

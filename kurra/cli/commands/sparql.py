@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Annotated
+
 import httpx
 import typer
 

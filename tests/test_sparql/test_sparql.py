@@ -1,15 +1,11 @@
 import json
 from pathlib import Path
 
-import httpx
 import pytest
-
-from rdflib import Dataset
-from typing_extensions import assert_type
 
 from kurra.db import upload, clear_graph
 from kurra.sparql import query
-from kurra.utils import RenderFormat, render_sparql_result, make_httpx_client
+from kurra.utils import RenderFormat, render_sparql_result
 
 LANG_TEST_VOC = Path(__file__).parent / "language-test.ttl"
 TESTING_GRAPH = "https://example.com/testing-graph"

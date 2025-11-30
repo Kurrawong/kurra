@@ -1,7 +1,9 @@
 from pathlib import Path
+
+import pytest
+
 from kurra.db import upload, clear_graph
 from kurra.sparql import query
-import pytest
 
 
 def test_db_upload(fuseki_container):

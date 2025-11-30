@@ -1,9 +1,10 @@
-import httpx
 import json
+import pickle
 from enum import Enum
 from pathlib import Path
 from typing import Union
-import pickle
+
+import httpx
 from rdflib import Graph
 
 

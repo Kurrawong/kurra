@@ -1,13 +1,12 @@
 from io import TextIOBase
 from pathlib import Path
-from textwrap import dedent
+from typing import Literal
 from typing import Union
 
 import httpx
 from rdflib import RDF, Graph, URIRef
 
 from kurra.utils import load_graph
-from typing import Literal
 
 suffix_map = {
     ".nt": "application/n-triples",
