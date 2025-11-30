@@ -54,7 +54,7 @@ def upload(
     """This function uploads a file to a SPARQL Endpoint using the Graph Store Protocol.
 
     It will upload it into a graph identified by graph_id (an IRI or Blank Node). If no graph_id is given, it will be
-    uploaded into the Fuseki default graph.
+    uploaded into the default graph.
 
     By default, it will replace all content in the Named Graph or default graph. If append is set to True, it will
     add it to existing content in the graph_id Named Graph.

@@ -299,7 +299,7 @@ def test_204_response(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
-    r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=httpx.Client(auth=("admin", "admin")), return_format="python", return_bindings_only=True)
+    r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client, return_format="python", return_bindings_only=True)
     assert r == ""
 
     # DROP data from a file
@@ -308,7 +308,7 @@ def test_204_response(fuseki_container, http_client):
 
     # DROP no data
     clear_graph(SPARQL_ENDPOINT, "all", http_client)
-    r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=httpx.Client(auth=("admin", "admin")), return_format="python", return_bindings_only=True)
+    r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client, return_format="python", return_bindings_only=True)
     assert r == ""
 
 

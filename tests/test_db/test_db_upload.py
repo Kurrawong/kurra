@@ -1,5 +1,5 @@
 from pathlib import Path
-from kurra.db import upload
+from kurra.db import upload, clear_graph
 from kurra.sparql import query
 import pytest
 
@@ -40,3 +40,33 @@ def test_db_upload_no_graph(fuseki_container):
     print(r)
 
     assert r[0]["c"]["value"] == "142"
+
+
+def test_db_upload_url(fuseki_container, http_client):
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    TESTING_GRAPH = "https://example.com/testing-graph"
+
+    upload(SPARQL_ENDPOINT, "https://raw.githubusercontent.com/Kurrawong/kurra/refs/heads/main/tests/test_fuseki/config.ttl", TESTING_GRAPH)
+
+    q = """
+        SELECT (COUNT(?s) AS ?c)
+        WHERE {
+            GRAPH ?g {
+                ?s ?p ?o
+            }
+        }
+        """
+    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
+
+    assert r[0]["c"]["value"] == "142"
+
+    # now test one with Content Negotiation and a redirect
+    clear_graph(SPARQL_ENDPOINT, TESTING_GRAPH, http_client)
+
+    upload(SPARQL_ENDPOINT,
+           "https://linked.data.gov.au/def/vocdermods",
+           TESTING_GRAPH)
+
+    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
+
+    assert r[0]["c"]["value"] == "86"
