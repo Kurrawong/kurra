@@ -346,10 +346,16 @@ def test_return_formats(fuseki_container, http_client):
                 ?c skos:altLabel ?al
             }
         }
+        ORDER BY ?pl
         """
     r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
 
     from pandas import DataFrame
+    assert type(r) == DataFrame
+    assert isinstance(r["pl"][0], str)
+    assert r["pl"][0] == "English prefLabel"
+
+    r = query(Path(__file__).parent / "language-test.ttl", q, return_format="dataframe")
     assert type(r) == DataFrame
     assert isinstance(r["pl"][0], str)
     assert r["pl"][0] == "English prefLabel"
@@ -361,8 +367,12 @@ def test_return_formats(fuseki_container, http_client):
         WHERE {
             ?c a skos:Concept
         }
+        ORDER BY ?c
         """
     r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
+    assert r["count"][0] == 7
+
+    r = query(Path(__file__).parent / "language-test.ttl", q, return_format="dataframe")
     assert r["count"][0] == 7
 
     q = """
@@ -374,4 +384,7 @@ def test_return_formats(fuseki_container, http_client):
         }
         """
     r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
+    assert r["boolean"][0]
+
+    r = query(Path(__file__).parent / "language-test.ttl", q, return_format="dataframe")
     assert r["boolean"][0]

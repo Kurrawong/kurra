@@ -332,6 +332,7 @@ def sparql(
 
     if return_format == "python" or return_format == "dataframe":
         r = r.json()
+        # TODO: improve SPARQL JSON -> Python dict here by using some form of RDFLib's toPython() or SPARQLWrapper's equivalent
 
     if return_format == "dataframe":
         return make_sparql_dataframe(r)
