@@ -2,10 +2,11 @@ import json
 from pathlib import Path
 
 import pytest
+from rdflib import Literal
 
 from kurra.db import upload, clear_graph
 from kurra.sparql import query
-from kurra.utils import RenderFormat, render_sparql_result
+from kurra.utils import RenderFormat, render_sparql_result, cast_sparql_literal_to_python
 
 LANG_TEST_VOC = Path(__file__).parent / "language-test.ttl"
 TESTING_GRAPH = "https://example.com/testing-graph"
@@ -32,5 +33,11 @@ def test_date(fuseki_container, http_client):
             } 
         }"""
 
-    r = query(SPARQL_ENDPOINT, q, http_client, "python")
+    r = query(SPARQL_ENDPOINT, q, http_client)
     print(r)
+    from rdflib.plugins.sparql.parser import parseQuery
+    print(parseQuery(r))
+
+    # print(r[0]["cd"]["value"])
+    # print(cast_sparql_literal_to_python(r[0]["cd"]["value"], r[0]["cd"]["datatype"]))
+    # print(type(Literal(r[0]["cd"]["value"], datatype=r[0]["cd"]["datatype"]).toPython()))

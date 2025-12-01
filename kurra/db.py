@@ -1,10 +1,10 @@
 from io import TextIOBase
 from pathlib import Path
-from typing import Literal
+from typing import Literal as LiteralType
 from typing import Union
 
 import httpx
-from rdflib import RDF, Graph, URIRef
+from rdflib import RDF, Graph, URIRef, Literal
 
 from kurra.utils import load_graph
 
@@ -257,7 +257,13 @@ def make_sparql_dataframe(sparql_result: dict):
         for i, row in enumerate(sparql_result["results"]["bindings"]):
             new_row = {}
             for k, v in row.items():
-                new_row[k] = v['value']
+                if v["type"] == "literal":
+                    if v.get("datatype") is not None:
+                        new_row[k] = Literal(v["value"], datatype=v["datatype"]).toPython()
+                    else:
+                        new_row[k] = Literal(v["value"]).toPython()
+                else:
+                    new_row[k] = v["value"]
             df.loc[i] = new_row
         return df
     else:  # ASK
@@ -271,7 +277,7 @@ def sparql(
     sparql_endpoint: str,
     q: str,
     http_client: httpx.Client = None,
-    return_format: Literal["original", "python", "dataframe"] = "original",
+    return_format: LiteralType["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
 ):
     """Poses a SPARQL query to a SPARQL Endpoint"""

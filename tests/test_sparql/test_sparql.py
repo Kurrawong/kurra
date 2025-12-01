@@ -347,10 +347,23 @@ def test_return_formats(fuseki_container, http_client):
             }
         }
         """
-    g = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
+    r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
 
     from pandas import DataFrame
-    assert type(g) == DataFrame
+    assert type(r) == DataFrame
+    assert isinstance(r["pl"][0], str)
+    assert r["pl"][0] == "English prefLabel"
+
+    q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+        SELECT (COUNT(?c) AS ?count) 
+        WHERE {
+            ?c a skos:Concept
+        }
+        """
+    r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
+    assert r["count"][0] == 7
 
     q = """
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -360,5 +373,5 @@ def test_return_formats(fuseki_container, http_client):
             <https://example.com/demo-vocabs/language-test> a skos:ConceptScheme .
         }
         """
-    g = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
-    print(g)
+    r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
+    assert r["boolean"][0]
