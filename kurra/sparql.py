@@ -70,26 +70,25 @@ def query(
 
         r = None
         if isinstance(p, str) and p.startswith("http"):
-            r = sparql(p, q, http_client, "python", False)
-
-        if r is None:
-            x = load_graph(p).query(q)
-            r = json.loads(x.serialize(format="json"))
+            r = sparql(p, q, http_client, return_format, return_bindings_only)
 
         if close_http_client:
             http_client.close()
 
-        if return_bindings_only:
-            if r.get("results") is not None:
-                r = r["results"]["bindings"]
-            elif r.get("boolean") is not None:  # ASK
-                r = r["boolean"]
-            else:
-                pass
-
-        if return_format == "python":
+        if r is not None:
             return r
-        elif return_format == "dataframe":
-            return make_sparql_dataframe(r)
-        else:  # original
-            return json.dumps(r)
+        else:  # querying a file or string RDF data
+            r = load_graph(p).query(q).serialize(format="json")
+
+            if return_format == "dataframe":
+                return make_sparql_dataframe(json.loads(r))
+            elif return_format == "python":
+                r = json.loads(r)
+                if return_bindings_only:
+                    if r.get("results") is not None:
+                        r = r["results"]["bindings"]
+                    elif r.get("boolean") is not None:
+                        r = r["boolean"]
+                return r
+            else:
+                return r.decode()

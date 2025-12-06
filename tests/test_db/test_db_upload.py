@@ -22,7 +22,7 @@ def test_db_upload(fuseki_container):
         """
     r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
 
-    assert r[0]["c"]["value"] == "142"
+    assert r[0]["c"] == 142
 
 
 @pytest.mark.skip(reason="Test works with normal Fuseki but not testing container version")
@@ -41,7 +41,7 @@ def test_db_upload_no_graph(fuseki_container):
 
     print(r)
 
-    assert r[0]["c"]["value"] == "142"
+    assert r[0]["c"] == 142
 
 
 def test_db_upload_url(fuseki_container, http_client):
@@ -60,7 +60,7 @@ def test_db_upload_url(fuseki_container, http_client):
         """
     r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
 
-    assert r[0]["c"]["value"] == "142"
+    assert r[0]["c"] == 142
 
     # now test one with Content Negotiation and a redirect
     clear_graph(SPARQL_ENDPOINT, TESTING_GRAPH, http_client)
@@ -71,4 +71,4 @@ def test_db_upload_url(fuseki_container, http_client):
 
     r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
 
-    assert r[0]["c"]["value"] == "86"
+    assert r[0]["c"] == 86

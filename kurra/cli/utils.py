@@ -22,7 +22,7 @@ def format_sparql_response_as_rich_table(response):
         for row in response["results"]["bindings"]:
             cols = []
             for k, v in row.items():
-                cols.append(v["value"])
+                cols.append(str(v))
             t.add_row(*tuple(cols))
 
     return t

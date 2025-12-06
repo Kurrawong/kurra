@@ -163,3 +163,11 @@ Please contact them for all use & support issues.
 You can also log issues at the kurra issue tracker:
 
 * <https://github.com/Kurrawong/kurra/issues>
+
+## Release Procedure
+
+* update version in pyproject.toml
+* commit all updates
+* tag with version
+* `uv build`
+* `uv publish -u __token__ -p {TOKEN}`

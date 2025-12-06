@@ -32,7 +32,6 @@ def test_cli_db_upload_file(fuseki_container):
     print(r)
 
 
-
 def test_cli_db_upload_file_with_graph_id(fuseki_container):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
     TESTING_GRAPH = "https://example.com/testing-graph"

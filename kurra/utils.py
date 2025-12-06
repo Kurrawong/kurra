@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union
 
 import httpx
-from rdflib import Graph
+from rdflib import Graph, URIRef, BNode, Literal
 
 
 class RenderFormat(str, Enum):
@@ -99,11 +99,16 @@ def render_sparql_result(
         if isinstance(r, Graph):  # CONSTRUCT: RDF GRaph
             output = "```turtle\n" + r.serialize(format="longturtle") + "```\n"
         else:  # SELECT or ASK: Python dict or JSON
-
             def render_sparql_value(v: dict) -> str:
                 # TODO: handle v["datatype"]
                 if v is None:
                     return ""
+                elif isinstance(v, URIRef) or isinstance(v, str):
+                    return f"[{v.split('/')[-1].split('#')[-1]}]({v})"
+                elif isinstance(v, Literal):
+                    return v
+                elif isinstance(v, BNode):
+                    return f"BN: {v:>6}"
                 elif v["type"] == "uri":
                     return f"[{v['value'].split('/')[-1].split('#')[-1]}]({v['value']})"
                 elif v["type"] == "literal":

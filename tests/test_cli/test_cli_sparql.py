@@ -41,9 +41,6 @@ def test_query_db(fuseki_container):
             q,
         ],
     )
-    print("BEFORE")
-    print(result)
-    print("AFTER")
     # assert result.exit_code == 0
 
 
@@ -73,7 +70,6 @@ def test_select(fuseki_container, http_client):
         app,
         ["sparql", SPARQL_ENDPOINT, "SELECT * WHERE { <https://example.com/demo-vocabs/language-test> ?p ?o }"]
     )
-    # print(result.stdout)
     assert "https://example.com/demo-vocabs/lan" in result.stdout
 
 

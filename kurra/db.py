@@ -5,6 +5,7 @@ from typing import Union
 
 import httpx
 from rdflib import RDF, Graph, URIRef, Literal
+import json
 
 from kurra.utils import load_graph
 
@@ -330,17 +331,29 @@ def sparql(
     if status_code == 204:
         return ""
 
-    if return_format == "python" or return_format == "dataframe":
+    if return_format == "python":
         r = r.json()
-        # TODO: improve SPARQL JSON -> Python dict here by using some form of RDFLib's toPython() or SPARQLWrapper's equivalent
-
-    if return_format == "dataframe":
-        return make_sparql_dataframe(r)
-
-    if return_bindings_only:
         if r.get("results") is not None:  # SELECT
-            return r["results"]["bindings"]
+            for row in r["results"]["bindings"]:
+                for k, v in row.items():
+                    if v["type"] == "literal":
+                        if v.get("datatype") is not None:
+                            row[k] = Literal(v["value"], datatype=v["datatype"]).toPython()
+                        else:
+                            row[k] = Literal(v["value"]).toPython()
+                    elif v["type"] == "uri":
+                        row[k] = v["value"]
+            if return_bindings_only:
+                r = r["results"]["bindings"]
+            return r
         elif r.get("boolean") is not None:  # ASK
-            return r["boolean"]
+            if return_bindings_only:
+                return bool(r["boolean"])
+            else:
+                return r
 
-    return r
+    elif return_format == "dataframe":
+        return make_sparql_dataframe(r.json())
+
+    # original format - JSON
+    return r.text
