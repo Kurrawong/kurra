@@ -3,9 +3,31 @@ from pathlib import Path
 import httpx
 import pytest
 from testcontainers.core.container import DockerContainer
-from testcontainers.core.waiting_utils import wait_for_logs
+import time
+import docker
 
 FUSEKI_IMAGE = "ghcr.io/kurrawong/fuseki-geosparql:git-main-e642d849"
+
+
+def wait_for_logs(container, text, timeout=30, interval=0.5):
+    """
+    Wait until the container emits a log line containing `text`.
+    """
+    client = docker.from_env()
+    start_time = time.time()
+
+    logs_seen = ""
+
+    while True:
+        # Read logs incrementally
+        logs = client.containers.get(container._container.id).logs().decode("utf-8")
+        if text in logs:
+            return True
+
+        if time.time() - start_time > timeout:
+            raise TimeoutError(f"Timed out waiting for log: {text}")
+
+        time.sleep(interval)
 
 
 @pytest.fixture(scope="function")
