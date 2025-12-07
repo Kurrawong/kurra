@@ -7,6 +7,12 @@ from typing import Union
 import httpx
 from rdflib import Graph, URIRef, BNode, Literal
 
+RDF_MEDIA_TYPES = {
+    "xml": "application/rdf+xml",
+    "json-ld": "application/ld+json",
+    "turtle": "text/turtle",
+}
+
 
 class RenderFormat(str, Enum):
     original = "original"
@@ -81,7 +87,7 @@ def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> G
 
 
 def render_sparql_result(
-    r: dict | str | Graph, rf: RenderFormat = RenderFormat.markdown
+        r: dict | str | Graph, rf: RenderFormat = RenderFormat.markdown
 ) -> str:
     """Renders a SPARQL result in a given render format"""
     if rf == RenderFormat.original:
@@ -130,7 +136,7 @@ def render_sparql_result(
                         header[0] += f"{col} | "
                         header[1] += f"--- | "
                     output = (
-                        "| " + header[0].strip() + "\n| " + header[1].strip() + "\n"
+                            "| " + header[0].strip() + "\n| " + header[1].strip() + "\n"
                     )
 
             if r.get("results"):
@@ -155,12 +161,11 @@ def render_sparql_result(
 
 
 def make_httpx_client(
-    sparql_username: str = None,
-    sparql_password: str = None,
+        sparql_username: str = None,
+        sparql_password: str = None,
 ):
     auth = None
     if sparql_username:
         if sparql_password:
             auth = httpx.BasicAuth(sparql_username, sparql_password)
     return httpx.Client(auth=auth)
-
