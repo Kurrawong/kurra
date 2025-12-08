@@ -84,4 +84,3 @@ def test_cli_db_upload_file_with_graph_id_file(fuseki_container):
         """
     r = query(SPARQL_ENDPOINT, q)
     print(r)
-

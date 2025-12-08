@@ -1,23 +1,44 @@
 from io import StringIO
 from pathlib import Path
 
+import pytest
 from rdflib import RDF, Graph, URIRef
 
-from kurra.db import create_dataset, list_dataset
+from kurra.db.fuseki.dataset import dataset_list, create, delete
+from kurra.db.fuseki.utils import FusekiError
 
 
-def test_db_create_dataset_by_dataset_name(fuseki_container, http_client):
+def test_db_list(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    base_url = f"http://localhost:{port}"
+    return_value = dataset_list(base_url, http_client)
+    assert "/ds" in list(map(lambda x: x["ds.name"], return_value))
+
+
+def test_db_list_non_existent(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    base_url = f"http://localhost:{port}/some-url"
+    with pytest.raises(FusekiError) as exc_info:
+        dataset_list(base_url, http_client)
+
+    assert (
+            f"Failed to list datasets at http://localhost:{port}/some-url"
+            in exc_info.value.message
+    )
+
+
+def test_create_by_dataset_name(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}"
     dataset_name = "myds"
-    return_value = create_dataset(base_url, dataset_name, http_client=http_client)
+    return_value = create(base_url, dataset_name, http_client=http_client)
     assert return_value == f"Dataset {dataset_name} created at {base_url}."
 
-    result = list_dataset(base_url, http_client=http_client)
+    result = dataset_list(base_url, http_client=http_client)
     assert f"/{dataset_name}" in list(map(lambda x: x["ds.name"], result))
 
 
-def test_db_create_dataset_by_config_file(fuseki_container, http_client):
+def test_create_by_config_file(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}"
     dataset_name = "myds"
@@ -141,19 +162,17 @@ PREFIX text:      <http://jena.apache.org/text#>
                            );
         text:uidField      "uid" ."""
     )
-    return_value = create_dataset(base_url, config_file, http_client=http_client)
+    return_value = create(base_url, config_file, http_client=http_client)
     assert (
-        return_value
-        == f"Dataset {dataset_name} created using assembler config at {base_url}."
+            return_value
+            == f"Dataset {dataset_name} created using assembler config at {base_url}."
     )
 
-    result = list_dataset(base_url, http_client=http_client)
+    result = dataset_list(base_url, http_client=http_client)
     assert f"/{dataset_name}" in list(map(lambda x: x["ds.name"], result))
 
 
-def test_db_create_dataset_by_config_file_with_existing_dataset(
-    fuseki_container, http_client
-):
+def test_create_by_config_file_with_existing_dataset(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}"
     current_dir = Path(__file__).parent
@@ -165,12 +184,31 @@ def test_db_create_dataset_by_config_file_with_existing_dataset(
     dataset_name = graph.value(
         fuseki_service, URIRef("http://jena.apache.org/fuseki#name")
     )
-    return_value = create_dataset(base_url, file, http_client=http_client)
+    return_value = create(base_url, file, http_client=http_client)
 
     assert (
-        return_value
-        == f"Dataset {dataset_name} created using assembler config at {base_url}."
+            return_value
+            == f"Dataset {dataset_name} created using assembler config at {base_url}."
     )
 
-    result = list_dataset(base_url, http_client=http_client)
+    result = dataset_list(base_url, http_client=http_client)
     assert f"/{dataset_name}" in list(map(lambda x: x["ds.name"], result))
+
+
+def test_delete(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    base_url = f"http://localhost:{port}"
+    dataset_name = "ds"
+    return_value = delete(base_url, dataset_name, http_client)
+    assert return_value == f"Dataset {dataset_name} deleted."
+
+
+def test_delete_non_existent(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    base_url = f"http://localhost:{port}"
+    dataset_name = "non-existent"
+
+    with pytest.raises(FusekiError) as exc_info:
+        delete(base_url, dataset_name, http_client)
+
+    assert f"Failed to delete dataset '{dataset_name}'" in exc_info.value.message

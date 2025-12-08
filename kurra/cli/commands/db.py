@@ -7,15 +7,10 @@ from rich.progress import track
 
 from kurra.cli.commands.sparql import sparql_command
 from kurra.cli.console import console
-from kurra.db import (
-    FusekiError,
-    clear_graph,
-    create_dataset,
-    delete_dataset,
-    list_dataset,
-    suffix_map,
-    upload,
-)
+from kurra.db.fuseki.dataset import create, delete, dataset_list
+from kurra.db.fuseki.utils import FusekiError
+from kurra.db.graph import clear, upload
+from kurra.db.utils import rdf_suffix_map
 
 app = typer.Typer(help="RDF database commands. Currently only Fuseki is supported")
 
@@ -24,18 +19,18 @@ dataset_type_options = ["mem", "tdb", "tdb1", "tdb2"]
 
 @app.command(name="list", help="Get the list of database repositories")
 def repository_list_command(
-    fuseki_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
-    ),
-    username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
-    ] = None,
-    password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
-    ] = None,
-    timeout: Annotated[
-        int, typer.Option("--timeout", "-t", help="Timeout per request")
-    ] = 60,
+        fuseki_url: str = typer.Argument(
+            ..., help="Fuseki base URL. E.g. http://localhost:3030"
+        ),
+        username: Annotated[
+            str, typer.Option("--username", "-u", help="Fuseki username.")
+        ] = None,
+        password: Annotated[
+            str, typer.Option("--password", "-p", help="Fuseki password.")
+        ] = None,
+        timeout: Annotated[
+            int, typer.Option("--timeout", "-t", help="Timeout per request")
+        ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -43,7 +38,7 @@ def repository_list_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as client:
         try:
-            result = list_dataset(fuseki_url, client)
+            result = dataset_list(fuseki_url, client)
             console.print(result)
         except Exception as err:
             console.print(
@@ -57,23 +52,23 @@ def repository_list_command(
     help="Create a new database repository. Provide either the dataset name and optionally the dataset type or provide the assembler file with --config.",
 )
 def repository_create_command(
-    fuseki_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
-    ),
-    dataset_name: str | None = typer.Argument(None, help="repository name"),
-    dataset_type: str = typer.Option(
-        "tdb2", help=f"dataset type. Options: {dataset_type_options}"
-    ),
-    config: Path | None = typer.Option(None, help="assembler file"),
-    username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
-    ] = None,
-    password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
-    ] = None,
-    timeout: Annotated[
-        int, typer.Option("--timeout", "-t", help="Timeout per request")
-    ] = 60,
+        fuseki_url: str = typer.Argument(
+            ..., help="Fuseki base URL. E.g. http://localhost:3030"
+        ),
+        dataset_name: str | None = typer.Argument(None, help="repository name"),
+        dataset_type: str = typer.Option(
+            "tdb2", help=f"dataset type. Options: {dataset_type_options}"
+        ),
+        config: Path | None = typer.Option(None, help="assembler file"),
+        username: Annotated[
+            str, typer.Option("--username", "-u", help="Fuseki username.")
+        ] = None,
+        password: Annotated[
+            str, typer.Option("--password", "-p", help="Fuseki password.")
+        ] = None,
+        timeout: Annotated[
+            int, typer.Option("--timeout", "-t", help="Timeout per request")
+        ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -90,7 +85,7 @@ def repository_create_command(
     if dataset_name:
         with httpx.Client(auth=auth, timeout=timeout) as client:
             try:
-                result = create_dataset(fuseki_url, dataset_name, dataset_type, client)
+                result = create(fuseki_url, dataset_name, dataset_type, client)
                 console.print(result)
             except Exception as err:
                 console.print(
@@ -104,7 +99,7 @@ def repository_create_command(
             )
         with httpx.Client(auth=auth, timeout=timeout) as client:
             try:
-                result = create_dataset(fuseki_url, config, http_client=client)
+                result = create(fuseki_url, config, http_client=client)
                 console.print(result)
             except Exception as err:
                 console.print(
@@ -115,33 +110,34 @@ def repository_create_command(
 
 @app.command(name="upload", help="Upload file(s) to a database repository")
 def upload_command(
-    path: Path = typer.Argument(
-        ..., help="The path of a file or directory of files to be uploaded."
-    ),
-    fuseki_url: str = typer.Argument(
-        ..., help="Repository SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
-    ),
-    username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
-    ] = None,
-    password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
-    ] = None,
-    graph_id: Annotated[
-        str | None, typer.Option("--graph", "-g", help="ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string \"file\", the URN urn:file:\{FILE_NAME} will be used per file")
-    ] = None,
-    timeout: Annotated[
-        int, typer.Option("--timeout", "-t", help="Timeout per request")
-    ] = 60,
-    disable_ssl_verification: Annotated[
-        bool,
-        typer.Option(
-            "--disable-ssl-verification", "-k", help="Disable SSL verification."
+        path: Path = typer.Argument(
+            ..., help="The path of a file or directory of files to be uploaded."
         ),
-    ] = False,
-    host_header: Annotated[
-        str | None, typer.Option("--host-header", "-e", help="Override the Host header")
-    ] = None,
+        fuseki_url: str = typer.Argument(
+            ..., help="Repository SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
+        ),
+        username: Annotated[
+            str, typer.Option("--username", "-u", help="Fuseki username.")
+        ] = None,
+        password: Annotated[
+            str, typer.Option("--password", "-p", help="Fuseki password.")
+        ] = None,
+        graph_id: Annotated[
+            str | None, typer.Option("--graph", "-g",
+                                     help="ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string \"file\", the URN urn:file:FILE_NAME will be used per file")
+        ] = None,
+        timeout: Annotated[
+            int, typer.Option("--timeout", "-t", help="Timeout per request")
+        ] = 60,
+        disable_ssl_verification: Annotated[
+            bool,
+            typer.Option(
+                "--disable-ssl-verification", "-k", help="Disable SSL verification."
+            ),
+        ] = False,
+        host_header: Annotated[
+            str | None, typer.Option("--host-header", "-e", help="Override the Host header")
+        ] = None,
 ) -> None:
     """Upload a file or a directory of files with an RDF file extension.
 
@@ -162,17 +158,17 @@ def upload_command(
         (username, password) if username is not None and password is not None else None
     )
 
-    files = list(filter(lambda f: f.suffix in suffix_map.keys(), files))
+    files = list(filter(lambda f: f.suffix in rdf_suffix_map.keys(), files))
 
     headers = {}
     if host_header is not None:
         headers["Host"] = host_header
 
     with httpx.Client(
-        auth=auth,
-        timeout=timeout,
-        headers=headers,
-        verify=False if disable_ssl_verification else True,
+            auth=auth,
+            timeout=timeout,
+            headers=headers,
+            verify=False if disable_ssl_verification else True,
     ) as client:
         for file in track(files, description=f"Uploading {len(files)} files..."):
             try:
@@ -189,21 +185,21 @@ def upload_command(
 
 @app.command(name="clear", help="Clear a database repository")
 def repository_clear_command(
-    named_graph: str = typer.Argument(
-        ..., help="Named graph. If 'all' is supplied, it will remove all named graphs."
-    ),
-    fuseki_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
-    ),
-    username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
-    ] = None,
-    password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
-    ] = None,
-    timeout: Annotated[
-        int, typer.Option("--timeout", "-t", help="Timeout per request")
-    ] = 60,
+        named_graph: str = typer.Argument(
+            ..., help="Named graph. If 'all' is supplied, it will remove all named graphs."
+        ),
+        fuseki_url: str = typer.Argument(
+            ..., help="Fuseki base URL. E.g. http://localhost:3030"
+        ),
+        username: Annotated[
+            str, typer.Option("--username", "-u", help="Fuseki username.")
+        ] = None,
+        password: Annotated[
+            str, typer.Option("--password", "-p", help="Fuseki password.")
+        ] = None,
+        timeout: Annotated[
+            int, typer.Option("--timeout", "-t", help="Timeout per request")
+        ] = 60,
 ):
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -211,7 +207,7 @@ def repository_clear_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as client:
         try:
-            clear_graph(fuseki_url, named_graph, client)
+            clear(fuseki_url, named_graph, client)
         except Exception as err:
             console.print(
                 f"[bold red]ERROR[/bold red] Failed to run clear command with '{named_graph}' at {fuseki_url}."
@@ -221,19 +217,19 @@ def repository_clear_command(
 
 @app.command(name="delete", help="Delete a database repository")
 def repository_delete_command(
-    fuseki_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
-    ),
-    dataset_name: str = typer.Argument(..., help="The name of the dataset to delete."),
-    username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
-    ] = None,
-    password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
-    ] = None,
-    timeout: Annotated[
-        int, typer.Option("--timeout", "-t", help="Timeout per request")
-    ] = 60,
+        fuseki_url: str = typer.Argument(
+            ..., help="Fuseki base URL. E.g. http://localhost:3030"
+        ),
+        dataset_name: str = typer.Argument(..., help="The name of the dataset to delete."),
+        username: Annotated[
+            str, typer.Option("--username", "-u", help="Fuseki username.")
+        ] = None,
+        password: Annotated[
+            str, typer.Option("--password", "-p", help="Fuseki password.")
+        ] = None,
+        timeout: Annotated[
+            int, typer.Option("--timeout", "-t", help="Timeout per request")
+        ] = 60,
 ):
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -241,7 +237,7 @@ def repository_delete_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as client:
         try:
-            success_message = delete_dataset(fuseki_url, dataset_name, client)
+            success_message = delete(fuseki_url, dataset_name, client)
             console.print(success_message)
         except FusekiError as err:
             console.print(err)
@@ -249,26 +245,26 @@ def repository_delete_command(
 
 @app.command(name="sparql", help="Query a database repository")
 def sparql_command3(
-    path_or_url: Path = typer.Argument(
-        ..., help="Repository SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
-    ),
-    q: str = typer.Argument(..., help="The SPARQL query to sent to the database"),
-    response_format: Annotated[
-        str,
-        typer.Option(
-            "--response-format",
-            "-f",
-            help="The response format of the SPARQL query",
+        path_or_url: Path = typer.Argument(
+            ..., help="Repository SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
         ),
-    ] = "table",
-    username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
-    ] = None,
-    password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
-    ] = None,
-    timeout: Annotated[
-        int, typer.Option("--timeout", "-t", help="Timeout per request")
-    ] = 60,
+        q: str = typer.Argument(..., help="The SPARQL query to sent to the database"),
+        response_format: Annotated[
+            str,
+            typer.Option(
+                "--response-format",
+                "-f",
+                help="The response format of the SPARQL query",
+            ),
+        ] = "table",
+        username: Annotated[
+            str, typer.Option("--username", "-u", help="Fuseki username.")
+        ] = None,
+        password: Annotated[
+            str, typer.Option("--password", "-p", help="Fuseki password.")
+        ] = None,
+        timeout: Annotated[
+            int, typer.Option("--timeout", "-t", help="Timeout per request")
+        ] = 60,
 ) -> None:
     sparql_command(path_or_url, q, response_format, username, password, timeout)

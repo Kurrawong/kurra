@@ -1,10 +1,9 @@
+import time
 from pathlib import Path
 
-import httpx
+import docker
 import pytest
 from testcontainers.core.container import DockerContainer
-import time
-import docker
 
 FUSEKI_IMAGE = "ghcr.io/kurrawong/fuseki-geosparql:git-main-e642d849"
 

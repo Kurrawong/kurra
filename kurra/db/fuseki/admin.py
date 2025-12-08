@@ -1,6 +1,6 @@
 import httpx
 
-from ..utils import FusekiError
+from .utils import FusekiError
 
 
 def ping(

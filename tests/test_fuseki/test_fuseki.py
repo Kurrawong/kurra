@@ -2,7 +2,8 @@ from pathlib import Path
 
 import httpx
 
-from kurra.db import clear_graph, sparql, upload
+from kurra.db.graph import clear, upload
+from kurra.db.sparql import query
 
 
 def test_file_upload_ng_replacement(fuseki_container):
@@ -44,7 +45,7 @@ def test_query(fuseki_container):
             }        
             """.replace("XXX", TESTING_GRAPH)
 
-        r = sparql(
+        r = query(
             SPARQL_ENDPOINT, q, client, return_format="python", return_bindings_only=True
         )
 
@@ -52,7 +53,7 @@ def test_query(fuseki_container):
 
         q = "DROP GRAPH <XXX>".replace("XXX", TESTING_GRAPH)
 
-        r = sparql(SPARQL_ENDPOINT, q, client)
+        r = query(SPARQL_ENDPOINT, q, client)
 
         print(r)
 
@@ -81,15 +82,15 @@ def test_clear(fuseki_container):
             }        
             """.replace("XXX", TESTING_GRAPH)
 
-        r = sparql(
+        r = query(
             SPARQL_ENDPOINT, q, client, return_format="python", return_bindings_only=True
         )
 
         assert r[0]["count"] == 2
 
-        clear_graph(SPARQL_ENDPOINT, TESTING_GRAPH, client)
+        clear(SPARQL_ENDPOINT, TESTING_GRAPH, client)
 
-        r = sparql(
+        r = query(
             SPARQL_ENDPOINT, q, client, return_format="python", return_bindings_only=True
         )
 

@@ -5,13 +5,12 @@ import httpx
 from typer.testing import CliRunner
 
 from kurra.cli import app
-from kurra.db import upload
+from kurra.db.graph import upload
 
 runner = CliRunner()
 
-
 LANG_TEST_VOC = (
-    Path(__file__).parent.parent.resolve() / "test_sparql" / "language-test.ttl"
+        Path(__file__).parent.parent.resolve() / "test_sparql" / "language-test.ttl"
 )
 TESTING_GRAPH = "https://example.com/testing-graph"
 
@@ -80,6 +79,6 @@ def test_describe(fuseki_container, http_client):
 
     result = runner.invoke(
         app,
-        ["sparql", SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>"]
+        ["sparql", SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>"],
     )
     assert "Made in Nov 2024 just for testing" in result.stdout

@@ -6,7 +6,10 @@ from rdflib.plugins.sparql.processor import SPARQLResult
 from rich.table import Table
 
 
-def format_sparql_response_as_rich_table(response):
+def format_sparql_response_as_rich_table(response, query):
+    if "CONSTRUCT" in query or "DESCRIBE" in query:
+        return response.serialize(format="longturtle")
+
     if isinstance(response, Graph):
         return response.serialize(format="longturtle")
 

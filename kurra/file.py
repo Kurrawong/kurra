@@ -39,7 +39,7 @@ def get_topbraid_metadata(content: str) -> str:
 
 
 def do_format(
-    content: str, output_format: KNOWN_RDF_FORMATS = "longturtle"
+        content: str, output_format: KNOWN_RDF_FORMATS = "longturtle"
 ) -> Tuple[str, bool]:
     metadata = get_topbraid_metadata(content)
 
@@ -51,10 +51,10 @@ def do_format(
 
 
 def format_file(
-    file: Path,
-    check: bool = False,
-    output_format: KNOWN_RDF_FORMATS = "longturtle",
-    output_filename: Path = None,
+        file: Path,
+        check: bool = False,
+        output_format: KNOWN_RDF_FORMATS = "longturtle",
+        output_filename: Path = None,
 ) -> bool:
     if not file.is_file():
         raise ValueError(f"{file} is not a file.")
@@ -85,10 +85,10 @@ def format_file(
 
 
 def format_rdf(
-    path: Path,
-    check: bool,
-    output_format: KNOWN_RDF_FORMATS = "longturtle",
-    output_filename: Path = None,
+        path: Path,
+        check: bool,
+        output_format: KNOWN_RDF_FORMATS = "longturtle",
+        output_filename: Path = None,
 ) -> None:
     path = Path(path).resolve()
 
@@ -137,7 +137,7 @@ def format_rdf(
 
 
 def make_dataset(
-    path_str_or_graph: Union[Path, str, Graph], graph_iri: Union[str, URIRef]
+        path_str_or_graph: Union[Path, str, Graph], graph_iri: Union[str, URIRef]
 ) -> Dataset:
     """Returns a given Graph, or string or file of triples, as a Dataset, with the supplied graph IRI"""
 
@@ -158,7 +158,7 @@ def make_dataset(
 
 
 def export_quads(
-    path_str_or_dataset: Union[Path, str, Dataset], destination: Optional[Path] = None
+        path_str_or_dataset: Union[Path, str, Dataset], destination: Optional[Path] = None
 ) -> bool | str:
     """Exports a given Dataset, or quads in trig format or a quads file specified by a path, either as
     quads to a string, if no destination is given, or a file, if one is"""

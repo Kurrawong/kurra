@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union
 
 import httpx
-from rdflib import Graph, URIRef, BNode, Literal
+from rdflib import Graph, URIRef, BNode, Literal, Dataset
 
 RDF_MEDIA_TYPES = {
     "xml": "application/rdf+xml",
@@ -62,6 +62,8 @@ def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> G
     # Serialized RDF file or dir of files
     if isinstance(graph_path_or_str, Path):
         if Path(graph_path_or_str).is_file():
+            if str(graph_path_or_str).endswith(".trig") or str(graph_path_or_str).endswith(".jsonld"):
+                return Dataset().parse(str(graph_path_or_str))
             return Graph().parse(str(graph_path_or_str))
         elif Path(graph_path_or_str).is_dir():
             g = Graph()

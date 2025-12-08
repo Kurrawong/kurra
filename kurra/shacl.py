@@ -7,7 +7,7 @@ from kurra.utils import load_graph
 
 
 def validate(
-    data_file_or_dir_or_graph: Path | Graph, shacl_file_or_dir_or_graph: Path | Graph
+        data_file_or_dir_or_graph: Path | Graph, shacl_file_or_dir_or_graph: Path | Graph
 ) -> tuple[bool, Graph, str]:
     """Runs pySHACL's validate() function with some preset values"""
 

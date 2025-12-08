@@ -11,14 +11,6 @@ rdf_suffix_map = {
 }
 
 
-class FusekiError(Exception):
-    """An error that occurred while interacting with Fuseki."""
-
-    def __init__(self, message_context: str, message: str, status_code: int) -> None:
-        self.message = f"{status_code} {message_context}. {message}"
-        super().__init__(self.message)
-
-
 def _guess_query_is_update(query: str) -> bool:
     if any(x in query for x in ["DROP", "INSERT", "DELETE"]):
         return True
@@ -29,7 +21,7 @@ def _guess_query_is_update(query: str) -> bool:
 def _guess_return_type_for_sparql_query(query: str) -> str:
     if any(x in query for x in ["SELECT", "INSERT", "ASK"]):
         return "application/sparql-results+json"
-    elif "CONSTRUCT" in query:
+    elif "CONSTRUCT" in query or "DESCRIBE" in query:
         return "text/turtle"
     else:
         return "application/sparql-results+json"

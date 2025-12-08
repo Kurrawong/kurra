@@ -3,7 +3,7 @@ from typing import Literal as LiteralType
 import httpx
 from rdflib import Literal
 
-from .utils import _guess_return_type_for_sparql_query, _guess_query_is_update, make_sparql_dataframe
+from kurra.db.utils import _guess_query_is_update, _guess_return_type_for_sparql_query, make_sparql_dataframe
 
 
 def query(
@@ -63,9 +63,6 @@ def query(
 
     if status_code == 204:
         return ""
-
-    if "CONSTRUCT" in q or "DESCRIBE" in q:
-        return r.text
 
     if return_format == "python":
         r = r.json()
