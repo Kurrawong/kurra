@@ -13,12 +13,20 @@ from kurra.utils import load_graph
 def query(
         p: Path | str | Graph | Dataset,
         q: str,
+        namespaces: dict[str, str] | None = None,
         http_client: httpx.Client = None,
         return_format: Literal["original", "python", "dataframe"] = "original",
         return_bindings_only: bool = False,
 ):
     if return_format not in ["original", "python", "dataframe"]:
         raise ValueError("return_format must be either 'original', 'python' or 'dataframe'")
+
+    if namespaces is not None:
+        preamble = ""
+        for k, v in namespaces.items():
+            preamble += f"PREFIX {k}: <{v}>\n"
+        preamble += "\n"
+        q = preamble + q
 
     if return_format == "dataframe":
         if "CONSTRUCT" in q or "DESCRIBE" in q or "INSERT" in q or "DELETE" in q or "DROP" in q:

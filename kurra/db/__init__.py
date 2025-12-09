@@ -9,6 +9,7 @@ from kurra.db.utils import _guess_query_is_update, _guess_return_type_for_sparql
 def query(
         sparql_endpoint: str,
         q: str,
+        namespaces: dict[str, str] | None = None,
         http_client: httpx.Client = None,
         return_format: LiteralType["original", "python", "dataframe"] = "original",
         return_bindings_only: bool = False,
@@ -16,6 +17,13 @@ def query(
     """Poses a SPARQL query to a SPARQL Endpoint"""
     if return_format not in ["original", "python", "dataframe"]:
         raise ValueError("return_format must be either 'original', 'python' or 'dataframe'")
+
+    if namespaces is not None:
+        preamble = ""
+        for k, v in namespaces.items():
+            preamble += f"PREFIX {k}: <{v}>\n"
+        preamble += "\n"
+        q = preamble + q
 
     if return_format == "dataframe":
         if "CONSTRUCT" in q or "DESCRIBE" in q or "INSERT" in q or "DELETE" in q or "DROP" in q:
