@@ -212,7 +212,7 @@ def test_upload_url(fuseki_container, http_client):
 
     upload(
         SPARQL_ENDPOINT,
-        "https://raw.githubusercontent.com/Kurrawong/kurra/refs/heads/main/tests/test_fuseki/config.ttl",
+        "https://raw.githubusercontent.com/Kurrawong/kurra/refs/heads/main/tests/test_db/config.ttl",
         TESTING_GRAPH,
     )
 

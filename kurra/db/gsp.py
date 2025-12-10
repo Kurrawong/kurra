@@ -100,7 +100,6 @@ def put(
     if http_client is None:
         http_client = httpx.Client()
         close_http_client = True
-
     r = http_client.put(
         sparql_endpoint,
         params={"graph": graph_iri if graph_iri is not None else "default"},

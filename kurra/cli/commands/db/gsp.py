@@ -8,35 +8,25 @@ from rich.progress import track
 from kurra.cli.commands import app
 from kurra.cli.commands.sparql import sparql_command
 from kurra.cli.console import console
-from kurra.db.fuseki import (
-    FusekiError,
-    backup,
-    backups_list,
-    create,
-    delete,
-    describe,
-    metrics,
-    ping,
-    server,
-    sleep,
-    stats,
-    status,
-    tasks,
-)
 from kurra.db.gsp import clear, delete, exists, get, post, put, upload
 from kurra.db.utils import rdf_suffix_map
 
-app = typer.Typer(help="Graph Store Protocol commands.")
+app = typer.Typer(help="Graph Store Protocol commands")
 
 
-@app.command(name="clear", help="Clear a database repository")
-def repository_clear_command(
-    named_graph: str = typer.Argument(
-        ..., help="Named graph. If 'all' is supplied, it will remove all named graphs."
-    ),
-    fuseki_url: str = typer.Argument(
+@app.command(name="exists", help="Checks to see if a graph exists within a database")
+def exists_command(
+    sparql_endpoint_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
+        ),
+    ] = "default",
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
     ] = None,
@@ -53,15 +43,227 @@ def repository_clear_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
         try:
-            clear(fuseki_url, named_graph, http_client=http_client)
+            console.print(
+                exists(sparql_endpoint_url, graph_identifier, http_client=http_client)
+            )
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to run clear command with '{named_graph}' at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to run clear command with '{graph_identifier}' at {sparql_endpoint_url}."
             )
             raise err
 
 
-@app.command(name="upload", help="Upload file(s) to a database repository")
+@app.command(name="get", help="Gets the content of a database graph")
+def get_command(
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
+        ),
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
+):
+    auth = (
+        (username, password) if username is not None and password is not None else None
+    )
+
+    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+        try:
+            r = get(sparql_endpoint_url, graph_identifier, http_client=http_client)
+            if r == 404:
+                console.print("Graph not found")
+            else:
+                rdf = r.serialize(format="longturtle")
+                if rdf == "":
+                    console.print("No content")
+                else:
+                    console.print(rdf)
+
+        except Exception as err:
+            console.print(
+                f"[bold red]ERROR[/bold red] Failed to run the get command with '{graph_identifier}' at {sparql_endpoint_url}: {err.message}."
+            )
+            raise err
+
+
+@app.command(name="put", help="Load content into a database graph")
+def put_command(
+    path: Path = typer.Argument(
+        ..., help="The path of a file or directory of files to be uploaded."
+    ),
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
+        ),
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
+):
+    auth = (
+        (username, password) if username is not None and password is not None else None
+    )
+
+    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+        try:
+            console.print(
+                put(
+                    sparql_endpoint_url, path, graph_identifier, http_client=http_client
+                )
+            )
+        except Exception as err:
+            console.print(
+                f"[bold red]ERROR[/bold red] Failed to run clear command with '{graph_identifier}' at {sparql_endpoint_url}."
+            )
+            raise err
+
+
+@app.command(name="post", help="Add content to a database graph")
+def post_command(
+    path: Path = typer.Argument(
+        ..., help="The path of a file or directory of files to be uploaded."
+    ),
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
+        ),
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
+):
+    auth = (
+        (username, password) if username is not None and password is not None else None
+    )
+
+    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+        try:
+            console.print(
+                post(
+                    sparql_endpoint_url, path, graph_identifier, http_client=http_client
+                )
+            )
+        except Exception as err:
+            console.print(
+                f"[bold red]ERROR[/bold red] Failed to run clear command with '{graph_identifier}' at {sparql_endpoint_url}."
+            )
+            raise err
+
+
+@app.command(name="delete", help="Deletes the content of a database graph")
+def delete_command(
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
+        ),
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
+):
+    auth = (
+        (username, password) if username is not None and password is not None else None
+    )
+
+    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+        try:
+            console.print(
+                delete(sparql_endpoint_url, graph_identifier, http_client=http_client)
+            )
+        except Exception as err:
+            console.print(
+                f"[bold red]ERROR[/bold red] Failed to run clear command with '{graph_identifier}' at {sparql_endpoint_url}."
+            )
+            raise err
+
+
+@app.command(name="clear", help="Clears a database graph")
+def clear_command(
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
+        ),
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
+):
+    auth = (
+        (username, password) if username is not None and password is not None else None
+    )
+
+    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+        try:
+            clear(sparql_endpoint_url, graph_identifier, http_client=http_client)
+        except Exception as err:
+            console.print(
+                f"[bold red]ERROR[/bold red] Failed to run clear command with '{graph_identifier}' at {sparql_endpoint_url}."
+            )
+            raise err
+
+
+@app.command(name="upload", help="Upload file(s) to a database")
 def upload_command(
     path: Path = typer.Argument(
         ..., help="The path of a file or directory of files to be uploaded."
@@ -69,19 +271,19 @@ def upload_command(
     sparql_endpoint: str = typer.Argument(
         ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
     ),
-    username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
-    ] = None,
-    password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
-    ] = None,
-    graph_id: Annotated[
+    graph_identifier: Annotated[
         str | None,
         typer.Option(
             "--graph",
             "-g",
             help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
+    ] = None,
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -125,7 +327,7 @@ def upload_command(
     ) as http_client:
         for file in track(files, description=f"Uploading {len(files)} files..."):
             try:
-                if graph_id == "file":
+                if graph_identifier == "file":
                     upload(
                         sparql_endpoint,
                         file,
@@ -136,7 +338,7 @@ def upload_command(
                     upload(
                         sparql_endpoint,
                         file,
-                        graph_id if graph_id is not None else "default",
+                        graph_identifier if graph_identifier is not None else "default",
                         http_client=http_client,
                     )  # str and None handled by upload()
             except Exception as err:

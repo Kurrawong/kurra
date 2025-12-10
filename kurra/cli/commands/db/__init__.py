@@ -9,7 +9,7 @@ from kurra.cli.commands.sparql import sparql_command
 app = typer.Typer(help="Fuseki database commands")
 
 
-@app.command(name="sparql", help="Query a database repository")
+@app.command(name="sparql", help="SPARQL query an RDF database")
 def sparql_command3(
     path_or_url: Path = typer.Argument(
         ..., help="Repository SPARQL Endpoint URL. E.g. http://localhost:3030/ds"

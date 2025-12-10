@@ -136,14 +136,14 @@ task code
 
 To build a new release:
 
-0. test: 1task test`
-1. format all code: `task code`
+0. format all code: `task code`
+1. test: `task test`
 2. update the version in pyproject.toml
 3. commit & push all changes
 4. git tag with the same version number
 5. push the tag - `git push --tags`
 6. build the release - `uv build`
-7. publish the release on PyPI - `uv publish` - username `__token__`, pwd is an actual token
+7. publish the release on PyPI - `uv publish -u __token__ -p {TOKEN}`, {TOKEN} is an actual token
 8. make the release on GitHub - https://github.com/Kurrawong/kurra/releases
   * don't forget to add the dist zips & wheels to it
 9. update version number in pyproject.toml to next alpha & push

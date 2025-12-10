@@ -7,7 +7,7 @@ import typer
 from kurra.cli.console import console
 from kurra.db.fuseki import FusekiError, create, delete, describe
 
-app = typer.Typer(help="Fuseki database commands.")
+app = typer.Typer(help="Fuseki database commands")
 
 dataset_type_options = ["mem", "tdb", "tdb1", "tdb2"]
 
