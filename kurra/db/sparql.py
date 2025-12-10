@@ -13,15 +13,32 @@ from .utils import (
 def query(
     sparql_endpoint: str,
     q: str,
+    namespaces: dict[str, str] | None = None,
     http_client: httpx.Client = None,
     return_format: LiteralType["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
 ):
     """Poses a SPARQL query to a SPARQL Endpoint"""
+    if sparql_endpoint is None:
+        raise ValueError("You must supply a sparql_endpoint")
+
+    if q is None:
+        raise ValueError("You must supply a query")
+
     if return_format not in ["original", "python", "dataframe"]:
         raise ValueError(
-            "return_format must be either 'original', 'python' or 'dataframe'"
+            f"return_format {return_format} must be either 'original', 'python' or 'dataframe'"
         )
+
+    if namespaces is not None:
+        preamble = ""
+        for k, v in namespaces.items():
+            preamble += f"PREFIX {k}: <{v}>\n"
+        preamble += "\n"
+        q = preamble + q
+
+    if http_client is None:
+        http_client = httpx.Client()
 
     if return_format == "dataframe":
         if (
@@ -41,12 +58,6 @@ def query(
             raise ValueError(
                 'You selected the output format "dataframe" by the pandas Python package is not installed.'
             )
-
-    if http_client is None:
-        http_client = httpx.Client()
-
-    if q is None:
-        raise ValueError("You must supply a query")
 
     if _guess_query_is_update(q):
         headers = {"Content-Type": "application/sparql-update"}

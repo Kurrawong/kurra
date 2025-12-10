@@ -38,7 +38,7 @@ def fuseki_container(request: pytest.FixtureRequest):
         "/fuseki/shiro.ini",
     )
     container.with_volume_mapping(
-        str(Path(__file__).parent.parent / "test_fuseki" / "config.ttl"),
+        str(Path(__file__).parent.parent / "test_db" / "config.ttl"),
         "/fuseki/config.ttl",
     )
     container.with_exposed_ports(3030)

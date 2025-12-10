@@ -298,8 +298,7 @@ PREFIX text:      <http://jena.apache.org/text#>
 def test_create_by_config_file_with_existing_dataset(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}"
-    current_dir = Path(__file__).parent
-    file = current_dir.parent / "test_cli/config.ttl"
+    file = Path(__file__).parent.parent / "test_cli/db/config.ttl"
     graph = Graph().parse(file, format="turtle")
     fuseki_service = graph.value(
         None, RDF.type, URIRef("http://jena.apache.org/fuseki#Service")

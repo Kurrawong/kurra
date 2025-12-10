@@ -27,7 +27,7 @@ def exists(
         http_client = httpx.Client()
         close_http_client = True
 
-    r = httpx.head(
+    r = http_client.head(
         sparql_endpoint,
         params={"graph": graph_iri if graph_iri is not None else "default"},
     )
@@ -61,7 +61,7 @@ def get(
         http_client = httpx.Client()
         close_http_client = True
 
-    r = httpx.get(
+    r = http_client.get(
         sparql_endpoint,
         params={"graph": graph_iri if graph_iri is not None else "default"},
         headers={"Accept": content_type},
@@ -93,7 +93,7 @@ def put(
 
     if content_type not in rdf_suffix_map.values():
         raise ValueError(
-            f"Media Type requested not available. Allow types are {', '.join(rdf_suffix_map.values())}"
+            f"Media Type {content_type} requested not available. Allowed types are {', '.join(rdf_suffix_map.values())}"
         )
 
     close_http_client = False
@@ -101,7 +101,7 @@ def put(
         http_client = httpx.Client()
         close_http_client = True
 
-    r = httpx.put(
+    r = http_client.put(
         sparql_endpoint,
         params={"graph": graph_iri if graph_iri is not None else "default"},
         headers={"Content-Type": content_type},
@@ -142,7 +142,7 @@ def post(
         http_client = httpx.Client()
         close_http_client = True
 
-    r = httpx.post(
+    r = http_client.post(
         sparql_endpoint,
         params={"graph": graph_iri if graph_iri is not None else "default"},
         headers={
@@ -176,7 +176,7 @@ def delete(
         http_client = httpx.Client()
         close_http_client = True
 
-    r = httpx.delete(
+    r = http_client.delete(
         sparql_endpoint,
         params={"graph": graph_iri if graph_iri is not None else "default"},
     )
@@ -199,7 +199,7 @@ def clear(
 
     This is an alias of delete()
     """
-    delete(sparql_endpoint, graph_iri, http_client=http_client)
+    delete(sparql_endpoint, graph_iri, http_client)
 
 
 def upload(

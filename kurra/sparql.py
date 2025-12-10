@@ -20,7 +20,7 @@ def query(
 ):
     if return_format not in ["original", "python", "dataframe"]:
         raise ValueError(
-            "return_format must be either 'original', 'python' or 'dataframe'"
+            f"return_format {return_format} must be either 'original', 'python' or 'dataframe'"
         )
 
     if namespaces is not None:
@@ -29,6 +29,9 @@ def query(
             preamble += f"PREFIX {k}: <{v}>\n"
         preamble += "\n"
         q = preamble + q
+
+    if http_client is None:
+        http_client = httpx.Client()
 
     if return_format == "dataframe":
         if (
@@ -53,7 +56,7 @@ def query(
         s = None
         f = None
         if isinstance(p, str) and p.startswith("http"):
-            r = db_query(p, q, http_client, "original", False)
+            r = db_query(p, q, namespaces, http_client, "original", False)
             s = load_graph(r)
 
         else:  # (isinstance(p, str) and not p.startswith("http")) or isinstance(p, Path):
@@ -76,14 +79,16 @@ def query(
         raise NotImplementedError(
             "INSERT & DELETE queries are not yet implemented by this interface. Try kurra.db.sparql"
         )
+
     elif "DROP" in q:
         if isinstance(p, str) and p.startswith("http"):
-            r = db_query(p, q, http_client, return_format, False)
+            r = db_query(p, q, namespaces, http_client, return_format, False)
 
             if r == "":
                 return ""
         else:
             raise NotImplementedError("DROP commands are not yet implemented for files")
+
     else:  # SELECT or ASK
         close_http_client = False
         if http_client is None:
@@ -92,7 +97,7 @@ def query(
 
         r = None
         if isinstance(p, str) and p.startswith("http"):
-            r = db_query(p, q, http_client, return_format, return_bindings_only)
+            r = db_query(p, q, namespaces, http_client, return_format, return_bindings_only)
 
         if close_http_client:
             http_client.close()

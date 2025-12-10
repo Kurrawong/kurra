@@ -1,9 +1,10 @@
 import httpx
 
 from kurra.db.sparql import query
+from kurra.db.gsp import upload
 
 
-def test_query(fuseki_container):
+def test_query(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     with httpx.Client() as client:
         SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
@@ -16,7 +17,7 @@ def test_query(fuseki_container):
                 ex:a2 ex:b2 ex:c2 .
                 """
 
-        upload(SPARQL_ENDPOINT, data, TESTING_GRAPH, False, client)
+        upload(SPARQL_ENDPOINT, data, TESTING_GRAPH, False, http_client=http_client)
 
         q = """
             SELECT (COUNT(*) AS ?count) 
@@ -30,7 +31,7 @@ def test_query(fuseki_container):
         r = query(
             SPARQL_ENDPOINT,
             q,
-            client,
+            http_client=http_client,
             return_format="python",
             return_bindings_only=True,
         )
@@ -39,6 +40,23 @@ def test_query(fuseki_container):
 
         q = "DROP GRAPH <XXX>".replace("XXX", TESTING_GRAPH)
 
-        r = query(SPARQL_ENDPOINT, q, client)
+        r = query(SPARQL_ENDPOINT, q, http_client=http_client)
 
-        print(r)
+        q = """
+            SELECT (COUNT(*) AS ?count) 
+            WHERE {
+              GRAPH <XXX> {
+                ?s ?p ?o
+              }
+            }        
+            """.replace("XXX", TESTING_GRAPH)
+
+        r = query(
+            SPARQL_ENDPOINT,
+            q,
+            http_client=http_client,
+            return_format="python",
+            return_bindings_only=True,
+        )
+
+        assert r[0]["count"] == 0
