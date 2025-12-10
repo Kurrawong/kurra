@@ -7,7 +7,6 @@ from typer.testing import CliRunner
 from kurra.cli import app
 from kurra.db.gsp import upload
 from kurra.db.sparql import query
-from typer.testing import CliRunner
 
 runner = CliRunner()
 
@@ -22,7 +21,9 @@ def test_query_db(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
     TESTING_GRAPH = "https://example.com/testing-graph"
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
 
     q = dedent("""
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#> 
@@ -57,19 +58,20 @@ def test_query_file():
 
     result = runner.invoke(
         app,
-        [
-            "sparql",
-            str(LANG_TEST_VOC),
-            q
-        ],
+        ["sparql", str(LANG_TEST_VOC), q],
     )
-    assert "https://example.com/demo-vocabs/language-test/lang-and-no-lang" in result.output
+    assert (
+        "https://example.com/demo-vocabs/language-test/lang-and-no-lang"
+        in result.output
+    )
 
 
 def test_select(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
 
     result = runner.invoke(
         app,
@@ -85,7 +87,9 @@ def test_select(fuseki_container, http_client):
 def test_describe(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
 
     result = runner.invoke(
         app,

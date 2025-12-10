@@ -4,8 +4,8 @@ from pathlib import Path
 
 import httpx
 import pytest
-from kurra.db.gsp import clear, upload
 
+from kurra.db.gsp import clear, upload
 from kurra.sparql import query
 from kurra.utils import RenderFormat, render_sparql_result
 
@@ -17,7 +17,9 @@ def test_query_db(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
     # SPARQL_ENDPOINT = "http://localhost:3030/test"
     TESTING_GRAPH = "https://example.com/testing-graph"
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
 
     q = """
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#> 
@@ -37,7 +39,13 @@ def test_query_db(fuseki_container, http_client):
         in json.loads(
             (
                 render_sparql_result(
-                    query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="python"), RenderFormat.json
+                    query(
+                        SPARQL_ENDPOINT,
+                        q,
+                        http_client=http_client,
+                        return_format="python",
+                    ),
+                    RenderFormat.json,
                 )
             )
         )["head"]["vars"]
@@ -262,11 +270,15 @@ def test_duplicates():
 
 def test_auth(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
-    #SPARQL_ENDPOINT = "http://localhost:3030/test"
+    # SPARQL_ENDPOINT = "http://localhost:3030/test"
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
 
-    x = httpx.get(SPARQL_ENDPOINT, params={"query": "ASK { ?s ?p ?o}"}, auth=("admin", "admin"))
+    x = httpx.get(
+        SPARQL_ENDPOINT, params={"query": "ASK { ?s ?p ?o}"}, auth=("admin", "admin")
+    )
 
     q = "ASK {?s ?p ?o}"
     r = query(
@@ -280,14 +292,21 @@ def test_auth(fuseki_container, http_client):
 
     with pytest.raises(RuntimeError):
         query(
-            SPARQL_ENDPOINT, q, None, None, return_format="python", return_bindings_only=True
+            SPARQL_ENDPOINT,
+            q,
+            None,
+            None,
+            return_format="python",
+            return_bindings_only=True,
         )
 
 
 def test_construct(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
 
     q = """
         CONSTRUCT { ?s ?p ?o }
@@ -306,7 +325,9 @@ def test_construct(fuseki_container, http_client):
 def test_insert(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
 
     q = """
         INSERT { ?s ?p ?o }
@@ -326,7 +347,9 @@ def test_204_response(fuseki_container, http_client):
     # DROP data from SPARQL Endpoint
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
     r = query(
         SPARQL_ENDPOINT,
         "DROP ALL",
@@ -362,7 +385,9 @@ def test_describe(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client)
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
 
     g = query(
         SPARQL_ENDPOINT,
@@ -377,7 +402,9 @@ def test_return_formats(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client)
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
 
     with pytest.raises(
         ValueError,
@@ -464,7 +491,9 @@ def test_deep_python(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client)
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client)
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
 
     q = """
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>

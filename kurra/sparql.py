@@ -97,7 +97,9 @@ def query(
 
         r = None
         if isinstance(p, str) and p.startswith("http"):
-            r = db_query(p, q, namespaces, http_client, return_format, return_bindings_only)
+            r = db_query(
+                p, q, namespaces, http_client, return_format, return_bindings_only
+            )
 
         if close_http_client:
             http_client.close()
