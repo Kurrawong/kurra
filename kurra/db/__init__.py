@@ -3,20 +3,26 @@ from typing import Literal as LiteralType
 import httpx
 from rdflib import Literal
 
-from kurra.db.utils import _guess_query_is_update, _guess_return_type_for_sparql_query, make_sparql_dataframe
+from kurra.db.utils import (
+    _guess_query_is_update,
+    _guess_return_type_for_sparql_query,
+    make_sparql_dataframe,
+)
 
 
 def query(
-        sparql_endpoint: str,
-        q: str,
-        namespaces: dict[str, str] | None = None,
-        http_client: httpx.Client = None,
-        return_format: LiteralType["original", "python", "dataframe"] = "original",
-        return_bindings_only: bool = False,
+    sparql_endpoint: str,
+    q: str,
+    namespaces: dict[str, str] | None = None,
+    http_client: httpx.Client = None,
+    return_format: LiteralType["original", "python", "dataframe"] = "original",
+    return_bindings_only: bool = False,
 ):
     """Poses a SPARQL query to a SPARQL Endpoint"""
     if return_format not in ["original", "python", "dataframe"]:
-        raise ValueError("return_format must be either 'original', 'python' or 'dataframe'")
+        raise ValueError(
+            "return_format must be either 'original', 'python' or 'dataframe'"
+        )
 
     if namespaces is not None:
         preamble = ""
@@ -26,14 +32,23 @@ def query(
         q = preamble + q
 
     if return_format == "dataframe":
-        if "CONSTRUCT" in q or "DESCRIBE" in q or "INSERT" in q or "DELETE" in q or "DROP" in q:
-            raise ValueError("Only SELECT and ASK queries can have return_format set to \"dataframe\"")
+        if (
+            "CONSTRUCT" in q
+            or "DESCRIBE" in q
+            or "INSERT" in q
+            or "DELETE" in q
+            or "DROP" in q
+        ):
+            raise ValueError(
+                'Only SELECT and ASK queries can have return_format set to "dataframe"'
+            )
 
         try:
             from pandas import DataFrame
         except ImportError:
             raise ValueError(
-                "You selected the output format \"dataframe\" by the pandas Python package is not installed.")
+                'You selected the output format "dataframe" by the pandas Python package is not installed.'
+            )
 
     if http_client is None:
         http_client = httpx.Client()
@@ -79,7 +94,9 @@ def query(
                 for k, v in row.items():
                     if v["type"] == "literal":
                         if v.get("datatype") is not None:
-                            row[k] = Literal(v["value"], datatype=v["datatype"]).toPython()
+                            row[k] = Literal(
+                                v["value"], datatype=v["datatype"]
+                            ).toPython()
                         else:
                             row[k] = Literal(v["value"]).toPython()
                     elif v["type"] == "uri":

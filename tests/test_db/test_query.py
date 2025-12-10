@@ -28,7 +28,11 @@ def test_query(fuseki_container):
             """.replace("XXX", TESTING_GRAPH)
 
         r = query(
-            SPARQL_ENDPOINT, q, client, return_format="python", return_bindings_only=True
+            SPARQL_ENDPOINT,
+            q,
+            client,
+            return_format="python",
+            return_bindings_only=True,
         )
 
         assert r[0]["count"] == 2

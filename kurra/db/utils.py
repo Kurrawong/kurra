@@ -31,7 +31,9 @@ def make_sparql_dataframe(sparql_result: dict):
     try:
         from pandas import DataFrame
     except ImportError:
-        raise ValueError("You selected the output format \"dataframe\" by the pandas Python package is not installed.")
+        raise ValueError(
+            'You selected the output format "dataframe" by the pandas Python package is not installed.'
+        )
 
     if sparql_result.get("results") is not None:  # SELECT
         df = DataFrame(columns=sparql_result["head"]["vars"])
@@ -40,7 +42,9 @@ def make_sparql_dataframe(sparql_result: dict):
             for k, v in row.items():
                 if v["type"] == "literal":
                     if v.get("datatype") is not None:
-                        new_row[k] = Literal(v["value"], datatype=v["datatype"]).toPython()
+                        new_row[k] = Literal(
+                            v["value"], datatype=v["datatype"]
+                        ).toPython()
                     else:
                         new_row[k] = Literal(v["value"]).toPython()
                 else:

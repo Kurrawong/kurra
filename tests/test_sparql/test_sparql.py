@@ -3,8 +3,8 @@ import json
 from pathlib import Path
 
 import pytest
+from kurra.db.graph import clear, upload
 
-from kurra.db.graph import upload, clear
 from kurra.sparql import query
 from kurra.utils import RenderFormat, render_sparql_result
 
@@ -28,17 +28,19 @@ def test_query_db(fuseki_container, http_client):
             } 
         }"""
 
-    assert "--- | ---" in render_sparql_result(query(SPARQL_ENDPOINT, q, http_client, "python"))
+    assert "--- | ---" in render_sparql_result(
+        query(SPARQL_ENDPOINT, q, http_client, "python")
+    )
 
     assert (
-            "c"
-            in json.loads(
-        (
-            render_sparql_result(
-                query(SPARQL_ENDPOINT, q, http_client, "python"), RenderFormat.json
+        "c"
+        in json.loads(
+            (
+                render_sparql_result(
+                    query(SPARQL_ENDPOINT, q, http_client, "python"), RenderFormat.json
+                )
             )
-        )
-    )["head"]["vars"]
+        )["head"]["vars"]
     )
 
     # test return format options
@@ -55,33 +57,46 @@ def test_query_db(fuseki_container, http_client):
         }"""
 
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_format="python", return_bindings_only=True
+        SPARQL_ENDPOINT,
+        q,
+        http_client,
+        return_format="python",
+        return_bindings_only=True,
     )
     assert r[0]["c"] == "https://example.com/demo-vocabs/language-test/en-only"
 
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_format="python", return_bindings_only=False
+        SPARQL_ENDPOINT,
+        q,
+        http_client,
+        return_format="python",
+        return_bindings_only=False,
     )
     assert (
-            r["results"]["bindings"][0]["c"]
-            == "https://example.com/demo-vocabs/language-test/en-only"
+        r["results"]["bindings"][0]["c"]
+        == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     r = query(SPARQL_ENDPOINT, q, http_client)
     r2 = json.loads(r)
     assert (
-            r2["results"]["bindings"][0]["c"]["value"]
-            == "https://example.com/demo-vocabs/language-test/en-only"
+        r2["results"]["bindings"][0]["c"]["value"]
+        == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_format="original", return_bindings_only=True
+        SPARQL_ENDPOINT,
+        q,
+        http_client,
+        return_format="original",
+        return_bindings_only=True,
     )
     # return_bindings_only=True is ignored since return format is not "python"
     assert isinstance(r, str)
     r2 = json.loads(r)
     assert (
-            r2["results"]["bindings"][0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+        r2["results"]["bindings"][0]["c"]["value"]
+        == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     q = "ASK {?s ?p ?o}"
@@ -94,7 +109,11 @@ def test_query_db(fuseki_container, http_client):
 
     q = "ASK {?s ?p ?o}"
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_format="python", return_bindings_only=True
+        SPARQL_ENDPOINT,
+        q,
+        http_client,
+        return_format="python",
+        return_bindings_only=True,
     )
     assert r
 
@@ -105,7 +124,11 @@ def test_query_db(fuseki_container, http_client):
 
     q = "ASK {?s ?p <http://nothing.com/x>}"
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_format="python", return_bindings_only=True
+        SPARQL_ENDPOINT,
+        q,
+        http_client,
+        return_format="python",
+        return_bindings_only=True,
     )
     assert not r
 
@@ -125,14 +148,13 @@ def test_query_file():
         }
         LIMIT 3"""
 
-    assert "--- | --- | ---" in render_sparql_result(query(LANG_TEST_VOC, q, return_format="python"))
+    assert "--- | --- | ---" in render_sparql_result(
+        query(LANG_TEST_VOC, q, return_format="python")
+    )
 
     r = query(LANG_TEST_VOC, q)
     assert (
-            "pl"
-            in json.loads(render_sparql_result(r, RenderFormat.json))[
-                "head"
-            ]["vars"]
+        "pl" in json.loads(render_sparql_result(r, RenderFormat.json))["head"]["vars"]
     )
 
     # test return format options
@@ -156,16 +178,16 @@ def test_query_file():
 
     r = query(LANG_TEST_VOC, q, return_format="python", return_bindings_only=False)
     assert (
-            r["results"]["bindings"][0]["c"]["value"]
-            == "https://example.com/demo-vocabs/language-test/en-only"
+        r["results"]["bindings"][0]["c"]["value"]
+        == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     r = query(LANG_TEST_VOC, q, return_format="original", return_bindings_only=False)
     assert isinstance(r, str)
     r2 = json.loads(r)
     assert (
-            r2["results"]["bindings"][0]["c"]["value"]
-            == "https://example.com/demo-vocabs/language-test/en-only"
+        r2["results"]["bindings"][0]["c"]["value"]
+        == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     r = query(LANG_TEST_VOC, q, return_format="original", return_bindings_only=True)
@@ -173,7 +195,8 @@ def test_query_file():
     assert isinstance(r, str)
     r2 = json.loads(r)
     assert (
-            r2["results"]["bindings"][0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+        r2["results"]["bindings"][0]["c"]["value"]
+        == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     q = "ASK {?s ?p ?o}"
@@ -246,7 +269,11 @@ def test_auth(fuseki_container, http_client):
 
     q = "ASK {?s ?p ?o}"
     r = query(
-        SPARQL_ENDPOINT, q, http_client, return_format="python", return_bindings_only=True
+        SPARQL_ENDPOINT,
+        q,
+        http_client,
+        return_format="python",
+        return_bindings_only=True,
     )
     assert r
 
@@ -299,16 +326,33 @@ def test_204_response(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
-    r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client, return_format="python", return_bindings_only=True)
+    r = query(
+        SPARQL_ENDPOINT,
+        "DROP ALL",
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=True,
+    )
     assert r == ""
 
     # DROP data from a file
     with pytest.raises(NotImplementedError):
-        query(Path(__file__).parent / "vocab.nq", "DROP ALL", return_format="python", return_bindings_only=True)
+        query(
+            Path(__file__).parent / "vocab.nq",
+            "DROP ALL",
+            return_format="python",
+            return_bindings_only=True,
+        )
 
     # DROP no data
     clear(SPARQL_ENDPOINT, "all", http_client)
-    r = query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client, return_format="python", return_bindings_only=True)
+    r = query(
+        SPARQL_ENDPOINT,
+        "DROP ALL",
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=True,
+    )
     assert r == ""
 
 
@@ -319,7 +363,12 @@ def test_describe(fuseki_container, http_client):
     query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client)
     upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
 
-    g = query(SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>", http_client, "python")
+    g = query(
+        SPARQL_ENDPOINT,
+        "DESCRIBE <https://example.com/demo-vocabs/language-test>",
+        http_client,
+        "python",
+    )
     assert len(g) == 16
 
 
@@ -329,13 +378,27 @@ def test_return_formats(fuseki_container, http_client):
     query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client)
     upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client)
 
-    with pytest.raises(ValueError, match="return_format must be either 'original', 'python' or 'dataframe'"):
-        g = query(SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>", http_client=http_client,
-                  return_format="json")
+    with pytest.raises(
+        ValueError,
+        match="return_format must be either 'original', 'python' or 'dataframe'",
+    ):
+        g = query(
+            SPARQL_ENDPOINT,
+            "DESCRIBE <https://example.com/demo-vocabs/language-test>",
+            http_client=http_client,
+            return_format="json",
+        )
 
-    with pytest.raises(ValueError, match="Only SELECT and ASK queries can have return_format set to \"dataframe\""):
-        g = query(SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>", http_client=http_client,
-                  return_format="dataframe")
+    with pytest.raises(
+        ValueError,
+        match='Only SELECT and ASK queries can have return_format set to "dataframe"',
+    ):
+        g = query(
+            SPARQL_ENDPOINT,
+            "DESCRIBE <https://example.com/demo-vocabs/language-test>",
+            http_client=http_client,
+            return_format="dataframe",
+        )
 
     q = """
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -356,6 +419,7 @@ def test_return_formats(fuseki_container, http_client):
     r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="dataframe")
 
     from pandas import DataFrame
+
     assert type(r) == DataFrame
     assert r["pl"][0] == "English prefLabel"
 
@@ -411,7 +475,13 @@ def test_deep_python(fuseki_container, http_client):
         }
         ORDER BY ?pl
         """
-    r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="python", return_bindings_only=False)
+    r = query(
+        SPARQL_ENDPOINT,
+        q,
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=False,
+    )
     assert r["results"]["bindings"][0]["count"] == 7
 
     q = """
@@ -427,7 +497,14 @@ def test_deep_python(fuseki_container, http_client):
         }
         ORDER BY ?pl
         """
-    r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="python", return_bindings_only=False)
+    r = query(
+        SPARQL_ENDPOINT,
+        q,
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=False,
+    )
     import pprint
+
     pprint.pprint(r)
     assert isinstance(r["results"]["bindings"][0]["dc"], datetime.date)

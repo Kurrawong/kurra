@@ -1,10 +1,11 @@
+from pathlib import Path
+
 import pytest
 from typer.testing import CliRunner
 
 from kurra.cli import app
 from kurra.cli.console import console
 from kurra.sparql import query
-from pathlib import Path
 
 runner = CliRunner()
 

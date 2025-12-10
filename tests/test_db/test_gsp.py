@@ -4,7 +4,7 @@ import pytest
 from typer.testing import CliRunner
 
 from kurra.db import query
-from kurra.db.gsp import exists, get, put, post, delete, clear, upload
+from kurra.db.gsp import clear, delete, exists, get, post, put, upload
 from kurra.utils import load_graph
 
 runner = CliRunner()
@@ -56,7 +56,7 @@ def test_put(fuseki_container, http_client):
         namespaces={"skos": "http://www.w3.org/2004/02/skos/core#"},
         return_format="python",
         return_bindings_only=True,
-        http_client=http_client
+        http_client=http_client,
     )
     assert r[0]["count"] == 7
 
@@ -65,10 +65,12 @@ def test_put(fuseki_container, http_client):
 
     r = query(
         SPARQL_ENDPOINT,
-        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <" + TESTING_GRAPH + "> {?s ?p ?o}}",
+        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
+        + TESTING_GRAPH
+        + "> {?s ?p ?o}}",
         return_format="python",
         return_bindings_only=True,
-        http_client=http_client
+        http_client=http_client,
     )
     assert r[0]["count"] == 3
 
@@ -85,7 +87,7 @@ def test_post(fuseki_container, http_client):
         namespaces={"skos": "http://www.w3.org/2004/02/skos/core#"},
         return_format="python",
         return_bindings_only=True,
-        http_client=http_client
+        http_client=http_client,
     )
     assert r[0]["count"] == 7
 
@@ -94,10 +96,12 @@ def test_post(fuseki_container, http_client):
 
     r = query(
         SPARQL_ENDPOINT,
-        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <" + TESTING_GRAPH + "> {?s ?p ?o}}",
+        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
+        + TESTING_GRAPH
+        + "> {?s ?p ?o}}",
         return_format="python",
         return_bindings_only=True,
-        http_client=http_client
+        http_client=http_client,
     )
     assert r[0]["count"] == 80
 
@@ -114,7 +118,7 @@ def test_delete(fuseki_container, http_client):
         namespaces={"skos": "http://www.w3.org/2004/02/skos/core#"},
         return_format="python",
         return_bindings_only=True,
-        http_client=http_client
+        http_client=http_client,
     )
     assert r[0]["count"] == 7
 
@@ -122,10 +126,12 @@ def test_delete(fuseki_container, http_client):
 
     r = query(
         SPARQL_ENDPOINT,
-        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <" + TESTING_GRAPH + "> {?s ?p ?o}}",
+        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
+        + TESTING_GRAPH
+        + "> {?s ?p ?o}}",
         return_format="python",
         return_bindings_only=True,
-        http_client=http_client
+        http_client=http_client,
     )
     assert r[0]["count"] == 0
 
@@ -144,10 +150,12 @@ def test_upload(fuseki_container, http_client):
 
     r = query(
         SPARQL_ENDPOINT,
-        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <" + TESTING_GRAPH + "> {?s ?p ?o}}",
+        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
+        + TESTING_GRAPH
+        + "> {?s ?p ?o}}",
         return_format="python",
         return_bindings_only=True,
-        http_client=http_client
+        http_client=http_client,
     )
     assert r[0]["count"] == 77
 
@@ -155,10 +163,12 @@ def test_upload(fuseki_container, http_client):
 
     r = query(
         SPARQL_ENDPOINT,
-        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <" + TESTING_GRAPH + "> {?s ?p ?o}}",
+        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
+        + TESTING_GRAPH
+        + "> {?s ?p ?o}}",
         return_format="python",
         return_bindings_only=True,
-        http_client=http_client
+        http_client=http_client,
     )
     assert r[0]["count"] == 3
 
@@ -166,15 +176,19 @@ def test_upload(fuseki_container, http_client):
 
     r = query(
         SPARQL_ENDPOINT,
-        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <" + TESTING_GRAPH + "> {?s ?p ?o}}",
+        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
+        + TESTING_GRAPH
+        + "> {?s ?p ?o}}",
         return_format="python",
         return_bindings_only=True,
-        http_client=http_client
+        http_client=http_client,
     )
     assert r[0]["count"] == 80
 
 
-@pytest.mark.skip(reason="Test works with normal Fuseki but not testing container version")
+@pytest.mark.skip(
+    reason="Test works with normal Fuseki but not testing container version"
+)
 def test_upload_no_graph(fuseki_container):
     port = fuseki_container.get_exposed_port(3030)
     SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
@@ -196,9 +210,11 @@ def test_upload_url(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
 
-    upload(SPARQL_ENDPOINT,
-           "https://raw.githubusercontent.com/Kurrawong/kurra/refs/heads/main/tests/test_fuseki/config.ttl",
-           TESTING_GRAPH)
+    upload(
+        SPARQL_ENDPOINT,
+        "https://raw.githubusercontent.com/Kurrawong/kurra/refs/heads/main/tests/test_fuseki/config.ttl",
+        TESTING_GRAPH,
+    )
 
     q = """
         SELECT (COUNT(?s) AS ?c)
@@ -215,9 +231,7 @@ def test_upload_url(fuseki_container, http_client):
     # now test one with Content Negotiation and a redirect
     clear(SPARQL_ENDPOINT, TESTING_GRAPH, http_client)
 
-    upload(SPARQL_ENDPOINT,
-           "https://linked.data.gov.au/def/vocdermods",
-           TESTING_GRAPH)
+    upload(SPARQL_ENDPOINT, "https://linked.data.gov.au/def/vocdermods", TESTING_GRAPH)
 
     r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
 

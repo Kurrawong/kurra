@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union
 
 import httpx
-from rdflib import Graph, URIRef, BNode, Literal, Dataset
+from rdflib import BNode, Dataset, Graph, Literal, URIRef
 
 RDF_MEDIA_TYPES = {
     "xml": "application/rdf+xml",
@@ -62,7 +62,9 @@ def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> G
     # Serialized RDF file or dir of files
     if isinstance(graph_path_or_str, Path):
         if Path(graph_path_or_str).is_file():
-            if str(graph_path_or_str).endswith(".trig") or str(graph_path_or_str).endswith(".jsonld"):
+            if str(graph_path_or_str).endswith(".trig") or str(
+                graph_path_or_str
+            ).endswith(".jsonld"):
                 return Dataset().parse(str(graph_path_or_str))
             return Graph().parse(str(graph_path_or_str))
         elif Path(graph_path_or_str).is_dir():
@@ -89,7 +91,7 @@ def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> G
 
 
 def render_sparql_result(
-        r: dict | str | Graph, rf: RenderFormat = RenderFormat.markdown
+    r: dict | str | Graph, rf: RenderFormat = RenderFormat.markdown
 ) -> str:
     """Renders a SPARQL result in a given render format"""
     if rf == RenderFormat.original:
@@ -107,6 +109,7 @@ def render_sparql_result(
         if isinstance(r, Graph):  # CONSTRUCT: RDF GRaph
             output = "```turtle\n" + r.serialize(format="longturtle") + "```\n"
         else:  # SELECT or ASK: Python dict or JSON
+
             def render_sparql_value(v: dict) -> str:
                 # TODO: handle v["datatype"]
                 if v is None:
@@ -138,7 +141,7 @@ def render_sparql_result(
                         header[0] += f"{col} | "
                         header[1] += f"--- | "
                     output = (
-                            "| " + header[0].strip() + "\n| " + header[1].strip() + "\n"
+                        "| " + header[0].strip() + "\n| " + header[1].strip() + "\n"
                     )
 
             if r.get("results"):
@@ -163,8 +166,8 @@ def render_sparql_result(
 
 
 def make_httpx_client(
-        sparql_username: str = None,
-        sparql_password: str = None,
+    sparql_username: str = None,
+    sparql_password: str = None,
 ):
     auth = None
     if sparql_username:

@@ -2,7 +2,7 @@ from io import TextIOBase
 from pathlib import Path
 
 import httpx
-from rdflib import Graph, RDF, URIRef
+from rdflib import RDF, Graph, URIRef
 
 
 class FusekiError(Exception):
@@ -14,8 +14,8 @@ class FusekiError(Exception):
 
 
 def ping(
-        server_url: str,
-        http_client: httpx.Client | None = None,
+    server_url: str,
+    http_client: httpx.Client | None = None,
 ):
     close_http_client = False
     if http_client is None:
@@ -36,8 +36,8 @@ def ping(
 
 
 def server(
-        server_url: str,
-        http_client: httpx.Client | None = None,
+    server_url: str,
+    http_client: httpx.Client | None = None,
 ):
     close_http_client = False
     if http_client is None:
@@ -48,7 +48,9 @@ def server(
 
     if r.status_code != 200:
         raise FusekiError(
-            f"Failed to get server information for server at {server_url}", r.text, r.status_code
+            f"Failed to get server information for server at {server_url}",
+            r.text,
+            r.status_code,
         )
 
     if close_http_client:
@@ -58,16 +60,16 @@ def server(
 
 
 def status(
-        server_url: str,
-        http_client: httpx.Client | None = None,
+    server_url: str,
+    http_client: httpx.Client | None = None,
 ):
     return server(server_url, http_client=http_client)
 
 
 def stats(
-        server_url: str,
-        name: str = None,
-        http_client: httpx.Client | None = None,
+    server_url: str,
+    name: str = None,
+    http_client: httpx.Client | None = None,
 ):
     close_http_client = False
     if http_client is None:
@@ -89,24 +91,24 @@ def stats(
 
 
 def backup(
-        server_url: str,
-        name: str,
-        http_client: httpx.Client | None = None,
+    server_url: str,
+    name: str,
+    http_client: httpx.Client | None = None,
 ):
     raise NotImplementedError("backup/backups is not implemented yet")
 
 
 def backups(
-        server_url: str,
-        name: str,
-        http_client: httpx.Client | None = None,
+    server_url: str,
+    name: str,
+    http_client: httpx.Client | None = None,
 ):
     return backup(server_url, name, http_client)
 
 
 def backups_list(
-        server_url: str,
-        http_client: httpx.Client | None = None,
+    server_url: str,
+    http_client: httpx.Client | None = None,
 ):
     close_http_client = False
     if http_client is None:
@@ -127,16 +129,16 @@ def backups_list(
 
 
 def sleep(
-        server_url: str,
-        http_client: httpx.Client | None = None,
+    server_url: str,
+    http_client: httpx.Client | None = None,
 ):
     raise NotImplementedError("sleep is not implemented yet")
 
 
 def tasks(
-        server_url: str,
-        name: str = None,
-        http_client: httpx.Client | None = None,
+    server_url: str,
+    name: str = None,
+    http_client: httpx.Client | None = None,
 ):
     close_http_client = False
     if http_client is None:
@@ -158,8 +160,8 @@ def tasks(
 
 
 def metrics(
-        server_url: str,
-        http_client: httpx.Client | None = None,
+    server_url: str,
+    http_client: httpx.Client | None = None,
 ):
     close_http_client = False
     if http_client is None:
@@ -180,9 +182,9 @@ def metrics(
 
 
 def describe(
-        base_url: str,
-        dataset_name: str = None,
-        http_client: httpx.Client | None = None,
+    base_url: str,
+    dataset_name: str = None,
+    http_client: httpx.Client | None = None,
 ) -> dict:
     """
     Describe the datasetss or a single dataset in a Fuseki server instances.
@@ -199,7 +201,11 @@ def describe(
         close_http_client = True
 
     headers = {"accept": "application/json"}
-    url = f"{base_url}/$/datasets/{dataset_name}" if dataset_name is not None else f"{base_url}/$/datasets"
+    url = (
+        f"{base_url}/$/datasets/{dataset_name}"
+        if dataset_name is not None
+        else f"{base_url}/$/datasets"
+    )
     r = http_client.get(url, headers=headers)
 
     if r.status_code != 200:
@@ -225,10 +231,10 @@ def describe(
 
 
 def create(
-        sparql_endpoint: str,
-        dataset_name_or_config_file: str | TextIOBase | Path,
-        dataset_type: str = "tdb2",
-        http_client: httpx.Client | None = None,
+    sparql_endpoint: str,
+    dataset_name_or_config_file: str | TextIOBase | Path,
+    dataset_type: str = "tdb2",
+    http_client: httpx.Client | None = None,
 ) -> str:
     close_http_client = False
     if http_client is None:
@@ -282,7 +288,7 @@ def create(
 
 
 def delete(
-        base_url: str, dataset_name: str, http_client: httpx.Client | None = None
+    base_url: str, dataset_name: str, http_client: httpx.Client | None = None
 ) -> str:
     """
     Delete a Fuseki dataset.

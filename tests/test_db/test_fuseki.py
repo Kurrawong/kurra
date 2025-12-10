@@ -4,10 +4,24 @@ from io import StringIO
 from pathlib import Path
 
 import pytest
-from rdflib import Graph, RDF, URIRef
+from rdflib import RDF, Graph, URIRef
 
-from kurra.db.fuseki import FusekiError, ping, server, status, stats, backup, backups, backups_list, sleep, tasks, metrics, create, \
-    delete, describe
+from kurra.db.fuseki import (
+    FusekiError,
+    backup,
+    backups,
+    backups_list,
+    create,
+    delete,
+    describe,
+    metrics,
+    ping,
+    server,
+    sleep,
+    stats,
+    status,
+    tasks,
+)
 from kurra.sparql import query
 
 
@@ -134,8 +148,8 @@ def test_describe_non_existent(fuseki_container, http_client):
         describe(base_url, http_client)
 
     assert (
-            f"Failed to list datasets at http://localhost:{port}/some-url"
-            in exc_info.value.message
+        f"Failed to list datasets at http://localhost:{port}/some-url"
+        in exc_info.value.message
     )
 
 
@@ -275,10 +289,7 @@ PREFIX text:      <http://jena.apache.org/text#>
         text:uidField      "uid" ."""
     )
     r = create(base_url, config_file, http_client=http_client)
-    assert (
-            r
-            == f"Dataset {dataset_name} created using assembler config at {base_url}."
-    )
+    assert r == f"Dataset {dataset_name} created using assembler config at {base_url}."
 
     result = describe(base_url, http_client=http_client)
     assert f"/{dataset_name}" in list(map(lambda x: x["ds.name"], result))
@@ -298,10 +309,7 @@ def test_create_by_config_file_with_existing_dataset(fuseki_container, http_clie
     )
     r = create(base_url, file, http_client=http_client)
 
-    assert (
-            r
-            == f"Dataset {dataset_name} created using assembler config at {base_url}."
-    )
+    assert r == f"Dataset {dataset_name} created using assembler config at {base_url}."
 
     result = describe(base_url, http_client=http_client)
     assert f"/{dataset_name}" in list(map(lambda x: x["ds.name"], result))

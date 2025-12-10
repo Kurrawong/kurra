@@ -16,12 +16,12 @@ app = typer.Typer(help="SHACL commands")
     help="Validate a given file or directory of RDF files using a given SHACL file or directory of files",
 )
 def shacl_command(
-        file_or_dir: Path = typer.Argument(
-            ..., help="The file or directory of RDF files to be validated"
-        ),
-        shacl_file_or_dir: Path = typer.Argument(
-            ..., help="The file or directory of SAHCL files to validate with"
-        ),
+    file_or_dir: Path = typer.Argument(
+        ..., help="The file or directory of RDF files to be validated"
+    ),
+    shacl_file_or_dir: Path = typer.Argument(
+        ..., help="The file or directory of SAHCL files to validate with"
+    ),
 ) -> None:
     """Validate a given file or directory of files using a given SHACL file or directory of files"""
     valid, g, txt = validate(file_or_dir, shacl_file_or_dir)

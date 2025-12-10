@@ -7,14 +7,14 @@ import httpx
 from rdflib import Graph
 
 from kurra.utils import load_graph
-from .utils import rdf_suffix_map
+
 from .sparql import query
+from .utils import rdf_suffix_map
 
 
 def exists(
-        sparql_endpoint: str,
-        graph_iri: str,
-        http_client: httpx.Client | None = None) -> bool:
+    sparql_endpoint: str, graph_iri: str, http_client: httpx.Client | None = None
+) -> bool:
     """Returns True if a graph with the given graph_iri exists at the SPARQL Endpoint or else False"""
     if not sparql_endpoint.startswith("http"):
         raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
@@ -39,10 +39,11 @@ def exists(
 
 
 def get(
-        sparql_endpoint: str,
-        graph_iri: str = "default",
-        content_type="text/turtle",
-        http_client: httpx.Client | None = None) -> Union[Graph, int]:
+    sparql_endpoint: str,
+    graph_iri: str = "default",
+    content_type="text/turtle",
+    http_client: httpx.Client | None = None,
+) -> Union[Graph, int]:
     """Graph Store Protocol's HTTP GET: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-get
 
     Returns the content of the graph identified by graph_id in the target SPARQL Endpoint
@@ -51,7 +52,9 @@ def get(
         raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
 
     if content_type not in rdf_suffix_map.values():
-        raise ValueError(f"Media Type requested not available. Allow types are {', '.join(rdf_suffix_map.values())}")
+        raise ValueError(
+            f"Media Type requested not available. Allow types are {', '.join(rdf_suffix_map.values())}"
+        )
 
     close_http_client = False
     if http_client is None:
@@ -61,7 +64,7 @@ def get(
     r = httpx.get(
         sparql_endpoint,
         params={"graph": graph_iri if graph_iri is not None else "default"},
-        headers={"Accept": content_type}
+        headers={"Accept": content_type},
     )
 
     if close_http_client:
@@ -74,11 +77,12 @@ def get(
 
 
 def put(
-        sparql_endpoint: str,
-        file_or_str_or_graph: Union[Path, str, Graph],
-        graph_iri: str = "default",
-        content_type="text/turtle",
-        http_client: httpx.Client | None = None) -> Union[Graph, int]:
+    sparql_endpoint: str,
+    file_or_str_or_graph: Union[Path, str, Graph],
+    graph_iri: str = "default",
+    content_type="text/turtle",
+    http_client: httpx.Client | None = None,
+) -> Union[Graph, int]:
     """Graph Store Protocol's HTTP PUT: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-put
 
     Inserts the RDF content supplied into a graph identified by graph_id or the default graph.
@@ -88,7 +92,9 @@ def put(
         raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
 
     if content_type not in rdf_suffix_map.values():
-        raise ValueError(f"Media Type requested not available. Allow types are {', '.join(rdf_suffix_map.values())}")
+        raise ValueError(
+            f"Media Type requested not available. Allow types are {', '.join(rdf_suffix_map.values())}"
+        )
 
     close_http_client = False
     if http_client is None:
@@ -112,11 +118,12 @@ def put(
 
 
 def post(
-        sparql_endpoint: str,
-        file_or_str_or_graph: Union[Path, str, Graph],
-        graph_iri: str = "default",
-        content_type="text/turtle",
-        http_client: httpx.Client | None = None) -> Union[Graph, int]:
+    sparql_endpoint: str,
+    file_or_str_or_graph: Union[Path, str, Graph],
+    graph_iri: str = "default",
+    content_type="text/turtle",
+    http_client: httpx.Client | None = None,
+) -> Union[Graph, int]:
     """Graph Store Protocol's HTTP POST: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-post
 
     Inserts the RDF content supplied into a graph identified by graph_id or the default graph.
@@ -126,7 +133,9 @@ def post(
         raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
 
     if content_type not in rdf_suffix_map.values():
-        raise ValueError(f"Media Type requested not available. Allow types are {', '.join(rdf_suffix_map.values())}")
+        raise ValueError(
+            f"Media Type requested not available. Allow types are {', '.join(rdf_suffix_map.values())}"
+        )
 
     close_http_client = False
     if http_client is None:
@@ -136,7 +145,9 @@ def post(
     r = httpx.post(
         sparql_endpoint,
         params={"graph": graph_iri if graph_iri is not None else "default"},
-        headers={"Content-Type": content_type,},
+        headers={
+            "Content-Type": content_type,
+        },
         content=load_graph(file_or_str_or_graph).serialize(format=content_type),
     )
 
@@ -150,9 +161,10 @@ def post(
 
 
 def delete(
-        sparql_endpoint: str,
-        graph_iri: str = "default",
-        http_client: httpx.Client | None = None) -> Union[Graph, int]:
+    sparql_endpoint: str,
+    graph_iri: str = "default",
+    http_client: httpx.Client | None = None,
+) -> Union[Graph, int]:
     """Graph Store Protocol's HTTP DELETE: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-delete
 
     Deletes the graph identified by graph_id or the default graph."""
@@ -179,9 +191,8 @@ def delete(
 
 
 def clear(
-        sparql_endpoint: str,
-        graph_iri: str,
-        http_client: httpx.Client | None = None):
+    sparql_endpoint: str, graph_iri: str, http_client: httpx.Client | None = None
+):
     """SPARQL Update Clear function: https://www.w3.org/TR/sparql12-update/#clear
 
     Clears - remove all triples from - an identified graph or from all graphs if "all" is given as the graph_id.
@@ -192,12 +203,12 @@ def clear(
 
 
 def upload(
-        sparql_endpoint: str,
-        file_or_str_or_graph: Union[Path, str, Graph],
-        graph_id: str | None = None,
-        append: bool = False,
-        content_type: str = "text/turtle",
-        http_client: httpx.Client | None = None,
+    sparql_endpoint: str,
+    file_or_str_or_graph: Union[Path, str, Graph],
+    graph_id: str | None = None,
+    append: bool = False,
+    content_type: str = "text/turtle",
+    http_client: httpx.Client | None = None,
 ) -> Union[bool, int]:
     """This function uploads a file to a SPARQL Endpoint using the Graph Store Protocol.
 
@@ -210,6 +221,10 @@ def upload(
     This function is an alias of put() (append=False) and post() (append=True)."""
 
     if append:
-        return post(sparql_endpoint, file_or_str_or_graph, graph_id, content_type, http_client)
+        return post(
+            sparql_endpoint, file_or_str_or_graph, graph_id, content_type, http_client
+        )
     else:
-        return put(sparql_endpoint, file_or_str_or_graph, graph_id, content_type, http_client)
+        return put(
+            sparql_endpoint, file_or_str_or_graph, graph_id, content_type, http_client
+        )

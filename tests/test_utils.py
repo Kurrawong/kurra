@@ -454,6 +454,6 @@ def test_render_sparql_result():
     assert json.loads(render_sparql_result(r7, RenderFormat.json)) == expected
 
     assert (
-            '"@id": "http://def.isotc211.org/19115/-1/2014/IdentificationInformation/code/MD_ProgressCode/completed"'
-            in str(render_sparql_result(r6, RenderFormat.json))
+        '"@id": "http://def.isotc211.org/19115/-1/2014/IdentificationInformation/code/MD_ProgressCode/completed"'
+        in str(render_sparql_result(r6, RenderFormat.json))
     )

@@ -11,7 +11,7 @@ from tests.test_cli.db.test_fuseki import runner
 runner = CliRunner()
 
 LANG_TEST_VOC = (
-        Path(__file__).parent.parent.resolve() / "test_sparql" / "language-test.ttl"
+    Path(__file__).parent.parent.resolve() / "test_sparql" / "language-test.ttl"
 )
 TESTING_GRAPH = "https://example.com/testing-graph"
 
@@ -68,7 +68,11 @@ def test_select(fuseki_container, http_client):
 
     result = runner.invoke(
         app,
-        ["sparql", SPARQL_ENDPOINT, "SELECT * WHERE { <https://example.com/demo-vocabs/language-test> ?p ?o }"]
+        [
+            "sparql",
+            SPARQL_ENDPOINT,
+            "SELECT * WHERE { <https://example.com/demo-vocabs/language-test> ?p ?o }",
+        ],
     )
     assert "https://example.com/demo-vocabs/lan" in result.stdout
 
@@ -80,7 +84,11 @@ def test_describe(fuseki_container, http_client):
 
     result = runner.invoke(
         app,
-        ["sparql", SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>"],
+        [
+            "sparql",
+            SPARQL_ENDPOINT,
+            "DESCRIBE <https://example.com/demo-vocabs/language-test>",
+        ],
     )
     assert "Made in Nov 2024 just for testing" in result.stdout
 
