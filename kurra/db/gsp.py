@@ -28,10 +28,8 @@ def exists(
         close_http_client = True
 
     r = httpx.head(
-        f"{sparql_endpoint}",
-        params={
-            "graph": graph_iri,
-        }
+        sparql_endpoint,
+        params={"graph": graph_iri if graph_iri is not None else "default"},
     )
 
     if close_http_client:
@@ -61,13 +59,9 @@ def get(
         close_http_client = True
 
     r = httpx.get(
-        f"{sparql_endpoint}",
-        params={
-            "graph": graph_iri,
-        },
-        headers={
-            "Accept": content_type,
-        }
+        sparql_endpoint,
+        params={"graph": graph_iri if graph_iri is not None else "default"},
+        headers={"Accept": content_type}
     )
 
     if close_http_client:
@@ -102,13 +96,9 @@ def put(
         close_http_client = True
 
     r = httpx.put(
-        f"{sparql_endpoint}",
-        params={
-            "graph": graph_iri,
-        },
-        headers={
-            "Content-Type": content_type,
-        },
+        sparql_endpoint,
+        params={"graph": graph_iri if graph_iri is not None else "default"},
+        headers={"Content-Type": content_type},
         content=load_graph(file_or_str_or_graph).serialize(format=content_type),
     )
 
@@ -144,13 +134,9 @@ def post(
         close_http_client = True
 
     r = httpx.post(
-        f"{sparql_endpoint}",
-        params={
-            "graph": graph_iri,
-        },
-        headers={
-            "Content-Type": content_type,
-        },
+        sparql_endpoint,
+        params={"graph": graph_iri if graph_iri is not None else "default"},
+        headers={"Content-Type": content_type,},
         content=load_graph(file_or_str_or_graph).serialize(format=content_type),
     )
 
@@ -179,10 +165,8 @@ def delete(
         close_http_client = True
 
     r = httpx.delete(
-        f"{sparql_endpoint}",
-        params={
-            "graph": graph_iri,
-        }
+        sparql_endpoint,
+        params={"graph": graph_iri if graph_iri is not None else "default"},
     )
 
     if close_http_client:

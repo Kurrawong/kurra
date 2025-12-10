@@ -1,25 +1,137 @@
+import json
+from datetime import datetime
 from io import StringIO
 from pathlib import Path
 
 import pytest
-from rdflib import RDF, Graph, URIRef
+from rdflib import Graph, RDF, URIRef
 
-from kurra.db.fuseki.dataset import dataset_list, create, delete
-from kurra.db.fuseki.utils import FusekiError
+from kurra.db.fuseki import FusekiError, ping, server, status, stats, backup, backups, backups_list, sleep, tasks, metrics, create, \
+    delete, describe
+from kurra.sparql import query
 
 
-def test_db_list(fuseki_container, http_client):
+def test_ping(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    server_url = f"http://localhost:{port}"
+
+    r = ping(server_url, http_client=http_client)
+    assert r.startswith(str(datetime.now().year))
+
+
+def test_server(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    server_url = f"http://localhost:{port}"
+
+    r = server(server_url, http_client=http_client)
+    j = json.loads(r)
+    assert j["datasets"][0]["ds.name"] == "/ds"
+
+
+def test_status(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    server_url = f"http://localhost:{port}"
+
+    r = status(server_url, http_client=http_client)
+    j = json.loads(r)
+    assert j["datasets"][0]["ds.name"] == "/ds"
+
+
+def test_stats(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    server_url = f"http://localhost:{port}"
+    sparql_endpoint = f"http://localhost:{port}/ds"
+
+    # bump Request up by 2
+    query(sparql_endpoint, "ASK WHERE {?s ?p ?o}", http_client=http_client)
+    query(sparql_endpoint, "ASK WHERE {?s ?p ?o}", http_client=http_client)
+
+    r = stats(server_url, None, http_client=http_client)
+    j = json.loads(r)
+    assert j["datasets"]["/ds"]["Requests"] == 2
+
+    # adding in the name of an existing dataset gets the same result as no name
+    # adding in a non-existent name gets a 404 and no result
+    r = stats(server_url, "ds", http_client=http_client)
+    j = json.loads(r)
+    assert j["datasets"]["/ds"]["Requests"] == 2
+
+
+def test_backup(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    server_url = f"http://localhost:{port}"
+
+    with pytest.raises(NotImplementedError) as e:
+        backup(server_url, None, http_client=http_client)
+
+        assert str(e) == "backup/backups is not implemented yet"
+
+
+def test_backups(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    server_url = f"http://localhost:{port}"
+
+    with pytest.raises(NotImplementedError) as e:
+        backups(server_url, None, http_client=http_client)
+
+        assert str(e) == "backup/backups is not implemented yet"
+
+
+def test_backups_list(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    server_url = f"http://localhost:{port}"
+
+    r = backups_list(server_url, http_client=http_client)
+    j = json.loads(r)
+    assert j["backups"] == []
+
+
+def test_sleep(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    server_url = f"http://localhost:{port}"
+
+    with pytest.raises(NotImplementedError) as e:
+        sleep(server_url, http_client=http_client)
+
+        assert str(e) == "sleep is not implemented yet"
+
+
+def test_tasks(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    server_url = f"http://localhost:{port}"
+
+    r = tasks(server_url, None, http_client=http_client)
+    j = json.loads(r)
+    assert j == []
+
+
+def test_metrics(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    server_url = f"http://localhost:{port}"
+
+    r = metrics(server_url, http_client=http_client)
+    assert "# HELP" in r
+
+
+def test_describe(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}"
-    return_value = dataset_list(base_url, http_client)
-    assert "/ds" in list(map(lambda x: x["ds.name"], return_value))
+    r = describe(base_url, http_client=http_client)
+    assert "/ds" in list(map(lambda x: x["ds.name"], r))
 
 
-def test_db_list_non_existent(fuseki_container, http_client):
+def test_describe_one(fuseki_container, http_client):
+    port = fuseki_container.get_exposed_port(3030)
+    base_url = f"http://localhost:{port}"
+    r = describe(base_url, "ds", http_client=http_client)
+    assert r["ds.name"] == "/ds"
+
+
+def test_describe_non_existent(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}/some-url"
     with pytest.raises(FusekiError) as exc_info:
-        dataset_list(base_url, http_client)
+        describe(base_url, http_client)
 
     assert (
             f"Failed to list datasets at http://localhost:{port}/some-url"
@@ -31,10 +143,10 @@ def test_create_by_dataset_name(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}"
     dataset_name = "myds"
-    return_value = create(base_url, dataset_name, http_client=http_client)
-    assert return_value == f"Dataset {dataset_name} created at {base_url}."
+    r = create(base_url, dataset_name, http_client=http_client)
+    assert r == f"Dataset {dataset_name} created at {base_url}."
 
-    result = dataset_list(base_url, http_client=http_client)
+    result = describe(base_url, http_client=http_client)
     assert f"/{dataset_name}" in list(map(lambda x: x["ds.name"], result))
 
 
@@ -162,13 +274,13 @@ PREFIX text:      <http://jena.apache.org/text#>
                            );
         text:uidField      "uid" ."""
     )
-    return_value = create(base_url, config_file, http_client=http_client)
+    r = create(base_url, config_file, http_client=http_client)
     assert (
-            return_value
+            r
             == f"Dataset {dataset_name} created using assembler config at {base_url}."
     )
 
-    result = dataset_list(base_url, http_client=http_client)
+    result = describe(base_url, http_client=http_client)
     assert f"/{dataset_name}" in list(map(lambda x: x["ds.name"], result))
 
 
@@ -184,14 +296,14 @@ def test_create_by_config_file_with_existing_dataset(fuseki_container, http_clie
     dataset_name = graph.value(
         fuseki_service, URIRef("http://jena.apache.org/fuseki#name")
     )
-    return_value = create(base_url, file, http_client=http_client)
+    r = create(base_url, file, http_client=http_client)
 
     assert (
-            return_value
+            r
             == f"Dataset {dataset_name} created using assembler config at {base_url}."
     )
 
-    result = dataset_list(base_url, http_client=http_client)
+    result = describe(base_url, http_client=http_client)
     assert f"/{dataset_name}" in list(map(lambda x: x["ds.name"], result))
 
 
@@ -199,8 +311,8 @@ def test_delete(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}"
     dataset_name = "ds"
-    return_value = delete(base_url, dataset_name, http_client)
-    assert return_value == f"Dataset {dataset_name} deleted."
+    r = delete(base_url, dataset_name, http_client)
+    assert r == f"Dataset {dataset_name} deleted."
 
 
 def test_delete_non_existent(fuseki_container, http_client):

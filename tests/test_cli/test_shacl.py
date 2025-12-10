@@ -7,7 +7,7 @@ from kurra.cli import app
 runner = CliRunner()
 
 
-def test_cli_valid():
+def test_shacl_valid():
     SHACL_TEST_DIR = Path(__file__).parent.parent.resolve() / "test_shacl"
 
     result = runner.invoke(
@@ -22,7 +22,7 @@ def test_cli_valid():
     assert result.stdout.strip() == "The data is valid"
 
 
-def test_cli_invalid():
+def test_shacl_invalid():
     SHACL_TEST_DIR = Path(__file__).parent.parent.resolve() / "test_shacl"
 
     result = runner.invoke(

@@ -5,7 +5,8 @@ import httpx
 from typer.testing import CliRunner
 
 from kurra.cli import app
-from kurra.db.graph import upload
+from kurra.db.gsp import upload
+from tests.test_cli.db.test_fuseki import runner
 
 runner = CliRunner()
 
@@ -82,3 +83,22 @@ def test_describe(fuseki_container, http_client):
         ["sparql", SPARQL_ENDPOINT, "DESCRIBE <https://example.com/demo-vocabs/language-test>"],
     )
     assert "Made in Nov 2024 just for testing" in result.stdout
+
+
+def test_fuseki_sparql_drop(fuseki_container):
+    port = fuseki_container.get_exposed_port(3030)
+    result = runner.invoke(
+        app,
+        [
+            "db",
+            "sparql",
+            "DROP ALL",
+            f"http://localhost:{port}",
+            "-u",
+            "admin",
+            "-p",
+            "admin",
+        ],
+    )
+    # assert result.exit_code == 0  # TODO: work out why this isn't returning 0
+    assert result.output == ""

@@ -4,7 +4,7 @@ import pytest
 from typer.testing import CliRunner
 
 from kurra.db import query
-from kurra.db.graph import exists, get, put, post, delete, clear, upload
+from kurra.db.gsp import exists, get, put, post, delete, clear, upload
 from kurra.utils import load_graph
 
 runner = CliRunner()
@@ -172,7 +172,6 @@ def test_upload(fuseki_container, http_client):
         http_client=http_client
     )
     assert r[0]["count"] == 80
-
 
 
 @pytest.mark.skip(reason="Test works with normal Fuseki but not testing container version")

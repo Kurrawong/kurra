@@ -4,8 +4,8 @@ from typing import Annotated
 
 import typer
 
-from kurra.cli.commands.db import upload_command
-from kurra.cli.commands.sparql import sparql_command
+from kurra.cli.commands.db.gsp import upload_command as gsp_upload_command
+from kurra.cli.commands.sparql import sparql_command as gsp_sparql_command
 from kurra.cli.console import console
 from kurra.file import (
     RDF_FILE_SUFFIXES,
@@ -52,12 +52,12 @@ def format_command(
 
 
 @app.command(name="upload", help="Upload files to a database repository")
-def upload_command2(
+def upload_command(
         path: Path = typer.Argument(
             ..., help="The path of a file or directory to be uploaded."
         ),
-        fuseki_url: str = typer.Argument(
-            ..., help="Repository SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
+        sparql_endpoint: str = typer.Argument(
+            ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
         ),
         username: Annotated[
             str, typer.Option("--username", "-u", help="Fuseki username.")
@@ -69,7 +69,7 @@ def upload_command2(
             int, typer.Option("--timeout", "-t", help="Timeout per request")
         ] = 60,
 ) -> None:
-    upload_command(path, fuseki_url, username, password, timeout)
+    gsp_upload_command(path, sparql_endpoint, username, password, timeout)
 
 
 @app.command(
@@ -83,7 +83,7 @@ def quads_command(path_or_str: Path, identifier: str, destination: Path = None):
 
 
 @app.command(name="sparql", help="SPARQL queries to local RDF files or a database")
-def query_command2(
+def query_command(
         path_or_url: Path,
         q: Annotated[
             str, typer.Option(
@@ -110,4 +110,4 @@ def query_command2(
             q = Path(q).read_text()
     except:
         pass
-    sparql_command(path_or_url, q, response_format, username, password, timeout)
+    gsp_sparql_command(path_or_url, q, response_format, username, password, timeout)
