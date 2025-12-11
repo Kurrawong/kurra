@@ -17,8 +17,7 @@ TESTING_GRAPH = "https://example.com/testing-graph"
 
 
 def test_exists(fuseki_container, http_client):
-    port = fuseki_container.get_exposed_port(3030)
-    SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
     g1 = exists(SPARQL_ENDPOINT, "http://nothing.com", http_client)
     assert not g1
 
@@ -32,8 +31,7 @@ def test_exists(fuseki_container, http_client):
 
 
 def test_get(fuseki_container, http_client):
-    port = fuseki_container.get_exposed_port(3030)
-    SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     g_result = load_graph(LANG_TEST_VOC)
 
@@ -59,10 +57,12 @@ def test_get(fuseki_container, http_client):
     g3 = get(SPARQL_ENDPOINT, "http://nothing.com", http_client=http_client)
     assert g3 == 404
 
+    g4 = get(SPARQL_ENDPOINT, "default", http_client=http_client, return_format="original")
+    assert "http://example.com/" in g4
+
 
 def test_put(fuseki_container, http_client):
-    port = fuseki_container.get_exposed_port(3030)
-    SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     put(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
 
@@ -92,8 +92,7 @@ def test_put(fuseki_container, http_client):
 
 
 def test_post(fuseki_container, http_client):
-    port = fuseki_container.get_exposed_port(3030)
-    SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     post(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
 
@@ -123,8 +122,7 @@ def test_post(fuseki_container, http_client):
 
 
 def test_delete(fuseki_container, http_client):
-    port = fuseki_container.get_exposed_port(3030)
-    SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     put(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
 
@@ -159,8 +157,7 @@ def test_clear():
 
 
 def test_upload(fuseki_container, http_client):
-    port = fuseki_container.get_exposed_port(3030)
-    SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH)
 
@@ -205,26 +202,26 @@ def test_upload(fuseki_container, http_client):
 @pytest.mark.skip(
     reason="Test works with normal Fuseki but not testing container version"
 )
-def test_upload_no_graph(fuseki_container):
-    port = fuseki_container.get_exposed_port(3030)
-    SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
+def test_upload_no_graph(fuseki_container, http_client):
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, None)
+    print(upload(SPARQL_ENDPOINT, LANG_TEST_VOC, None, http_client=http_client))
 
     q = """
         SELECT (COUNT(?s) AS ?c)
         WHERE {
-            ?s ?p ?o
+        GRAPH ?g {
+                ?s ?p ?o
+            }
         }
         """
-    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
+    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True, http_client=http_client)
 
     assert r[0]["c"] == 77
 
 
 def test_upload_url(fuseki_container, http_client):
-    port = fuseki_container.get_exposed_port(3030)
-    SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     upload(
         SPARQL_ENDPOINT,

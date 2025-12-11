@@ -1,5 +1,6 @@
 # Graph Store Protocol
 
+from typing import Literal as LiteralType
 from pathlib import Path
 from typing import Union
 
@@ -38,20 +39,35 @@ def exists(
 def get(
     sparql_endpoint: str,
     graph_iri: str = "default",
-    content_type="text/turtle",
+    accept_type="text/turtle",
+    return_format: LiteralType["original", "python"] = "python",
     http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
     """Graph Store Protocol's HTTP GET: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-get
 
-    Returns the content of the graph identified by graph_id in the target SPARQL Endpoint
-    as an RDFLib Graph object if it exists, or else it returns an HTTP Status Code integer."""
+    Returns the content of the graph identified by graph_id in the target SPARQL Endpoint.
+
+    Args:
+        sparql_endpoint: The SPARQL Endpoint URL to use
+        graph_iri: The IRI of the graph to retrieve
+        accept_type: The RDF format to request from the server and to return if return_format is set to 'original'
+        return_format: The return format to use, 'python' - RDFLib's Graph - or 'original' - an RDF string value in the format of accept_type
+        http_client: An HTTP client to use. Created internally if not supplied
+
+    Returns:
+          An RDF result as either an RDFLib Graph object or a string object containing RDF in the accept_type
+          format. If a graph, the graph identifier will be the graph_iri or a Blank Node if None/default
+    """
     if not sparql_endpoint.startswith("http"):
         raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
 
-    if content_type not in rdf_suffix_map.values():
+    if accept_type not in rdf_suffix_map.values():
         raise ValueError(
             f"Media Type requested not available. Allow types are {', '.join(rdf_suffix_map.values())}"
         )
+
+    if return_format not in ["original", "python"]:
+        raise ValueError("Return format must be either 'python' (default) or 'original'")
 
     close_http_client = False
     if http_client is None:
@@ -61,17 +77,20 @@ def get(
     r = http_client.get(
         sparql_endpoint,
         params={"graph": graph_iri if graph_iri is not None else "default"},
-        headers={"Accept": content_type},
+        headers={"Accept": accept_type},
     )
 
     if close_http_client:
         http_client.close()
 
     if r.is_success:
-        if graph_iri is not None and graph_iri != "default":
-            return Graph(identifier=graph_iri).parse(data=r.text, format=content_type)
+        if return_format == "original":
+            return r.text
         else:
-            return Graph().parse(data=r.text, format=content_type)
+            if graph_iri is not None and graph_iri != "default":
+                return Graph(identifier=graph_iri).parse(data=r.text, format=accept_type)
+            else:
+                return Graph().parse(data=r.text, format=accept_type)
     else:
         return r.status_code
 
