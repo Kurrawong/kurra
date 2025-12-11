@@ -459,7 +459,7 @@ def test_render_sparql_result():
     )
 
 
-def test_convert_sparql_json_to_python_db(fuseki_container, http_client):
+def test_convert_sparql_json_to_python_db():
     """See test_sparql test_deep_python_db()"""
     pass
 

@@ -10,7 +10,7 @@ from kurra.db.utils import (
 from kurra.utils import convert_sparql_json_to_python
 
 
-def query(
+def query2(
     sparql_endpoint: str,
     q: str,
     namespaces: dict[str, str] | None = None,
