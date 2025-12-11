@@ -7,23 +7,21 @@ from typing import Union
 import httpx
 from rdflib import BNode, Dataset, Graph, Literal, URIRef
 
-RDF_MEDIA_TYPES = {
-    "xml": "application/rdf+xml",
-    "json-ld": "application/ld+json",
-    "turtle": "text/turtle",
-}
 
+rdf_suffix_map = {
+    ".nt": "application/n-triples",
+    ".nq": "application/n-quads",
+    ".ttl": "text/turtle",
+    ".trig": "application/trig",
+    ".json": "application/ld+json",
+    ".jsonld": "application/ld+json",
+    ".xml": "application/rdf+xml",
+}
 
 class RenderFormat(str, Enum):
     original = "original"
     json = "json"
     markdown = "markdown"
-
-
-class SPARQL_RESULTS_MEDIA_TYPES(str, Enum):
-    json = "application/json"
-    turtle = "text/turtle"
-    jsonld = "application/ld+json"
 
 
 def guess_format_from_data(rdf: str) -> str | None:
@@ -206,3 +204,58 @@ def convert_sparql_json_to_python(j: Union[str, bytes, httpx.Response], return_b
             return r
     else:
         return r
+
+
+def _guess_query_is_update(query: str) -> bool:
+    if any(x in query for x in ["DROP", "INSERT", "DELETE"]):
+        return True
+    else:
+        return False
+
+
+def _guess_return_type_for_sparql_query(query: str) -> str:
+    if any(x in query for x in ["SELECT", "INSERT", "ASK"]):
+        return "application/sparql-results+json"
+    elif "CONSTRUCT" in query or "DESCRIBE" in query:
+        return "text/turtle"
+    else:
+        return "application/sparql-results+json"
+
+
+def make_sparql_dataframe(sparql_result: dict):
+    try:
+        from pandas import DataFrame
+    except ImportError:
+        raise ValueError(
+            'You selected the output format "dataframe" by the pandas Python package is not installed.'
+        )
+
+    if sparql_result.get("results") is not None:  # SELECT
+        df = DataFrame(columns=sparql_result["head"]["vars"])
+        for i, row in enumerate(sparql_result["results"]["bindings"]):
+            new_row = {}
+            for k, v in row.items():
+                if v["type"] == "literal":
+                    if v.get("datatype") is not None:
+                        new_row[k] = Literal(
+                            v["value"], datatype=v["datatype"]
+                        ).toPython()
+                    else:
+                        new_row[k] = Literal(v["value"]).toPython()
+                else:
+                    new_row[k] = v["value"]
+            df.loc[i] = new_row
+        return df
+    else:  # ASK
+        df = DataFrame(columns=["boolean"])
+        df.loc[0] = sparql_result["boolean"]
+
+    return df
+
+
+def add_namespaces_to_query_or_data(q: str, namespaces: dict):
+    preamble = ""
+    for k, v in namespaces.items():
+        preamble += f"PREFIX {k}: <{v}>\n"
+    preamble += "\n"
+    return preamble + q

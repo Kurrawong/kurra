@@ -7,7 +7,7 @@ from rich.progress import track
 
 from kurra.cli.console import console
 from kurra.db.gsp import clear, delete, exists, get, post, put, upload
-from kurra.db.utils import rdf_suffix_map
+from kurra.utils import rdf_suffix_map
 
 app = typer.Typer(help="Graph Store Protocol commands")
 

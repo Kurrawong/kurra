@@ -5,9 +5,8 @@ from typing import Literal
 import httpx
 from rdflib import Dataset, Graph
 
-from kurra.db import make_sparql_dataframe
 from kurra.db.sparql import query as db_query
-from kurra.utils import load_graph, convert_sparql_json_to_python
+from kurra.utils import load_graph, convert_sparql_json_to_python, make_sparql_dataframe, add_namespaces_to_query_or_data, _guess_query_is_update
 
 
 def query(
@@ -18,17 +17,19 @@ def query(
     return_format: Literal["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
 ):
+    if p is None:
+        raise ValueError("You must supply a Path, string (of data or a URL), Graph or a Dataset to query for variable p")
+
+    if q is None:
+        raise ValueError("You must supply a query")
+
     if return_format not in ["original", "python", "dataframe"]:
         raise ValueError(
             f"return_format {return_format} must be either 'original', 'python' or 'dataframe'"
         )
 
     if namespaces is not None:
-        preamble = ""
-        for k, v in namespaces.items():
-            preamble += f"PREFIX {k}: <{v}>\n"
-        preamble += "\n"
-        q = preamble + q
+        q = add_namespaces_to_query_or_data(q, namespaces)
 
     if http_client is None:
         http_client = httpx.Client()

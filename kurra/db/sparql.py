@@ -2,12 +2,8 @@ from typing import Literal as LiteralType
 
 import httpx
 
-from kurra.utils import convert_sparql_json_to_python
-from .utils import (
-    _guess_query_is_update,
-    _guess_return_type_for_sparql_query,
-    make_sparql_dataframe,
-)
+from kurra.utils import convert_sparql_json_to_python, _guess_query_is_update, _guess_return_type_for_sparql_query, \
+    make_sparql_dataframe, add_namespaces_to_query_or_data
 
 
 def query(
@@ -31,11 +27,7 @@ def query(
         )
 
     if namespaces is not None:
-        preamble = ""
-        for k, v in namespaces.items():
-            preamble += f"PREFIX {k}: <{v}>\n"
-        preamble += "\n"
-        q = preamble + q
+        q = add_namespaces_to_query_or_data(q, namespaces)
 
     if http_client is None:
         http_client = httpx.Client()
@@ -101,3 +93,9 @@ def query(
 
     # original format - JSON
     return r.text
+
+
+
+
+
+

@@ -6,8 +6,7 @@ from typing import Union
 import httpx
 from rdflib import Graph
 
-from kurra.utils import load_graph
-from .utils import rdf_suffix_map
+from kurra.utils import load_graph, rdf_suffix_map
 
 
 def exists(
