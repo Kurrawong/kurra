@@ -5,7 +5,7 @@ from textwrap import dedent
 
 from rdflib import Dataset, Graph, URIRef
 
-from kurra.file import export_quads, format_file, make_dataset
+from kurra.file import export_quads, _format_file, make_dataset, reformat
 from kurra.utils import load_graph
 
 
@@ -18,7 +18,7 @@ ex:a
     ex:b ex:c ;
 ."""
 
-    format_file(input_file, False, output_filename=output_file)
+    _format_file(input_file, False, output_filename=output_file)
     output_file_text = output_file.read_text().strip().replace("ns1", "ex")
 
     assert output_file_text == comparison
@@ -29,7 +29,7 @@ ex:a
     output_file = Path(__file__).parent / "minimal1b-out.ttl"
     # same comparison data
 
-    format_file(input_file, False, output_filename=output_file)
+    _format_file(input_file, False, output_filename=output_file)
     output_file_text = output_file.read_text().strip().replace("ns1", "ex")
 
     assert output_file_text == comparison
@@ -144,8 +144,21 @@ def test_prefixes():
         """
     )
 
-    format_file(input_file, False, output_filename=output_file)
+    _format_file(input_file, False, output_filename=output_file)
 
     # assert output_file == comparison
 
     output_file.unlink(missing_ok=True)
+
+
+def test_directory():
+    d = Path(__file__).parent
+
+    expected_files = d.glob("**/*.jsonld")
+
+    reformat(d, False, output_format="json-ld")
+
+    for ef in expected_files:
+        if ef.name != "minimal5.jsonld":
+            print(f"removing {ef}")
+            ef.unlink()

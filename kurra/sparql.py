@@ -17,6 +17,7 @@ def query(
     return_format: Literal["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
 ):
+    """Pose a SPARQL query to a file, and RDF Graph or a SPARQL Endpoint"""
     if p is None:
         raise ValueError("You must supply a Path, string (of data or a URL), Graph or a Dataset to query for variable p")
 

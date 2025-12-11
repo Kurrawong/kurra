@@ -11,7 +11,7 @@ from kurra.file import (
     RDF_FILE_SUFFIXES,
     FailOnChangeError,
     export_quads,
-    format_rdf,
+    reformat,
     make_dataset,
 )
 
@@ -19,9 +19,9 @@ app = typer.Typer(help="RDF file commands")
 
 
 @app.command(
-    name="format", help="Format RDF files using one of several common RDF formats"
+    name="reformat", help="Reformat RDF files"
 )
-def format_command(
+def reformat_command(
     file_or_dir: str = typer.Argument(
         ..., help="The file or directory of RDF files to be formatted"
     ),
@@ -45,7 +45,7 @@ def format_command(
     ),
 ) -> None:
     try:
-        format_rdf(file_or_dir, check, output_format, output_filename)
+        reformat(file_or_dir, check, output_format, output_filename)
     except FailOnChangeError as err:
         print(err)
         sys.exit(1)

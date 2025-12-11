@@ -14,7 +14,7 @@ def query(
     return_format: LiteralType["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
 ):
-    """Poses a SPARQL query to a SPARQL Endpoint"""
+    """Pose a SPARQL query to a SPARQL Endpoint"""
     if sparql_endpoint is None:
         raise ValueError("You must supply a sparql_endpoint")
 

@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Literal, Optional, Tuple, Union
-
+import itertools
 from rdflib import Dataset, Graph, URIRef
 
 from kurra.utils import load_graph
@@ -50,14 +50,18 @@ def do_format(
     return new_content, changed
 
 
-def format_file(
+def _format_file(
     file: Path,
     check: bool = False,
     output_format: KNOWN_RDF_FORMATS = "longturtle",
     output_filename: Path = None,
 ) -> bool:
+    """Inner format function - not to be used directly"""
     if not file.is_file():
         raise ValueError(f"{file} is not a file.")
+
+    if file.suffix not in RDF_FILE_SUFFIXES.values():
+        raise ValueError(f"File {file} is not a RDF file. Must have one of the following suffixes: {RDF_FILE_SUFFIXES.values()}")
 
     path = Path(file).resolve()
     if not path.exists():
@@ -84,22 +88,31 @@ def format_file(
     return changed
 
 
-def format_rdf(
+def reformat(
     path: Path,
     check: bool,
     output_format: KNOWN_RDF_FORMATS = "longturtle",
     output_filename: Path = None,
 ) -> None:
+    """Reformats a file or all files in a given path according to the output format"""
     path = Path(path).resolve()
 
     if path.is_dir():
-        files = list(path.glob("**/*.ttl"))
+        if output_filename is not None:
+            raise ValueError("You cannot specify an output filename if converting multiple files")
+
+        types = [f"**/*{ft}" for ft in RDF_FILE_SUFFIXES.values()]
+        files = list(
+            itertools.chain.from_iterable(
+                path.glob(pattern) for pattern in types
+            )
+        )
 
         changed_files = []
 
         for file in files:
             try:
-                changed = format_file(
+                changed = _format_file(
                     file,
                     check,
                     output_format=output_format,
@@ -126,7 +139,7 @@ def format_rdf(
             )
     else:
         try:
-            format_file(
+            _format_file(
                 path,
                 check,
                 output_format=output_format,
