@@ -245,7 +245,7 @@ def test_clear(fuseki_container, http_client):
 @pytest.mark.xfail  # This test fails with the testcontainer Fuseki image but works on 'rea' Fuseki installations
 def test_upload_file(fuseki_container):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
-    f = Path(__file__).parent /  "config.ttl"
+    f = Path(__file__).parent / "config.ttl"
 
     result = runner.invoke(
         app,

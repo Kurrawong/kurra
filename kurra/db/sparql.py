@@ -2,8 +2,13 @@ from typing import Literal as LiteralType
 
 import httpx
 
-from kurra.utils import convert_sparql_json_to_python, _guess_query_is_update, _guess_return_type_for_sparql_query, \
-    make_sparql_dataframe, add_namespaces_to_query_or_data
+from kurra.utils import (
+    _guess_query_is_update,
+    _guess_return_type_for_sparql_query,
+    add_namespaces_to_query_or_data,
+    convert_sparql_json_to_python,
+    make_sparql_dataframe,
+)
 
 
 def query(
@@ -93,9 +98,3 @@ def query(
 
     # original format - JSON
     return r.text
-
-
-
-
-
-

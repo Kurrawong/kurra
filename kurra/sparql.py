@@ -6,7 +6,13 @@ import httpx
 from rdflib import Dataset, Graph
 
 from kurra.db.sparql import query as db_query
-from kurra.utils import load_graph, convert_sparql_json_to_python, make_sparql_dataframe, add_namespaces_to_query_or_data, _guess_query_is_update
+from kurra.utils import (
+    _guess_query_is_update,
+    add_namespaces_to_query_or_data,
+    convert_sparql_json_to_python,
+    load_graph,
+    make_sparql_dataframe,
+)
 
 
 def query(
@@ -19,7 +25,9 @@ def query(
 ):
     """Pose a SPARQL query to a file, and RDF Graph or a SPARQL Endpoint"""
     if p is None:
-        raise ValueError("You must supply a Path, string (of data or a URL), Graph or a Dataset to query for variable p")
+        raise ValueError(
+            "You must supply a Path, string (of data or a URL), Graph or a Dataset to query for variable p"
+        )
 
     if q is None:
         raise ValueError("You must supply a query")

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+import rdflib
 from typer.testing import CliRunner
 
 from kurra.db.gsp import clear, delete, exists, get, post, put, upload
@@ -39,9 +40,24 @@ def test_get(fuseki_container, http_client):
     upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, http_client)
     g = get(SPARQL_ENDPOINT, TESTING_GRAPH, http_client=http_client)
     assert g.isomorphic(g_result)
+    assert str(g.identifier) == TESTING_GRAPH
 
-    g2 = get(SPARQL_ENDPOINT, "http://nothing.com", http_client=http_client)
-    assert g2 == 404
+    d = """
+        PREFIX : <http://example.com/>
+        
+        :a 
+            :b :c ;
+            :d :e ;
+        .
+        """
+    upload(SPARQL_ENDPOINT, d, None, http_client)
+
+    g2 = get(SPARQL_ENDPOINT, "default", http_client=http_client)
+    assert len(g2) == 2
+    assert isinstance(g2.identifier, rdflib.BNode)
+
+    g3 = get(SPARQL_ENDPOINT, "http://nothing.com", http_client=http_client)
+    assert g3 == 404
 
 
 def test_put(fuseki_container, http_client):

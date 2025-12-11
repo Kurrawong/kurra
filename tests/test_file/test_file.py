@@ -5,7 +5,7 @@ from textwrap import dedent
 
 from rdflib import Dataset, Graph, URIRef
 
-from kurra.file import export_quads, _format_file, make_dataset, reformat
+from kurra.file import _format_file, export_quads, make_dataset, reformat
 from kurra.utils import load_graph
 
 

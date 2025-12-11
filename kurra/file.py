@@ -1,6 +1,7 @@
+import itertools
 from pathlib import Path
 from typing import Literal, Optional, Tuple, Union
-import itertools
+
 from rdflib import Dataset, Graph, URIRef
 
 from kurra.utils import load_graph
@@ -61,7 +62,9 @@ def _format_file(
         raise ValueError(f"{file} is not a file.")
 
     if file.suffix not in RDF_FILE_SUFFIXES.values():
-        raise ValueError(f"File {file} is not a RDF file. Must have one of the following suffixes: {RDF_FILE_SUFFIXES.values()}")
+        raise ValueError(
+            f"File {file} is not a RDF file. Must have one of the following suffixes: {RDF_FILE_SUFFIXES.values()}"
+        )
 
     path = Path(file).resolve()
     if not path.exists():
@@ -99,13 +102,13 @@ def reformat(
 
     if path.is_dir():
         if output_filename is not None:
-            raise ValueError("You cannot specify an output filename if converting multiple files")
+            raise ValueError(
+                "You cannot specify an output filename if converting multiple files"
+            )
 
         types = [f"**/*{ft}" for ft in RDF_FILE_SUFFIXES.values()]
         files = list(
-            itertools.chain.from_iterable(
-                path.glob(pattern) for pattern in types
-            )
+            itertools.chain.from_iterable(path.glob(pattern) for pattern in types)
         )
 
         changed_files = []

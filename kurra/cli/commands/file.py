@@ -11,16 +11,14 @@ from kurra.file import (
     RDF_FILE_SUFFIXES,
     FailOnChangeError,
     export_quads,
-    reformat,
     make_dataset,
+    reformat,
 )
 
 app = typer.Typer(help="RDF file commands")
 
 
-@app.command(
-    name="reformat", help="Reformat RDF files"
-)
+@app.command(name="reformat", help="Reformat RDF files")
 def reformat_command(
     file_or_dir: str = typer.Argument(
         ..., help="The file or directory of RDF files to be formatted"

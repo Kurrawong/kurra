@@ -68,7 +68,10 @@ def get(
         http_client.close()
 
     if r.is_success:
-        return Graph().parse(data=r.text, format=content_type)
+        if graph_iri is not None and graph_iri != "default":
+            return Graph(identifier=graph_iri).parse(data=r.text, format=content_type)
+        else:
+            return Graph().parse(data=r.text, format=content_type)
     else:
         return r.status_code
 

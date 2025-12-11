@@ -7,7 +7,6 @@ from typing import Union
 import httpx
 from rdflib import BNode, Dataset, Graph, Literal, URIRef
 
-
 rdf_suffix_map = {
     ".nt": "application/n-triples",
     ".nq": "application/n-quads",
@@ -17,6 +16,7 @@ rdf_suffix_map = {
     ".jsonld": "application/ld+json",
     ".xml": "application/rdf+xml",
 }
+
 
 class RenderFormat(str, Enum):
     original = "original"
@@ -174,7 +174,9 @@ def make_httpx_client(
     return httpx.Client(auth=auth)
 
 
-def convert_sparql_json_to_python(j: Union[str, bytes, httpx.Response], return_bindings_only=False) -> {}:
+def convert_sparql_json_to_python(
+    j: Union[str, bytes, httpx.Response], return_bindings_only=False
+) -> {}:
     if type(j) == str:
         r = json.loads(j)
     elif type(j) == bytes:
@@ -187,9 +189,7 @@ def convert_sparql_json_to_python(j: Union[str, bytes, httpx.Response], return_b
             for k, v in row.items():
                 if v["type"] == "literal":
                     if v.get("datatype") is not None:
-                        row[k] = Literal(
-                            v["value"], datatype=v["datatype"]
-                        ).toPython()
+                        row[k] = Literal(v["value"], datatype=v["datatype"]).toPython()
                     else:
                         row[k] = Literal(v["value"]).toPython()
                 elif v["type"] == "uri":

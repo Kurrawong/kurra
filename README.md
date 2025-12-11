@@ -173,3 +173,5 @@ You can also log issues at the kurra issue tracker:
 * tag with version
 * `uv build`
 * `uv publish -u __token__ -p {TOKEN}`
+* make a GitHub Release
+  * add release notes
