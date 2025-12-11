@@ -1,7 +1,7 @@
 import httpx
 
 from kurra.db.gsp import upload
-from kurra.db.sparql import query
+from kurra.sparql import query
 
 
 def test_query(fuseki_container, http_client):

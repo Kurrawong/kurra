@@ -5,8 +5,6 @@ import httpx
 import typer
 from rich.progress import track
 
-from kurra.cli.commands import app
-from kurra.cli.commands.sparql import sparql_command
 from kurra.cli.console import console
 from kurra.db.gsp import clear, delete, exists, get, post, put, upload
 from kurra.db.utils import rdf_suffix_map

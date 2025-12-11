@@ -1,13 +1,13 @@
 from typing import Literal as LiteralType
 
 import httpx
-from rdflib import Literal
 
 from kurra.db.utils import (
     _guess_query_is_update,
     _guess_return_type_for_sparql_query,
     make_sparql_dataframe,
 )
+from kurra.utils import convert_sparql_json_to_python
 
 
 def query(
@@ -88,27 +88,7 @@ def query(
         return ""
 
     if return_format == "python":
-        r = r.json()
-        if r.get("results") is not None:  # SELECT
-            for row in r["results"]["bindings"]:
-                for k, v in row.items():
-                    if v["type"] == "literal":
-                        if v.get("datatype") is not None:
-                            row[k] = Literal(
-                                v["value"], datatype=v["datatype"]
-                            ).toPython()
-                        else:
-                            row[k] = Literal(v["value"]).toPython()
-                    elif v["type"] == "uri":
-                        row[k] = v["value"]
-            if return_bindings_only:
-                r = r["results"]["bindings"]
-            return r
-        elif r.get("boolean") is not None:  # ASK
-            if return_bindings_only:
-                return bool(r["boolean"])
-            else:
-                return r
+        return convert_sparql_json_to_python(r, return_bindings_only)
 
     elif return_format == "dataframe":
         return make_sparql_dataframe(r.json())

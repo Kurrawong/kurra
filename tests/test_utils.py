@@ -457,3 +457,13 @@ def test_render_sparql_result():
         '"@id": "http://def.isotc211.org/19115/-1/2014/IdentificationInformation/code/MD_ProgressCode/completed"'
         in str(render_sparql_result(r6, RenderFormat.json))
     )
+
+
+def test_convert_sparql_json_to_python_db(fuseki_container, http_client):
+    """See test_sparql test_deep_python_db()"""
+    pass
+
+
+def test_convert_sparql_json_to_python_file():
+    """See test_sparql test_deep_python_file()"""
+    pass

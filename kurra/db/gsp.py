@@ -7,8 +7,6 @@ import httpx
 from rdflib import Graph
 
 from kurra.utils import load_graph
-
-from .sparql import query
 from .utils import rdf_suffix_map
 
 

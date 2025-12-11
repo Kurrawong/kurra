@@ -1,12 +1,10 @@
 from pathlib import Path
 from textwrap import dedent
 
-import httpx
 from typer.testing import CliRunner
 
 from kurra.cli import app
 from kurra.db.gsp import upload
-from kurra.db.sparql import query
 
 runner = CliRunner()
 

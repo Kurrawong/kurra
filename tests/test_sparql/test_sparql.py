@@ -181,11 +181,11 @@ def test_query_file():
         LIMIT 3"""
 
     r = query(LANG_TEST_VOC, q, return_format="python", return_bindings_only=True)
-    assert r[0]["c"]["value"] == "https://example.com/demo-vocabs/language-test/en-only"
+    assert r[0]["c"] == "https://example.com/demo-vocabs/language-test/en-only"
 
     r = query(LANG_TEST_VOC, q, return_format="python", return_bindings_only=False)
     assert (
-        r["results"]["bindings"][0]["c"]["value"]
+        r["results"]["bindings"][0]["c"]
         == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
@@ -486,8 +486,10 @@ def test_return_formats(fuseki_container, http_client):
     assert r["boolean"][0]
 
 
-def test_deep_python(fuseki_container, http_client):
-    """Tests the "deep" conversion of SPARQL types to Python types at kurra.db.sparql() Line 336+"""
+def test_deep_python_db(fuseki_container, http_client):
+    """Ensures that 'deep python' is returned from DB queries
+
+    Tests the "deep" conversion of SPARQL types to Python types at kurra.db.sparql() Line 96"""
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client)
@@ -535,3 +537,101 @@ def test_deep_python(fuseki_container, http_client):
         return_bindings_only=False,
     )
     assert isinstance(r["results"]["bindings"][0]["dc"], datetime.date)
+
+
+def test_deep_python_file():
+    """Ensures that 'deep python' is returned from file queries"""
+    q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+        SELECT (COUNT(?c) AS ?count) 
+        WHERE {
+            ?c 
+                a skos:Concept .
+        }
+        ORDER BY ?pl
+        """
+    r = query(LANG_TEST_VOC, q, return_format="python", return_bindings_only=True)
+    assert r[0]["count"] == 7
+
+    q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        PREFIX schema: <https://schema.org/>
+
+        SELECT *
+        WHERE {
+            ?c 
+                a skos:ConceptScheme ;
+                schema:dateCreated ?dc ;
+            . 
+        }
+        ORDER BY ?pl
+        """
+    r = query(LANG_TEST_VOC, q, return_format="python")
+    assert isinstance(r["results"]["bindings"][0]["dc"], datetime.date)
+
+    d = """
+        PREFIX ex: <https://exammple.org/>
+        PREFIX schema: <https://schema.org/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        
+        ex:a schema:dateIssued "2025-12-11" .  # str
+        
+        ex:b schema:dateIssued "2025-12-11T14:30:20" .  # str
+        
+        ex:c schema:dateIssued "2025-12-11"^^xsd:date .  # date
+        
+        ex:d schema:dateIssued "2025-12-11T14:30:20"^^xsd:dateTime .  # datetime
+        """
+
+    q = """
+        PREFIX ex: <https://exammple.org/>
+        PREFIX schema: <https://schema.org/>
+
+        SELECT *
+        WHERE {
+            ex:a schema:dateIssued ?di ;
+            . 
+        }
+        """
+    r = query(d, q, return_format="python")
+    assert isinstance(r["results"]["bindings"][0]["di"], str)
+
+    q = """
+        PREFIX ex: <https://exammple.org/>
+        PREFIX schema: <https://schema.org/>
+
+        SELECT *
+        WHERE {
+            ex:b schema:dateIssued ?di ;
+            . 
+        }
+        """
+    r = query(d, q, return_format="python")
+    assert isinstance(r["results"]["bindings"][0]["di"], str)
+
+    q = """
+        PREFIX ex: <https://exammple.org/>
+        PREFIX schema: <https://schema.org/>
+
+        SELECT *
+        WHERE {
+            ex:c schema:dateIssued ?di ;
+            . 
+        }
+        """
+    r = query(d, q, return_format="python")
+    assert isinstance(r["results"]["bindings"][0]["di"], datetime.date)
+
+    q = """
+        PREFIX ex: <https://exammple.org/>
+        PREFIX schema: <https://schema.org/>
+
+        SELECT *
+        WHERE {
+            ex:d schema:dateIssued ?di ;
+            . 
+        }
+        """
+    r = query(d, q, return_format="python")
+    assert isinstance(r["results"]["bindings"][0]["di"], datetime.datetime)

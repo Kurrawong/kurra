@@ -6,7 +6,7 @@ from rdflib.namespace import RDF
 from typer.testing import CliRunner
 
 from kurra.cli import app
-from kurra.db.gsp import delete, get, put, upload
+from kurra.db.gsp import get, put, upload
 from kurra.sparql import query
 
 runner = CliRunner()

@@ -174,3 +174,35 @@ def make_httpx_client(
         if sparql_password:
             auth = httpx.BasicAuth(sparql_username, sparql_password)
     return httpx.Client(auth=auth)
+
+
+def convert_sparql_json_to_python(j: Union[str, bytes, httpx.Response], return_bindings_only=False) -> {}:
+    if type(j) == str:
+        r = json.loads(j)
+    elif type(j) == bytes:
+        r = json.loads(j.decode())
+    elif type(j) == httpx.Response:
+        r = j.json()
+
+    if r.get("results") is not None:  # SELECT
+        for row in r["results"]["bindings"]:
+            for k, v in row.items():
+                if v["type"] == "literal":
+                    if v.get("datatype") is not None:
+                        row[k] = Literal(
+                            v["value"], datatype=v["datatype"]
+                        ).toPython()
+                    else:
+                        row[k] = Literal(v["value"]).toPython()
+                elif v["type"] == "uri":
+                    row[k] = v["value"]
+        if return_bindings_only:
+            r = r["results"]["bindings"]
+        return r
+    elif r.get("boolean") is not None:  # ASK
+        if return_bindings_only:
+            return bool(r["boolean"])
+        else:
+            return r
+    else:
+        return r

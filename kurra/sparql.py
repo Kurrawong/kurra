@@ -7,7 +7,7 @@ from rdflib import Dataset, Graph
 
 from kurra.db import make_sparql_dataframe
 from kurra.db.sparql import query as db_query
-from kurra.utils import load_graph
+from kurra.utils import load_graph, convert_sparql_json_to_python
 
 
 def query(
@@ -112,12 +112,6 @@ def query(
             if return_format == "dataframe":
                 return make_sparql_dataframe(json.loads(r))
             elif return_format == "python":
-                r = json.loads(r)
-                if return_bindings_only:
-                    if r.get("results") is not None:
-                        r = r["results"]["bindings"]
-                    elif r.get("boolean") is not None:
-                        r = r["boolean"]
-                return r
+                return convert_sparql_json_to_python(r, return_bindings_only)
             else:
                 return r.decode()

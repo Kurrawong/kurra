@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from kurra.db import query
 from kurra.db.gsp import clear, delete, exists, get, post, put, upload
+from kurra.sparql import query
 from kurra.utils import load_graph
 
 runner = CliRunner()
