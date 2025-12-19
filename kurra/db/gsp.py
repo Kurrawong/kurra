@@ -7,7 +7,7 @@ from typing import Union
 import httpx
 from rdflib import Graph
 
-from kurra.utils import load_graph, rdf_suffix_map
+from kurra.utils import load_graph, RDF_SUFFIX_MAP
 
 
 def exists(
@@ -61,9 +61,9 @@ def get(
     if not sparql_endpoint.startswith("http"):
         raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
 
-    if accept_type not in rdf_suffix_map.values():
+    if accept_type not in RDF_SUFFIX_MAP.values():
         raise ValueError(
-            f"Media Type requested not available. Allow types are {', '.join(rdf_suffix_map.values())}"
+            f"Media Type requested not available. Allow types are {', '.join(RDF_SUFFIX_MAP.values())}"
         )
 
     if return_format not in ["original", "python"]:
@@ -110,9 +110,9 @@ def put(
     if not sparql_endpoint.startswith("http"):
         raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
 
-    if content_type not in rdf_suffix_map.values():
+    if content_type not in RDF_SUFFIX_MAP.values():
         raise ValueError(
-            f"Media Type {content_type} requested not available. Allowed types are {', '.join(rdf_suffix_map.values())}"
+            f"Media Type {content_type} requested not available. Allowed types are {', '.join(RDF_SUFFIX_MAP.values())}"
         )
 
     close_http_client = False
@@ -150,9 +150,9 @@ def post(
     if not sparql_endpoint.startswith("http"):
         raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
 
-    if content_type not in rdf_suffix_map.values():
+    if content_type not in RDF_SUFFIX_MAP.values():
         raise ValueError(
-            f"Media Type requested not available. Allow types are {', '.join(rdf_suffix_map.values())}"
+            f"Media Type requested not available. Allow types are {', '.join(RDF_SUFFIX_MAP.values())}"
         )
 
     close_http_client = False

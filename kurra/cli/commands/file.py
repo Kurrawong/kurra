@@ -8,12 +8,12 @@ from kurra.cli.commands.db.gsp import upload_command as gsp_upload_command
 from kurra.cli.commands.sparql import sparql_command as gsp_sparql_command
 from kurra.cli.console import console
 from kurra.file import (
-    RDF_FILE_SUFFIXES,
     FailOnChangeError,
     export_quads,
     make_dataset,
     reformat,
 )
+from kurra.utils import RDF_FILE_SUFFIXES
 
 app = typer.Typer(help="RDF file commands")
 

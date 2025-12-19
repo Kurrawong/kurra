@@ -7,15 +7,26 @@ from typing import Union
 import httpx
 from rdflib import BNode, Dataset, Graph, Literal, URIRef
 
-rdf_suffix_map = {
+RDF_SUFFIX_MAP = {
     ".nt": "application/n-triples",
     ".nq": "application/n-quads",
+    ".owl": "application/rdf+xml",
     ".ttl": "text/turtle",
     ".trig": "application/trig",
     ".json": "application/ld+json",
     ".jsonld": "application/ld+json",
     ".xml": "application/rdf+xml",
 }
+
+RDF_FILE_SUFFIXES = {
+    "turtle": ".ttl",
+    "longturtle": ".ttl",
+    "xml": ".rdf",
+    "n-triples": ".nt",
+    "json-ld": ".jsonld",
+    "owl": ".owl",
+}
+
 
 
 class RenderFormat(str, Enum):

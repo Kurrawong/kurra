@@ -7,7 +7,7 @@ from rich.progress import track
 
 from kurra.cli.console import console
 from kurra.db.gsp import clear, delete, exists, get, post, put, upload
-from kurra.utils import rdf_suffix_map
+from kurra.utils import RDF_SUFFIX_MAP
 
 app = typer.Typer(help="Graph Store Protocol commands")
 
@@ -315,7 +315,7 @@ def upload_command(
         (username, password) if username is not None and password is not None else None
     )
 
-    files = list(filter(lambda f: f.suffix in rdf_suffix_map.keys(), files))
+    files = list(filter(lambda f: f.suffix in RDF_SUFFIX_MAP.keys(), files))
 
     with httpx.Client(
         auth=auth,

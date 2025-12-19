@@ -1,19 +1,10 @@
 import itertools
 from pathlib import Path
-from typing import Literal, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 from rdflib import Dataset, Graph, URIRef
 
-from kurra.utils import load_graph
-
-KNOWN_RDF_FORMATS = Literal["turtle", "longturtle", "xml", "n-triples", "json-ld"]
-RDF_FILE_SUFFIXES = {
-    "turtle": ".ttl",
-    "longturtle": ".ttl",
-    "xml": ".rdf",
-    "n-triples": ".nt",
-    "json-ld": ".jsonld",
-}
+from kurra.utils import load_graph, RDF_FILE_SUFFIXES
 
 
 class FailOnChangeError(Exception):
@@ -40,7 +31,7 @@ def get_topbraid_metadata(content: str) -> str:
 
 
 def do_format(
-    content: str, output_format: KNOWN_RDF_FORMATS = "longturtle"
+    content: str, output_format: RDF_FILE_SUFFIXES.keys() = "longturtle"
 ) -> Tuple[str, bool]:
     metadata = get_topbraid_metadata(content)
 
@@ -54,7 +45,7 @@ def do_format(
 def _format_file(
     file: Path,
     check: bool = False,
-    output_format: KNOWN_RDF_FORMATS = "longturtle",
+    output_format: RDF_FILE_SUFFIXES.keys() = "longturtle",
     output_filename: Path = None,
 ) -> bool:
     """Inner format function - not to be used directly"""
@@ -94,7 +85,7 @@ def _format_file(
 def reformat(
     path: Path,
     check: bool,
-    output_format: KNOWN_RDF_FORMATS = "longturtle",
+    output_format: RDF_FILE_SUFFIXES.keys() = "longturtle",
     output_filename: Path = None,
 ) -> None:
     """Reformats a file or all files in a given path according to the output format"""
