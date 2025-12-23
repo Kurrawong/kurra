@@ -1,10 +1,10 @@
 from pathlib import Path
-from kurra.shacl import list_local_validators, sync_validators
-from kurra.utils import make_httpx_client
+
 import pytest
 from typer.testing import CliRunner
 
 from kurra.cli import app
+from kurra.shacl import sync_validators
 
 runner = CliRunner()
 

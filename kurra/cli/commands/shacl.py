@@ -1,13 +1,14 @@
 from pathlib import Path
-from rich.table import Table
+
 import typer
+from rich.table import Table
 
 from kurra.cli.console import console
 from kurra.cli.utils import (
     format_shacl_graph_as_rich_table,
 )
 from kurra.shacl import validate, list_local_validators, sync_validators
-from kurra.utils import make_httpx_client
+
 app = typer.Typer(help="SHACL commands")
 
 
@@ -16,12 +17,12 @@ app = typer.Typer(help="SHACL commands")
     help="Validate a given file or directory of RDF files using a given SHACL file or directory of files",
 )
 def validate_command(
-    file_or_dir: Path = typer.Argument(
-        ..., help="The file or directory of RDF files to be validated"
-    ),
-    shacl_graph_or_file_or_url_or_id: str = typer.Argument(
-        ..., help="The file or directory of SAHCL files to validate with"
-    ),
+        file_or_dir: Path = typer.Argument(
+            ..., help="The file or directory of RDF files to be validated"
+        ),
+        shacl_graph_or_file_or_url_or_id: str = typer.Argument(
+            ..., help="The file or directory of SAHCL files to validate with"
+        ),
 ) -> None:
     """Validate a given file or directory of files using a given SHACL file or directory of files"""
     valid, g, txt = validate(file_or_dir, shacl_graph_or_file_or_url_or_id)
@@ -53,6 +54,7 @@ def listv_command():
                 v["name"]
             )
         console.print(t)
+
 
 @app.command(
     name="syncv",

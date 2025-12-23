@@ -7,7 +7,6 @@ from rdflib import Dataset, Graph
 
 from kurra.db.sparql import query as db_query
 from kurra.utils import (
-    _guess_query_is_update,
     add_namespaces_to_query_or_data,
     convert_sparql_json_to_python,
     load_graph,
@@ -16,12 +15,12 @@ from kurra.utils import (
 
 
 def query(
-    p: Path | str | Graph | Dataset,
-    q: str,
-    namespaces: dict[str, str] | None = None,
-    http_client: httpx.Client = None,
-    return_format: Literal["original", "python", "dataframe"] = "original",
-    return_bindings_only: bool = False,
+        p: Path | str | Graph | Dataset,
+        q: str,
+        namespaces: dict[str, str] | None = None,
+        http_client: httpx.Client = None,
+        return_format: Literal["original", "python", "dataframe"] = "original",
+        return_bindings_only: bool = False,
 ):
     """Pose a SPARQL query to a file, and RDF Graph or a SPARQL Endpoint"""
     if p is None:
@@ -45,11 +44,11 @@ def query(
 
     if return_format == "dataframe":
         if (
-            "CONSTRUCT" in q
-            or "DESCRIBE" in q
-            or "INSERT" in q
-            or "DELETE" in q
-            or "DROP" in q
+                "CONSTRUCT" in q
+                or "DESCRIBE" in q
+                or "INSERT" in q
+                or "DELETE" in q
+                or "DROP" in q
         ):
             raise ValueError(
                 'Only SELECT and ASK queries can have return_format set to "dataframe"'

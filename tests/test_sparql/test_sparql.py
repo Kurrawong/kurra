@@ -35,20 +35,20 @@ def test_query_db(fuseki_container, http_client):
     )
 
     assert (
-        "c"
-        in json.loads(
-            (
-                render_sparql_result(
-                    query(
-                        SPARQL_ENDPOINT,
-                        q,
-                        http_client=http_client,
-                        return_format="python",
-                    ),
-                    RenderFormat.json,
-                )
+            "c"
+            in json.loads(
+        (
+            render_sparql_result(
+                query(
+                    SPARQL_ENDPOINT,
+                    q,
+                    http_client=http_client,
+                    return_format="python",
+                ),
+                RenderFormat.json,
             )
-        )["head"]["vars"]
+        )
+    )["head"]["vars"]
     )
 
     # test return format options
@@ -80,15 +80,15 @@ def test_query_db(fuseki_container, http_client):
         return_bindings_only=False,
     )
     assert (
-        r["results"]["bindings"][0]["c"]
-        == "https://example.com/demo-vocabs/language-test/en-only"
+            r["results"]["bindings"][0]["c"]
+            == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     r = query(SPARQL_ENDPOINT, q, http_client=http_client)
     r2 = json.loads(r)
     assert (
-        r2["results"]["bindings"][0]["c"]["value"]
-        == "https://example.com/demo-vocabs/language-test/en-only"
+            r2["results"]["bindings"][0]["c"]["value"]
+            == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     r = query(
@@ -102,8 +102,8 @@ def test_query_db(fuseki_container, http_client):
     assert isinstance(r, str)
     r2 = json.loads(r)
     assert (
-        r2["results"]["bindings"][0]["c"]["value"]
-        == "https://example.com/demo-vocabs/language-test/en-only"
+            r2["results"]["bindings"][0]["c"]["value"]
+            == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     q = "ASK {?s ?p ?o}"
@@ -161,7 +161,7 @@ def test_query_file():
 
     r = query(LANG_TEST_VOC, q)
     assert (
-        "pl" in json.loads(render_sparql_result(r, RenderFormat.json))["head"]["vars"]
+            "pl" in json.loads(render_sparql_result(r, RenderFormat.json))["head"]["vars"]
     )
 
     # test return format options
@@ -185,16 +185,16 @@ def test_query_file():
 
     r = query(LANG_TEST_VOC, q, return_format="python", return_bindings_only=False)
     assert (
-        r["results"]["bindings"][0]["c"]
-        == "https://example.com/demo-vocabs/language-test/en-only"
+            r["results"]["bindings"][0]["c"]
+            == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     r = query(LANG_TEST_VOC, q, return_format="original", return_bindings_only=False)
     assert isinstance(r, str)
     r2 = json.loads(r)
     assert (
-        r2["results"]["bindings"][0]["c"]["value"]
-        == "https://example.com/demo-vocabs/language-test/en-only"
+            r2["results"]["bindings"][0]["c"]["value"]
+            == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     r = query(LANG_TEST_VOC, q, return_format="original", return_bindings_only=True)
@@ -202,8 +202,8 @@ def test_query_file():
     assert isinstance(r, str)
     r2 = json.loads(r)
     assert (
-        r2["results"]["bindings"][0]["c"]["value"]
-        == "https://example.com/demo-vocabs/language-test/en-only"
+            r2["results"]["bindings"][0]["c"]["value"]
+            == "https://example.com/demo-vocabs/language-test/en-only"
     )
 
     q = "ASK {?s ?p ?o}"
@@ -407,8 +407,8 @@ def test_return_formats(fuseki_container, http_client):
     )
 
     with pytest.raises(
-        ValueError,
-        match="must be either 'original', 'python' or 'dataframe'",
+            ValueError,
+            match="must be either 'original', 'python' or 'dataframe'",
     ):
         g = query(
             SPARQL_ENDPOINT,
@@ -418,8 +418,8 @@ def test_return_formats(fuseki_container, http_client):
         )
 
     with pytest.raises(
-        ValueError,
-        match='Only SELECT and ASK queries can have return_format set to "dataframe"',
+            ValueError,
+            match='Only SELECT and ASK queries can have return_format set to "dataframe"',
     ):
         g = query(
             SPARQL_ENDPOINT,

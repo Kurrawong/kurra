@@ -87,8 +87,8 @@ def test_fuseki_create_with_config_file(fuseki_container):
     )
     assert result.exit_code == 0
     assert (
-        f"Dataset myds created using assembler config at http://localhost:{port}."
-        in result.output
+            f"Dataset myds created using assembler config at http://localhost:{port}."
+            in result.output
     )
 
 
@@ -113,7 +113,7 @@ def test_fuseki_create_existing_dataset(fuseki_container):
     )
     assert result.exit_code == 1
     assert (
-        f"Failed to create dataset {dataset_name} at {sparql_endpoint}" in result.output
+            f"Failed to create dataset {dataset_name} at {sparql_endpoint}" in result.output
     )
 
 

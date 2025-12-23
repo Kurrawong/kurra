@@ -28,7 +28,6 @@ RDF_FILE_SUFFIXES = {
 }
 
 
-
 class RenderFormat(str, Enum):
     original = "original"
     json = "json"
@@ -72,7 +71,7 @@ def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> G
     if isinstance(graph_path_or_str, Path):
         if Path(graph_path_or_str).is_file():
             if str(graph_path_or_str).endswith(".trig") or str(
-                graph_path_or_str
+                    graph_path_or_str
             ).endswith(".jsonld"):
                 return Dataset().parse(str(graph_path_or_str))
             return Graph().parse(graph_path_or_str)
@@ -100,7 +99,7 @@ def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> G
 
 
 def render_sparql_result(
-    r: dict | str | Graph, rf: RenderFormat = RenderFormat.markdown
+        r: dict | str | Graph, rf: RenderFormat = RenderFormat.markdown
 ) -> str:
     """Renders a SPARQL result in a given render format"""
     if rf == RenderFormat.original:
@@ -150,7 +149,7 @@ def render_sparql_result(
                         header[0] += f"{col} | "
                         header[1] += f"--- | "
                     output = (
-                        "| " + header[0].strip() + "\n| " + header[1].strip() + "\n"
+                            "| " + header[0].strip() + "\n| " + header[1].strip() + "\n"
                     )
 
             if r.get("results"):
@@ -175,8 +174,8 @@ def render_sparql_result(
 
 
 def make_httpx_client(
-    sparql_username: str = None,
-    sparql_password: str = None,
+        sparql_username: str = None,
+        sparql_password: str = None,
 ):
     auth = None
     if sparql_username:
@@ -186,7 +185,7 @@ def make_httpx_client(
 
 
 def convert_sparql_json_to_python(
-    j: Union[str, bytes, httpx.Response], return_bindings_only=False
+        j: Union[str, bytes, httpx.Response], return_bindings_only=False
 ) -> {}:
     if type(j) == str:
         r = json.loads(j)
@@ -273,9 +272,9 @@ def add_namespaces_to_query_or_data(q: str, namespaces: dict):
 
 
 def make_httpx_client(
-    sparql_username: str = None,
-    sparql_password: str = None,
-    timeout: int = 60,
+        sparql_username: str = None,
+        sparql_password: str = None,
+        timeout: int = 60,
 ):
     auth = None
     if sparql_username:

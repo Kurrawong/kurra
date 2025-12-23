@@ -4,15 +4,15 @@ from pickle import dump, load
 import httpx
 from pyshacl import validate as v
 from rdflib import Graph, Dataset, URIRef
-from rdflib.namespace import OWL, RDF, SDO
+from rdflib.namespace import SDO
 
 from kurra.db.gsp import get as gsp_get
 from kurra.sparql import query
 from kurra.utils import load_graph
-from typing import Union
+
 
 def validate(
-        data_file_or_dir_or_graph: Path | Graph, shacl_graph_or_file_or_url_or_id: Graph|Path|str|int
+        data_file_or_dir_or_graph: Path | Graph, shacl_graph_or_file_or_url_or_id: Graph | Path | str | int
 ) -> tuple[bool, Graph, str]:
     """Runs pySHACL's validate() function with some preset values"""
     data_graph = load_graph(data_file_or_dir_or_graph)
@@ -23,7 +23,7 @@ def validate(
     return v(data_graph, shacl_graph=shapes_graph, allow_warnings=True)
 
 
-def list_local_validators() -> dict[str, dict[str, int]]|None:
+def list_local_validators() -> dict[str, dict[str, int]] | None:
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
     validator_ids_cache = kurra_cache / "validator_ids.pkl"
@@ -120,20 +120,21 @@ def sync_validators(http_client: httpx.Client | None = None):
     return local_validators
 
 
-def get_validator_graph(graph_or_file_or_url_or_id: Graph|Path|str|int) -> Graph|None:
+def get_validator_graph(graph_or_file_or_url_or_id: Graph | Path | str | int) -> Graph | None:
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
     validator_ids_cache = kurra_cache / "validator_ids.pkl"
 
     # it's a local ID so look it up in cache
-    if isinstance(graph_or_file_or_url_or_id, int) or (isinstance(graph_or_file_or_url_or_id, str) and graph_or_file_or_url_or_id.isdigit()):
+    if isinstance(graph_or_file_or_url_or_id, int) or (
+            isinstance(graph_or_file_or_url_or_id, str) and graph_or_file_or_url_or_id.isdigit()):
         validator_ids = load(open(validator_ids_cache, "rb"))
         validator_iris = [key for key, value in validator_ids.items() if value == int(graph_or_file_or_url_or_id)]
         if len(validator_iris) != 1:
             raise ValueError(f"Could not find validator for {graph_or_file_or_url_or_id}")
 
         cv = load(open(validators_cache, "rb"))
-        cv:Dataset
+        cv: Dataset
         return cv.graph(URIRef(validator_iris[0]))
 
     # cater for CLI making paths strings
@@ -145,4 +146,3 @@ def get_validator_graph(graph_or_file_or_url_or_id: Graph|Path|str|int) -> Graph
         return load_graph(graph_or_file_or_url_or_id)
     except:
         return None
-

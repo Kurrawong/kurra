@@ -16,7 +16,7 @@ app = typer.Typer(
 
 @app.callback(invoke_without_command=True)
 def main(
-    version: Annotated[bool, typer.Option("--version", "-v", is_eager=True)] = False,
+        version: Annotated[bool, typer.Option("--version", "-v", is_eager=True)] = False,
 ):
     """Main callback for the CLI app"""
     if version:

@@ -1,8 +1,9 @@
 # Kurra
 
-A Python package of RDF data manipulation and data management functions that can be called from the command line or other software.
+A Python package of RDF data manipulation and data management functions that can be called from the command line or
+other software.
 
-This library uses the [RDFLib](https://pypi.org/project/rdflib/) under-the-hood to process 
+This library uses the [RDFLib](https://pypi.org/project/rdflib/) under-the-hood to process
 [RDF](https://www.w3.org/RDF/) data. It supplies functions to:
 
 * manipulate local RDF files
@@ -11,30 +12,30 @@ This library uses the [RDFLib](https://pypi.org/project/rdflib/) under-the-hood 
 
 kurra is for convenience: the functions it provides are simple but kurra saves you having to reinvent wheels.
 
-
 ## CLI app
 
-kurra presents a Command Line Interface that can be used on Mac, Linux and Windows (WSL) command prompts. 
+kurra presents a Command Line Interface that can be used on Mac, Linux and Windows (WSL) command prompts.
 
 The hierarchy of functions provided is:
 
 * **db** - run commands against RDF databases
-  * list
-  * create
-  * upload
-  * clear
-  * delete
-  * sparql
+    * list
+    * create
+    * upload
+    * clear
+    * delete
+    * sparql
 * **file** - run commands on local RDF files
-  * format
-  * upload
-  * quads
-  * sparql
+    * format
+    * upload
+    * quads
+    * sparql
 * **shacl**
-  * validate - SHACL validate a file
+    * validate - SHACL validate a file
 * **sparql** - SPARQL query files or databases
 
-Once you have installed kurra (see below), you can ask it to tell you what each command does and what inputs are needed by using the `--help` or just `-h`, command, e.g.:
+Once you have installed kurra (see below), you can ask it to tell you what each command does and what inputs are needed
+by using the `--help` or just `-h`, command, e.g.:
 
 ```bash
 kurra -h
@@ -55,7 +56,8 @@ which will return something like:
 ╰───────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-To find out more about the specific options within `db`, `file`, `shacl` & `sparql`, run the help command at the next level, like this:
+To find out more about the specific options within `db`, `file`, `shacl` & `sparql`, run the help command at the next
+level, like this:
 
 ```bash
 kurra db -h
@@ -89,12 +91,12 @@ To get further help for the particular commands. For `db`, you will see somethin
 ╰───────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-
 ## Installation
 
 ### CLI App
 
-The recommended way to manage and run Python CLI apps is to use the Python package uv which you will need to install first, see the [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/). then:
+The recommended way to manage and run Python CLI apps is to use the Python package uv which you will need to install
+first, see the [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/). then:
 
 ```bash
 uv tool install kurra
@@ -102,7 +104,8 @@ uv tool install kurra
 
 Now you can invoke `kurra` anywhere in your terminal as long as `~/.local/bin` is in your `PATH`.
 
-See the uv documentation on [installing tools](https://docs.astral.sh/uv/guides/tools/#installing-tools) for more information.
+See the uv documentation on [installing tools](https://docs.astral.sh/uv/guides/tools/#installing-tools) for more
+information.
 
 ### Library
 
@@ -145,7 +148,9 @@ To build a new release:
 6. build the release - `uv build`
 7. publish the release on PyPI - `uv publish -u __token__ -p {TOKEN}`, {TOKEN} is an actual token
 8. make the release on GitHub - https://github.com/Kurrawong/kurra/releases
-  * don't forget to add the dist zips & wheels to it
+
+* don't forget to add the dist zips & wheels to it
+
 9. update version number in pyproject.toml to next alpha & push
 
 ## License
@@ -158,7 +163,7 @@ kurra is maintained by:
 
 **KurrawongAI**  
 <http://kurrawong.ai>  
-<info@kurrawong.ai>  
+<info@kurrawong.ai>
 
 Please contact them for all use & support issues.
 
@@ -174,4 +179,4 @@ You can also log issues at the kurra issue tracker:
 * `uv build`
 * `uv publish -u __token__ -p {TOKEN}`
 * make a GitHub Release
-  * add release notes
+    * add release notes
