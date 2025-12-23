@@ -42,7 +42,7 @@ def test_format_cli():
         [
             "kurra",
             "file",
-            "format",
+            "reformat",
             "--output-format",
             "json-ld",
             "tests/test_file/minimal1.ttl",

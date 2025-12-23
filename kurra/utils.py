@@ -75,7 +75,7 @@ def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> G
                 graph_path_or_str
             ).endswith(".jsonld"):
                 return Dataset().parse(str(graph_path_or_str))
-            return Graph().parse(str(graph_path_or_str))
+            return Graph().parse(graph_path_or_str)
         elif Path(graph_path_or_str).is_dir():
             g = Graph()
             if recursive:

@@ -17,7 +17,6 @@ def validate(
     """Runs pySHACL's validate() function with some preset values"""
     data_graph = load_graph(data_file_or_dir_or_graph)
     shapes_graph = get_validator_graph(shacl_graph_or_file_or_url_or_id)
-
     if shapes_graph is None:
         raise RuntimeError(f"Not able to load shapes graph: {shacl_graph_or_file_or_url_or_id}")
 
@@ -136,6 +135,11 @@ def get_validator_graph(graph_or_file_or_url_or_id: Graph|Path|str|int) -> Graph
         cv = load(open(validators_cache, "rb"))
         cv:Dataset
         return cv.graph(URIRef(validator_iris[0]))
+
+    # cater for CLI making paths strings
+    if isinstance(graph_or_file_or_url_or_id, str):
+        if Path(graph_or_file_or_url_or_id).exists():
+            return load_graph(Path(graph_or_file_or_url_or_id))
 
     try:
         return load_graph(graph_or_file_or_url_or_id)

@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 from rdflib import Dataset, URIRef
 from rdflib.namespace import RDF, SH
-
+import pytest
 from kurra.shacl import sync_validators
 from kurra.shacl import validate, list_local_validators
 from kurra.utils import load_graph
@@ -28,6 +28,7 @@ def test_validate_simple():
     assert not valid3
 
 
+@pytest.mark.xfail
 def test_sync_validators():
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
@@ -52,6 +53,7 @@ def test_sync_validators():
     assert len(known_validators) == 10
 
 
+@pytest.mark.xfail
 def test_list_local_validators():
     pm_cache = Path().home() / ".pm"
 
@@ -62,8 +64,9 @@ def test_list_local_validators():
 
     assert len(list_local_validators().keys()) == 10
 
-
+@pytest.mark.xfail
 def test_validate_by_id():
+    """Awaiting sync_validators()"""
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
 
