@@ -1,4 +1,6 @@
 from pathlib import Path
+from kurra.shacl import list_local_validators, sync_validators
+from kurra.utils import make_httpx_client
 
 from typer.testing import CliRunner
 
@@ -35,3 +37,18 @@ def test_shacl_invalid():
         ],
     )
     assert "The errors are:" in result.stdout
+
+
+def test_shacl_list_validators():
+    sync_validators()
+
+    result = runner.invoke(
+        app,
+        [
+            "shacl",
+            "listv",
+        ],
+    )
+
+    assert "Prez Manifest Validator" in result.output
+    assert "fake-validator" not in result.output

@@ -270,3 +270,15 @@ def add_namespaces_to_query_or_data(q: str, namespaces: dict):
         preamble += f"PREFIX {k}: <{v}>\n"
     preamble += "\n"
     return preamble + q
+
+
+def make_httpx_client(
+    sparql_username: str = None,
+    sparql_password: str = None,
+    timeout: int = 60,
+):
+    auth = None
+    if sparql_username:
+        if sparql_password:
+            auth = httpx.BasicAuth(sparql_username, sparql_password)
+    return httpx.Client(auth=auth, timeout=timeout)
