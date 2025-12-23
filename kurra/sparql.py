@@ -64,7 +64,7 @@ def query(
     if "CONSTRUCT" in q or "DESCRIBE" in q:
         s = None
         f = None
-        if isinstance(p, str) and p.startswith("http"):
+        if str(p).startswith("http"):
             r = db_query(p, q, namespaces, http_client, "original", False)
             s = load_graph(r)
 
@@ -84,19 +84,16 @@ def query(
                 else f.graph.serialize(format="longturtle")
             )
 
-    elif "INSERT" in q or "DELETE" in q:
-        raise NotImplementedError(
-            "INSERT & DELETE queries are not yet implemented by this interface. Try kurra.db.sparql"
-        )
-
-    elif "DROP" in q:
-        if isinstance(p, str) and p.startswith("http"):
+    elif "INSERT" in q or "DELETE" in q or "DROP" in q:
+        if str(p).startswith("http"):
             r = db_query(p, q, namespaces, http_client, return_format, False)
 
             if r == "":
                 return ""
         else:
-            raise NotImplementedError("DROP commands are not yet implemented for files")
+            raise NotImplementedError(
+                "Update commands are not yet implemented for files"
+            )
 
     else:  # SELECT or ASK
         close_http_client = False
@@ -105,7 +102,7 @@ def query(
             close_http_client = True
 
         r = None
-        if isinstance(p, str) and p.startswith("http"):
+        if str(p).startswith("http"):
             r = db_query(
                 p, q, namespaces, http_client, return_format, return_bindings_only
             )

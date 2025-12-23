@@ -4,6 +4,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from rdflib.namespace import SKOS
 
 from kurra.db.gsp import clear, upload
 from kurra.sparql import query
@@ -330,17 +331,38 @@ def test_insert(fuseki_container, http_client):
     )
 
     q = """
-        INSERT { ?s ?p ?o }
+        INSERT { 
+            GRAPH <http://other> {
+                ?s ?p ?o 
+            }
+        }
         WHERE {
             GRAPH ?g {
                 ?s ?p ?o
             }
         }
-        LIMIT 3       
         """
 
-    with pytest.raises(NotImplementedError):
-        r = query(SPARQL_ENDPOINT, q, http_client=http_client)
+    r = query(SPARQL_ENDPOINT, q, http_client=http_client)
+    assert r == ""
+
+    q = """
+        SELECT *
+        WHERE {
+            GRAPH <http://other> {
+                ?cs a skos:ConceptScheme ;
+            }            
+        }
+        """
+    r = query(
+        SPARQL_ENDPOINT,
+        q,
+        namespaces={"skos": SKOS},
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=True,
+    )
+    assert r[0]["cs"] == "https://example.com/demo-vocabs/language-test"
 
 
 def test_204_response(fuseki_container, http_client):
