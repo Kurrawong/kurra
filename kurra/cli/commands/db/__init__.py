@@ -6,7 +6,7 @@ import typer
 from kurra.cli.commands.db.fuseki import app
 from kurra.cli.commands.sparql import sparql_command
 
-app = typer.Typer(help="Fuseki database commands")
+app = typer.Typer(help="Database commands")
 
 
 @app.command(name="sparql", help="SPARQL query an RDF database")
