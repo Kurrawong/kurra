@@ -3,7 +3,7 @@ from pickle import dump, load
 
 import httpx
 from pyshacl import validate as v
-from rdflib import Graph, Dataset, URIRef
+from rdflib import Dataset, Graph, URIRef
 from rdflib.namespace import SDO
 
 from kurra.db.gsp import get as gsp_get
@@ -12,13 +12,16 @@ from kurra.utils import load_graph
 
 
 def validate(
-        data_file_or_dir_or_graph: Path | Graph, shacl_graph_or_file_or_url_or_id: Graph | Path | str | int
+    data_file_or_dir_or_graph: Path | Graph,
+    shacl_graph_or_file_or_url_or_id: Graph | Path | str | int,
 ) -> tuple[bool, Graph, str]:
     """Runs pySHACL's validate() function with some preset values"""
     data_graph = load_graph(data_file_or_dir_or_graph)
     shapes_graph = get_validator_graph(shacl_graph_or_file_or_url_or_id)
     if shapes_graph is None:
-        raise RuntimeError(f"Not able to load shapes graph: {shacl_graph_or_file_or_url_or_id}")
+        raise RuntimeError(
+            f"Not able to load shapes graph: {shacl_graph_or_file_or_url_or_id}"
+        )
 
     return v(data_graph, shacl_graph=shapes_graph, allow_warnings=True)
 
@@ -42,7 +45,9 @@ def list_local_validators() -> dict[str, dict[str, int]] | None:
 
         for validator_iri in sorted(validator_iris):
             validator_id = validator_ids[validator_iri]
-            validator_name = load_graph(cv.get_graph(validator_iri)).value(subject=validator_iri, predicate=SDO.name)
+            validator_name = load_graph(cv.get_graph(validator_iri)).value(
+                subject=validator_iri, predicate=SDO.name
+            )
             local_validators[str(validator_iri)] = {
                 "name": str(validator_name),
                 "id": str(validator_id),
@@ -98,9 +103,13 @@ def sync_validators(http_client: httpx.Client | None = None):
         for v in unknown_validators:
             g = gsp_get(semback_sparql_endpoint, v, http_client=http_client)
             if g == 422:
-                raise NotImplementedError("The KurrawongAI Semantic Background set of validators is not available yet.")
+                raise NotImplementedError(
+                    "The KurrawongAI Semantic Background set of validators is not available yet."
+                )
             if not isinstance(g, Graph):
-                raise RuntimeError(f"The graph {v} was not obtained from the SPARQL Endpoint {semback_sparql_endpoint}")
+                raise RuntimeError(
+                    f"The graph {v} was not obtained from the SPARQL Endpoint {semback_sparql_endpoint}"
+                )
             d.add_graph(g)
             print(f"Caching validator {g.identifier}")
 
@@ -120,18 +129,28 @@ def sync_validators(http_client: httpx.Client | None = None):
     return local_validators
 
 
-def get_validator_graph(graph_or_file_or_url_or_id: Graph | Path | str | int) -> Graph | None:
+def get_validator_graph(
+    graph_or_file_or_url_or_id: Graph | Path | str | int,
+) -> Graph | None:
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
     validator_ids_cache = kurra_cache / "validator_ids.pkl"
 
     # it's a local ID so look it up in cache
     if isinstance(graph_or_file_or_url_or_id, int) or (
-            isinstance(graph_or_file_or_url_or_id, str) and graph_or_file_or_url_or_id.isdigit()):
+        isinstance(graph_or_file_or_url_or_id, str)
+        and graph_or_file_or_url_or_id.isdigit()
+    ):
         validator_ids = load(open(validator_ids_cache, "rb"))
-        validator_iris = [key for key, value in validator_ids.items() if value == int(graph_or_file_or_url_or_id)]
+        validator_iris = [
+            key
+            for key, value in validator_ids.items()
+            if value == int(graph_or_file_or_url_or_id)
+        ]
         if len(validator_iris) != 1:
-            raise ValueError(f"Could not find validator for {graph_or_file_or_url_or_id}")
+            raise ValueError(
+                f"Could not find validator for {graph_or_file_or_url_or_id}"
+            )
 
         cv = load(open(validators_cache, "rb"))
         cv: Dataset

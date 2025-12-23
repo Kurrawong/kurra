@@ -9,7 +9,7 @@ from kurra.db.gsp import upload
 runner = CliRunner()
 
 LANG_TEST_VOC = (
-        Path(__file__).parent.parent.resolve() / "test_sparql" / "language-test.ttl"
+    Path(__file__).parent.parent.resolve() / "test_sparql" / "language-test.ttl"
 )
 TESTING_GRAPH = "https://example.com/testing-graph"
 
@@ -59,8 +59,8 @@ def test_query_file():
         ["sparql", str(LANG_TEST_VOC), q],
     )
     assert (
-            "https://example.com/demo-vocabs/language-test/lang-and-no-lang"
-            in result.output
+        "https://example.com/demo-vocabs/language-test/lang-and-no-lang"
+        in result.output
     )
 
 

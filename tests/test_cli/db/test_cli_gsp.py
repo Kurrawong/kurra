@@ -124,10 +124,10 @@ def test_put(fuseki_container, http_client):
 
     r = get(SPARQL_ENDPOINT, TESTING_GRAPH, http_client=http_client)
     assert (
-               URIRef("http://base/#service_tdb_all"),
-               RDF.type,
-               URIRef("http://jena.apache.org/fuseki#Service"),
-           ) in r
+        URIRef("http://base/#service_tdb_all"),
+        RDF.type,
+        URIRef("http://jena.apache.org/fuseki#Service"),
+    ) in r
 
     # delete(SPARQL_ENDPOINT, "all", http_client=http_client)
 
@@ -153,10 +153,10 @@ def test_put(fuseki_container, http_client):
     )
     r = get(SPARQL_ENDPOINT, http_client=http_client)
     assert (
-               URIRef("http://example.com/a"),
-               URIRef("http://example.com/b"),
-               URIRef("http://example.com/c"),
-           ) in r
+        URIRef("http://example.com/a"),
+        URIRef("http://example.com/b"),
+        URIRef("http://example.com/c"),
+    ) in r
 
 
 def test_post(fuseki_container, http_client):

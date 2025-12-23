@@ -7,11 +7,11 @@ from typing import Union
 import httpx
 from rdflib import Graph
 
-from kurra.utils import load_graph, RDF_SUFFIX_MAP
+from kurra.utils import RDF_SUFFIX_MAP, load_graph
 
 
 def exists(
-        sparql_endpoint: str, graph_iri: str, http_client: httpx.Client | None = None
+    sparql_endpoint: str, graph_iri: str, http_client: httpx.Client | None = None
 ) -> bool:
     """Returns True if a graph with the given graph_iri exists at the SPARQL Endpoint or else False"""
     if not sparql_endpoint.startswith("http"):
@@ -37,11 +37,11 @@ def exists(
 
 
 def get(
-        sparql_endpoint: str,
-        graph_iri: str = "default",
-        accept_type="text/turtle",
-        return_format: LiteralType["original", "python"] = "python",
-        http_client: httpx.Client | None = None,
+    sparql_endpoint: str,
+    graph_iri: str = "default",
+    accept_type="text/turtle",
+    return_format: LiteralType["original", "python"] = "python",
+    http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
     """Graph Store Protocol's HTTP GET: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-get
 
@@ -67,7 +67,9 @@ def get(
         )
 
     if return_format not in ["original", "python"]:
-        raise ValueError("Return format must be either 'python' (default) or 'original'")
+        raise ValueError(
+            "Return format must be either 'python' (default) or 'original'"
+        )
 
     close_http_client = False
     if http_client is None:
@@ -88,7 +90,9 @@ def get(
             return r.text
         else:
             if graph_iri is not None and graph_iri != "default":
-                return Graph(identifier=graph_iri).parse(data=r.text, format=accept_type)
+                return Graph(identifier=graph_iri).parse(
+                    data=r.text, format=accept_type
+                )
             else:
                 return Graph().parse(data=r.text, format=accept_type)
     else:
@@ -96,11 +100,11 @@ def get(
 
 
 def put(
-        sparql_endpoint: str,
-        file_or_str_or_graph: Union[Path, str, Graph],
-        graph_iri: str = "default",
-        content_type="text/turtle",
-        http_client: httpx.Client | None = None,
+    sparql_endpoint: str,
+    file_or_str_or_graph: Union[Path, str, Graph],
+    graph_iri: str = "default",
+    content_type="text/turtle",
+    http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
     """Graph Store Protocol's HTTP PUT: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-put
 
@@ -136,11 +140,11 @@ def put(
 
 
 def post(
-        sparql_endpoint: str,
-        file_or_str_or_graph: Union[Path, str, Graph],
-        graph_iri: str = "default",
-        content_type="text/turtle",
-        http_client: httpx.Client | None = None,
+    sparql_endpoint: str,
+    file_or_str_or_graph: Union[Path, str, Graph],
+    graph_iri: str = "default",
+    content_type="text/turtle",
+    http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
     """Graph Store Protocol's HTTP POST: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-post
 
@@ -179,9 +183,9 @@ def post(
 
 
 def delete(
-        sparql_endpoint: str,
-        graph_iri: str = "default",
-        http_client: httpx.Client | None = None,
+    sparql_endpoint: str,
+    graph_iri: str = "default",
+    http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
     """Graph Store Protocol's HTTP DELETE: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-delete
 
@@ -209,7 +213,7 @@ def delete(
 
 
 def clear(
-        sparql_endpoint: str, graph_iri: str, http_client: httpx.Client | None = None
+    sparql_endpoint: str, graph_iri: str, http_client: httpx.Client | None = None
 ):
     """SPARQL Update Clear function: https://www.w3.org/TR/sparql12-update/#clear
 
@@ -221,12 +225,12 @@ def clear(
 
 
 def upload(
-        sparql_endpoint: str,
-        file_or_str_or_graph: Union[Path, str, Graph],
-        graph_id: str | None = None,
-        append: bool = False,
-        content_type: str = "text/turtle",
-        http_client: httpx.Client | None = None,
+    sparql_endpoint: str,
+    file_or_str_or_graph: Union[Path, str, Graph],
+    graph_id: str | None = None,
+    append: bool = False,
+    content_type: str = "text/turtle",
+    http_client: httpx.Client | None = None,
 ) -> Union[bool, int]:
     """This function uploads a file to a SPARQL Endpoint using the Graph Store Protocol.
 

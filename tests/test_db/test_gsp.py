@@ -57,7 +57,9 @@ def test_get(fuseki_container, http_client):
     g3 = get(SPARQL_ENDPOINT, "http://nothing.com", http_client=http_client)
     assert g3 == 404
 
-    g4 = get(SPARQL_ENDPOINT, "default", http_client=http_client, return_format="original")
+    g4 = get(
+        SPARQL_ENDPOINT, "default", http_client=http_client, return_format="original"
+    )
     assert "http://example.com/" in g4
 
 
@@ -215,7 +217,13 @@ def test_upload_no_graph(fuseki_container, http_client):
             }
         }
         """
-    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True, http_client=http_client)
+    r = query(
+        SPARQL_ENDPOINT,
+        q,
+        return_format="python",
+        return_bindings_only=True,
+        http_client=http_client,
+    )
 
     assert r[0]["c"] == 77
 

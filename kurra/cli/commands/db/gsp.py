@@ -14,26 +14,26 @@ app = typer.Typer(help="Graph Store Protocol commands")
 
 @app.command(name="exists", help="Checks to see if a graph exists within a database")
 def exists_command(
-        sparql_endpoint_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-        graph_identifier: Annotated[
-            str,
-            typer.Option(
-                "--graph",
-                "-g",
-                help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
-            ),
-        ] = "default",
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ):
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -53,26 +53,26 @@ def exists_command(
 
 @app.command(name="get", help="Gets the content of a database graph")
 def get_command(
-        sparql_endpoint_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-        graph_identifier: Annotated[
-            str,
-            typer.Option(
-                "--graph",
-                "-g",
-                help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
-            ),
-        ] = "default",
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ):
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -99,29 +99,29 @@ def get_command(
 
 @app.command(name="put", help="Load content into a database graph")
 def put_command(
-        path: Path = typer.Argument(
-            ..., help="The path of a file or directory of files to be uploaded."
+    path: Path = typer.Argument(
+        ..., help="The path of a file or directory of files to be uploaded."
+    ),
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-        sparql_endpoint_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        graph_identifier: Annotated[
-            str,
-            typer.Option(
-                "--graph",
-                "-g",
-                help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
-            ),
-        ] = "default",
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ):
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -143,29 +143,29 @@ def put_command(
 
 @app.command(name="post", help="Add content to a database graph")
 def post_command(
-        path: Path = typer.Argument(
-            ..., help="The path of a file or directory of files to be uploaded."
+    path: Path = typer.Argument(
+        ..., help="The path of a file or directory of files to be uploaded."
+    ),
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-        sparql_endpoint_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        graph_identifier: Annotated[
-            str,
-            typer.Option(
-                "--graph",
-                "-g",
-                help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
-            ),
-        ] = "default",
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ):
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -187,26 +187,26 @@ def post_command(
 
 @app.command(name="delete", help="Deletes the content of a database graph")
 def delete_command(
-        sparql_endpoint_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-        graph_identifier: Annotated[
-            str,
-            typer.Option(
-                "--graph",
-                "-g",
-                help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
-            ),
-        ] = "default",
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ):
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -226,26 +226,26 @@ def delete_command(
 
 @app.command(name="clear", help="Clears a database graph")
 def clear_command(
-        sparql_endpoint_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    sparql_endpoint_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    graph_identifier: Annotated[
+        str,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-        graph_identifier: Annotated[
-            str,
-            typer.Option(
-                "--graph",
-                "-g",
-                help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
-            ),
-        ] = "default",
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    ] = "default",
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ):
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -263,38 +263,38 @@ def clear_command(
 
 @app.command(name="upload", help="Upload file(s) to a database")
 def upload_command(
-        path: Path = typer.Argument(
-            ..., help="The path of a file or directory of files to be uploaded."
+    path: Path = typer.Argument(
+        ..., help="The path of a file or directory of files to be uploaded."
+    ),
+    sparql_endpoint: str = typer.Argument(
+        ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
+    ),
+    graph_identifier: Annotated[
+        str | None,
+        typer.Option(
+            "--graph",
+            "-g",
+            help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-        sparql_endpoint: str = typer.Argument(
-            ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
+    ] = None,
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
+    disable_ssl_verification: Annotated[
+        bool,
+        typer.Option(
+            "--disable-ssl-verification", "-k", help="Disable SSL verification."
         ),
-        graph_identifier: Annotated[
-            str | None,
-            typer.Option(
-                "--graph",
-                "-g",
-                help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
-            ),
-        ] = None,
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
-        disable_ssl_verification: Annotated[
-            bool,
-            typer.Option(
-                "--disable-ssl-verification", "-k", help="Disable SSL verification."
-            ),
-        ] = False,
-        host_header: Annotated[
-            str | None, typer.Option("--host-header", "-e", help="Override the Host header")
-        ] = None,
+    ] = False,
+    host_header: Annotated[
+        str | None, typer.Option("--host-header", "-e", help="Override the Host header")
+    ] = None,
 ) -> None:
     """Upload a file or a directory of files with an RDF file extension.
 
@@ -318,10 +318,10 @@ def upload_command(
     files = list(filter(lambda f: f.suffix in RDF_SUFFIX_MAP.keys(), files))
 
     with httpx.Client(
-            auth=auth,
-            timeout=timeout,
-            headers={"Host": host_header} if host_header is not None else {},
-            verify=False if disable_ssl_verification else True,
+        auth=auth,
+        timeout=timeout,
+        headers={"Host": host_header} if host_header is not None else {},
+        verify=False if disable_ssl_verification else True,
     ) as http_client:
         for file in track(files, description=f"Uploading {len(files)} files..."):
             try:

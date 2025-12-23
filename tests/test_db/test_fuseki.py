@@ -148,8 +148,8 @@ def test_describe_non_existent(fuseki_container, http_client):
         describe(base_url, http_client)
 
     assert (
-            f"Failed to list datasets at http://localhost:{port}/some-url"
-            in exc_info.value.message
+        f"Failed to list datasets at http://localhost:{port}/some-url"
+        in exc_info.value.message
     )
 
 

@@ -14,18 +14,18 @@ dataset_type_options = ["mem", "tdb", "tdb1", "tdb2"]
 
 @app.command(name="ping", help="Check if the server is alive")
 def describe_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -43,18 +43,18 @@ def describe_command(
 
 @app.command(name="server", help="Get basic server info")
 def describe_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -72,18 +72,18 @@ def describe_command(
 
 @app.command(name="stats", help="Request statistics for all datasets")
 def describe_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -101,18 +101,18 @@ def describe_command(
 
 @app.command(name="backup", help="Ask the server to create a backup")
 def describe_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -130,18 +130,18 @@ def describe_command(
 
 @app.command(name="backups_list", help="List all existing backups")
 def describe_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -159,18 +159,18 @@ def describe_command(
 
 @app.command(name="sleep", help="Tell the server to sleep")
 def describe_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -188,18 +188,18 @@ def describe_command(
 
 @app.command(name="tasks", help="List running tasks")
 def describe_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -217,18 +217,18 @@ def describe_command(
 
 @app.command(name="metrics", help="Get server metrics")
 def describe_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -246,18 +246,18 @@ def describe_command(
 
 @app.command(name="describe", help="Get the list of datasets or describe one")
 def describe_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -278,23 +278,23 @@ def describe_command(
     help="Create a new dataset",
 )
 def create_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        dataset_name: str | None = typer.Argument(None, help="repository name"),
-        dataset_type: str = typer.Option(
-            "tdb2", help=f"dataset type. Options: {dataset_type_options}"
-        ),
-        config: Path | None = typer.Option(None, help="assembler file"),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    dataset_name: str | None = typer.Argument(None, help="repository name"),
+    dataset_type: str = typer.Option(
+        "tdb2", help=f"dataset type. Options: {dataset_type_options}"
+    ),
+    config: Path | None = typer.Option(None, help="assembler file"),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ) -> None:
     auth = (
         (username, password) if username is not None and password is not None else None
@@ -338,19 +338,19 @@ def create_command(
 
 @app.command(name="delete", help="Delete a dataset")
 def delete_command(
-        fuseki_url: str = typer.Argument(
-            ..., help="Fuseki base URL. E.g. http://localhost:3030"
-        ),
-        dataset_name: str = typer.Argument(..., help="The name of the dataset to delete."),
-        username: Annotated[
-            str, typer.Option("--username", "-u", help="Fuseki username.")
-        ] = None,
-        password: Annotated[
-            str, typer.Option("--password", "-p", help="Fuseki password.")
-        ] = None,
-        timeout: Annotated[
-            int, typer.Option("--timeout", "-t", help="Timeout per request")
-        ] = 60,
+    fuseki_url: str = typer.Argument(
+        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+    ),
+    dataset_name: str = typer.Argument(..., help="The name of the dataset to delete."),
+    username: Annotated[
+        str, typer.Option("--username", "-u", help="Fuseki username.")
+    ] = None,
+    password: Annotated[
+        str, typer.Option("--password", "-p", help="Fuseki password.")
+    ] = None,
+    timeout: Annotated[
+        int, typer.Option("--timeout", "-t", help="Timeout per request")
+    ] = 60,
 ):
     auth = (
         (username, password) if username is not None and password is not None else None

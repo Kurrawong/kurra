@@ -12,12 +12,12 @@ from kurra.utils import (
 
 
 def query(
-        sparql_endpoint: str,
-        q: str,
-        namespaces: dict[str, str] | None = None,
-        http_client: httpx.Client = None,
-        return_format: LiteralType["original", "python", "dataframe"] = "original",
-        return_bindings_only: bool = False,
+    sparql_endpoint: str,
+    q: str,
+    namespaces: dict[str, str] | None = None,
+    http_client: httpx.Client = None,
+    return_format: LiteralType["original", "python", "dataframe"] = "original",
+    return_bindings_only: bool = False,
 ):
     """Pose a SPARQL query to a SPARQL Endpoint"""
     if sparql_endpoint is None:
@@ -39,11 +39,11 @@ def query(
 
     if return_format == "dataframe":
         if (
-                "CONSTRUCT" in q
-                or "DESCRIBE" in q
-                or "INSERT" in q
-                or "DELETE" in q
-                or "DROP" in q
+            "CONSTRUCT" in q
+            or "DESCRIBE" in q
+            or "INSERT" in q
+            or "DELETE" in q
+            or "DROP" in q
         ):
             raise ValueError(
                 'Only SELECT and ASK queries can have return_format set to "dataframe"'
