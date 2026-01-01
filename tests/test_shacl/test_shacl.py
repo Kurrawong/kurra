@@ -6,7 +6,7 @@ import pytest
 from rdflib import Dataset, URIRef
 from rdflib.namespace import RDF, SH
 
-from kurra.shacl import list_local_validators, sync_validators, validate
+from kurra.shacl import list_local_validators, sync_validators, validate, check_validator_known
 from kurra.utils import load_graph
 
 SHACL_TEST_DIR = Path(__file__).parent.resolve()
@@ -26,6 +26,15 @@ def test_validate_simple():
     data_file3 = SHACL_TEST_DIR / "vocab-invalid2.ttl"
     valid3, g3, txt3 = validate(data_file3, shacl_graph)
     assert not valid3
+
+
+def test_validate_multiple_data_files():
+    data_files = [
+        Path(__file__).parent / "vocab-invalid.ttl",
+        Path(__file__).parent / "vocab-invalid-additions.ttl",
+    ]
+    v = validate(data_files, "https://linked.data.gov.au/def/vocpub/validator")
+    assert v[0]
 
 
 def test_sync_validators():
@@ -77,3 +86,8 @@ def test_validate_by_id():
 
     valid, g, txt = validate(SHACL_TEST_DIR / "vocab-invalid.ttl", 9)
     assert len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 6
+
+
+def test_check_validator_known():
+    assert check_validator_known("https://linked.data.gov.au/def/vocpub/validator")
+    assert not check_validator_known("https://linked.data.gov.au/def/vocpub/validatorx")

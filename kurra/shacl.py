@@ -12,16 +12,79 @@ from kurra.utils import load_graph
 
 
 def validate(
-    data_file_or_dir_or_graph: Path | Graph,
+    data_file_or_dir_or_graph_or_list: Path | Graph | list[Path] | list[Graph],
     shacl_graph_or_file_or_url_or_id: Graph | Path | str | int,
 ) -> tuple[bool, Graph, str]:
-    """Runs pySHACL's validate() function with some preset values"""
-    data_graph = load_graph(data_file_or_dir_or_graph)
-    shapes_graph = get_validator_graph(shacl_graph_or_file_or_url_or_id)
+    """Validates a data graph using a shapes graph.
+
+    Args:
+        data_file_or_dir_or_graph_or_list: The path to an RDF data file, a graph, a list of Paths or a list of Graphs to validate. List items will be merged
+        shacl_graph_or_file_or_url_or_id: The sHACL shapes to validate with
+
+    Returns:
+        Tuple[bool, Graph, str]: The validation status, results graph and message, all from pySHACL
+
+    Raises:
+        ValueError: If the ID of the SHACL validator is invalid
+        RuntimeError: If the IRI of the SHACL validator is not able to be resolved locally or against the Semantic Background's validators
+    """
+    kurra_cache = Path().home() / ".kurra"
+    validators_cache = kurra_cache / "validators.pkl"
+
+    data_graph = None
+    shapes_graph = None
+
+    def _get_shapes_from_iri(iri):
+        local_validators = list_local_validators()
+        for local_validator in local_validators.keys():
+            if iri == local_validator:
+                cv = load(open(validators_cache, "rb"))
+                return cv.get_graph(URIRef(iri))
+
+    def _get_shapes_from_id(id):
+        id = int(id)
+        local_validators = list_local_validators()
+        max = len(local_validators.keys())
+        if id < 0 or id > max:
+            raise ValueError(f"shacl graph id value out of range. Must be <= {max}")
+        for k, x in local_validators.items():
+            if int(x["id"]) == id:
+                cv = load(open(validators_cache, "rb"))
+                return cv.get_graph(URIRef(k))
+
+    # Try and resolve a validator IRI to a graph
+    if isinstance(shacl_graph_or_file_or_url_or_id, str):
+        if shacl_graph_or_file_or_url_or_id.startswith("http"):
+            shapes_graph = _get_shapes_from_iri(shacl_graph_or_file_or_url_or_id)
+        elif shacl_graph_or_file_or_url_or_id.isnumeric():
+            shapes_graph = _get_shapes_from_id(shacl_graph_or_file_or_url_or_id)
+
+    # Try and resolve a validator ID to a graph
+    elif isinstance(shacl_graph_or_file_or_url_or_id, int):
+        shapes_graph = _get_shapes_from_id(shacl_graph_or_file_or_url_or_id)
+
+    # Try and load the file/URL/path directly
+    else:
+        shapes_graph = get_validator_graph(shacl_graph_or_file_or_url_or_id)
+
+    # If the shapes graph is not yet loaded, try updating validators from the Semantic Background and try again
+    if shapes_graph is None:
+        # Try and resolve a validator IRI to a graph
+        if isinstance(shacl_graph_or_file_or_url_or_id, str):
+            if shacl_graph_or_file_or_url_or_id.startswith("http"):
+                shapes_graph = _get_shapes_from_iri()
+
     if shapes_graph is None:
         raise RuntimeError(
             f"Not able to load shapes graph: {shacl_graph_or_file_or_url_or_id}"
         )
+
+    if isinstance(data_file_or_dir_or_graph_or_list, (Path, Graph)):
+        data_graph = load_graph(data_file_or_dir_or_graph_or_list)
+    elif isinstance(data_file_or_dir_or_graph_or_list, list):
+        data_graph = Graph()
+        for x in data_file_or_dir_or_graph_or_list:
+            data_graph += load_graph(x)
 
     return v(data_graph, shacl_graph=shapes_graph, allow_warnings=True)
 
@@ -168,3 +231,20 @@ def get_validator_graph(
         return load_graph(graph_or_file_or_url_or_id)
     except:
         return None
+
+
+def check_validator_known(validator_iri: str) -> bool:
+    """Checks first locally and then in the Semantic Background to if a validator, identified by IRI, is known"""
+    local_validators = list_local_validators()
+    for local_validator in local_validators.keys():
+        if validator_iri == local_validator:
+            return True
+
+    sync_validators()
+
+    local_validators = list_local_validators()
+    for local_validator in local_validators.keys():
+        if validator_iri == local_validator:
+            return True
+
+    return False
