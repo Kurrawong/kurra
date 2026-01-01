@@ -28,7 +28,6 @@ def test_validate_simple():
     assert not valid3
 
 
-@pytest.mark.xfail
 def test_sync_validators():
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
@@ -38,7 +37,7 @@ def test_sync_validators():
 
     known_validators = sync_validators()
 
-    assert len(known_validators) == 10
+    assert len(known_validators) == 11
 
     d = load(open(validators_cache, "rb"))
     d: Dataset
@@ -46,14 +45,13 @@ def test_sync_validators():
     with open(validators_cache, "wb") as f:
         dump(d, f)
 
-    assert len(list_local_validators().keys()) == 9
+    assert len(list_local_validators().keys()) == 10
 
     known_validators = sync_validators()
 
-    assert len(known_validators) == 10
+    assert len(known_validators) == 11
 
 
-@pytest.mark.xfail
 def test_list_local_validators():
     pm_cache = Path().home() / ".pm"
 
@@ -62,10 +60,9 @@ def test_list_local_validators():
 
     sync_validators()
 
-    assert len(list_local_validators().keys()) == 10
+    assert len(list_local_validators().keys()) == 11
 
 
-@pytest.mark.xfail
 def test_validate_by_id():
     """Awaiting sync_validators()"""
     kurra_cache = Path().home() / ".kurra"

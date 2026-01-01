@@ -27,6 +27,9 @@ def validate(
 
 
 def list_local_validators() -> dict[str, dict[str, int]] | None:
+    """Lists SHACL validators - IRI & name - stored in the local system's calidator cache.
+
+    This function does not connect over the Internet."""
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
     validator_ids_cache = kurra_cache / "validator_ids.pkl"
@@ -59,16 +62,16 @@ def list_local_validators() -> dict[str, dict[str, int]] | None:
 
 
 def sync_validators(http_client: httpx.Client | None = None):
-    """Checks the Semantic Background, currently https://fuseki.dev.kurrawong.ai/semback, for known validators.
+    """Checks the Semantic Background's read-only SPARQL Endpoint, currently https://fuseki.dev.kurrawong.ai/semback/sparql, for validators.
 
-    It then checks local storage to see which, if any, of those validators are stored locally.
+    It then checks local storage, using list_local_calidators(), to see which, if any, of those validators are stored locally.
 
-    For any missing, it pulls down and stores a copy locally and updates the known list of available validators.
+    For any missing, it pulls down and stores a copy locally.
     """
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
     validator_ids_cache = kurra_cache / "validator_ids.pkl"
-    semback_sparql_endpoint = "https://api.data.kurrawong.ai/sparql"
+    semback_sparql_endpoint = "https://fuseki.dev.kurrawong.ai/semback/sparql"
 
     # get list of remote validators
     q = """
