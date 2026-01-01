@@ -21,7 +21,7 @@ def validate_command(
         ..., help="The file or directory of RDF files to be validated"
     ),
     shacl_graph_or_file_or_url_or_id: str = typer.Argument(
-        ..., help="The file or directory of SAHCL files to validate with"
+        ..., help="The file or directory of SHACL files to validate with"
     ),
 ) -> None:
     """Validate a given file or directory of files using a given SHACL file or directory of files"""

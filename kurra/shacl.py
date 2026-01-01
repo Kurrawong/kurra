@@ -52,18 +52,20 @@ def validate(
                 cv = load(open(validators_cache, "rb"))
                 return cv.get_graph(URIRef(k))
 
-    # Try and resolve a validator IRI to a graph
+    # Try and resolve a validator IRI or string ID to a graph
     if isinstance(shacl_graph_or_file_or_url_or_id, str):
         if shacl_graph_or_file_or_url_or_id.startswith("http"):
             shapes_graph = _get_shapes_from_iri(shacl_graph_or_file_or_url_or_id)
         elif shacl_graph_or_file_or_url_or_id.isnumeric():
             shapes_graph = _get_shapes_from_id(shacl_graph_or_file_or_url_or_id)
+        else:
+            shapes_graph = get_validator_graph(shacl_graph_or_file_or_url_or_id)
 
-    # Try and resolve a validator ID to a graph
+    # Try and resolve an int validator ID to a graph
     elif isinstance(shacl_graph_or_file_or_url_or_id, int):
         shapes_graph = _get_shapes_from_id(shacl_graph_or_file_or_url_or_id)
 
-    # Try and load the file/URL/path directly
+    # Try and load the file/URL/path directly - Path
     else:
         shapes_graph = get_validator_graph(shacl_graph_or_file_or_url_or_id)
 
