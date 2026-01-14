@@ -1,0 +1,3 @@
+PREFIX olis: <https://olis.dev/>
+PREFIX schema: <https://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
