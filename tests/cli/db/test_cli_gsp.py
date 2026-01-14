@@ -142,7 +142,7 @@ def test_put(fuseki_container, http_client):
             "put",
             str(
                 Path(__file__).parent.parent.resolve().parent
-                / "dir_of_rdf"
+                / "rdf"
                 / "rdf_1.ttl"
             ),
             "-g",
@@ -177,7 +177,7 @@ def test_post(fuseki_container, http_client):
             "post",
             str(
                 Path(__file__).parent.parent.resolve().parent
-                / "dir_of_rdf"
+                / "rdf"
                 / "rdf_1.ttl"
             ),
             "-g",

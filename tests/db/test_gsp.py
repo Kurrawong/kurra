@@ -17,26 +17,26 @@ TESTING_GRAPH = "https://example.com/testing-graph"
 
 
 def test_exists(fuseki_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
-    g1 = exists(SPARQL_ENDPOINT, "http://nothing.com", http_client)
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    g1 = exists(sparql_endpoint, "http://nothing.com", http_client)
     assert not g1
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, http_client)
-    g2 = exists(SPARQL_ENDPOINT, TESTING_GRAPH, http_client)
+    upload(sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, http_client)
+    g2 = exists(sparql_endpoint, TESTING_GRAPH, http_client)
     assert g2
 
-    delete(SPARQL_ENDPOINT, TESTING_GRAPH, http_client)
-    g3 = exists(SPARQL_ENDPOINT, TESTING_GRAPH, http_client)
+    delete(sparql_endpoint, TESTING_GRAPH, http_client)
+    g3 = exists(sparql_endpoint, TESTING_GRAPH, http_client)
     assert not g3
 
 
 def test_get(fuseki_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     g_result = load_graph(LANG_TEST_VOC)
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, http_client)
-    g = get(SPARQL_ENDPOINT, TESTING_GRAPH, http_client=http_client)
+    upload(sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, http_client)
+    g = get(sparql_endpoint, TESTING_GRAPH, http_client=http_client)
     assert g.isomorphic(g_result)
     assert str(g.identifier) == TESTING_GRAPH
 
@@ -48,28 +48,28 @@ def test_get(fuseki_container, http_client):
             :d :e ;
         .
         """
-    upload(SPARQL_ENDPOINT, d, None, http_client)
+    upload(sparql_endpoint, d, None, http_client)
 
-    g2 = get(SPARQL_ENDPOINT, "default", http_client=http_client)
+    g2 = get(sparql_endpoint, "default", http_client=http_client)
     assert len(g2) == 2
     assert isinstance(g2.identifier, rdflib.BNode)
 
-    g3 = get(SPARQL_ENDPOINT, "http://nothing.com", http_client=http_client)
+    g3 = get(sparql_endpoint, "http://nothing.com", http_client=http_client)
     assert g3 == 404
 
     g4 = get(
-        SPARQL_ENDPOINT, "default", http_client=http_client, return_format="original"
+        sparql_endpoint, "default", http_client=http_client, return_format="original"
     )
     assert "http://example.com/" in g4
 
 
 def test_put(fuseki_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    put(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
+    put(sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
 
     r = query(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         "SELECT (COUNT(?c) AS ?count) WHERE {?c a skos:Concept}",
         namespaces={"skos": "http://www.w3.org/2004/02/skos/core#"},
         return_format="python",
@@ -79,10 +79,10 @@ def test_put(fuseki_container, http_client):
     assert r[0]["count"] == 7
 
     # replace that graph
-    put(SPARQL_ENDPOINT, THREE_TRIPLE_FILE, TESTING_GRAPH, http_client=http_client)
+    put(sparql_endpoint, THREE_TRIPLE_FILE, TESTING_GRAPH, http_client=http_client)
 
     r = query(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
         + TESTING_GRAPH
         + "> {?s ?p ?o}}",
@@ -94,12 +94,12 @@ def test_put(fuseki_container, http_client):
 
 
 def test_post(fuseki_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    post(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
+    post(sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
 
     r = query(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         "SELECT (COUNT(?c) AS ?count) WHERE {?c a skos:Concept}",
         namespaces={"skos": "http://www.w3.org/2004/02/skos/core#"},
         return_format="python",
@@ -109,10 +109,10 @@ def test_post(fuseki_container, http_client):
     assert r[0]["count"] == 7
 
     # add to that graph
-    post(SPARQL_ENDPOINT, THREE_TRIPLE_FILE, TESTING_GRAPH, http_client=http_client)
+    post(sparql_endpoint, THREE_TRIPLE_FILE, TESTING_GRAPH, http_client=http_client)
 
     r = query(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
         + TESTING_GRAPH
         + "> {?s ?p ?o}}",
@@ -124,12 +124,12 @@ def test_post(fuseki_container, http_client):
 
 
 def test_delete(fuseki_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    put(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
+    put(sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
 
     r = query(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         "SELECT (COUNT(?c) AS ?count) WHERE {?c a skos:Concept}",
         namespaces={"skos": "http://www.w3.org/2004/02/skos/core#"},
         return_format="python",
@@ -138,10 +138,10 @@ def test_delete(fuseki_container, http_client):
     )
     assert r[0]["count"] == 7
 
-    delete(SPARQL_ENDPOINT, TESTING_GRAPH, http_client=http_client)
+    delete(sparql_endpoint, TESTING_GRAPH, http_client=http_client)
 
     r = query(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
         + TESTING_GRAPH
         + "> {?s ?p ?o}}",
@@ -151,7 +151,7 @@ def test_delete(fuseki_container, http_client):
     )
     assert r[0]["count"] == 0
 
-    assert not exists(SPARQL_ENDPOINT, TESTING_GRAPH)
+    assert not exists(sparql_endpoint, TESTING_GRAPH)
 
 
 def test_clear():
@@ -159,12 +159,12 @@ def test_clear():
 
 
 def test_upload(fuseki_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH)
+    upload(sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH)
 
     r = query(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
         + TESTING_GRAPH
         + "> {?s ?p ?o}}",
@@ -174,10 +174,10 @@ def test_upload(fuseki_container, http_client):
     )
     assert r[0]["count"] == 77
 
-    upload(SPARQL_ENDPOINT, THREE_TRIPLE_FILE, TESTING_GRAPH)
+    upload(sparql_endpoint, THREE_TRIPLE_FILE, TESTING_GRAPH)
 
     r = query(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
         + TESTING_GRAPH
         + "> {?s ?p ?o}}",
@@ -187,10 +187,10 @@ def test_upload(fuseki_container, http_client):
     )
     assert r[0]["count"] == 3
 
-    upload(SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, append=True)
+    upload(sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, append=True)
 
     r = query(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
         + TESTING_GRAPH
         + "> {?s ?p ?o}}",
@@ -205,9 +205,9 @@ def test_upload(fuseki_container, http_client):
     reason="Test works with normal Fuseki but not testing container version"
 )
 def test_upload_no_graph(fuseki_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    print(upload(SPARQL_ENDPOINT, LANG_TEST_VOC, None, http_client=http_client))
+    print(upload(sparql_endpoint, LANG_TEST_VOC, None, http_client=http_client))
 
     q = """
         SELECT (COUNT(?s) AS ?c)
@@ -218,7 +218,7 @@ def test_upload_no_graph(fuseki_container, http_client):
         }
         """
     r = query(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         q,
         return_format="python",
         return_bindings_only=True,
@@ -229,10 +229,10 @@ def test_upload_no_graph(fuseki_container, http_client):
 
 
 def test_upload_url(fuseki_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     upload(
-        SPARQL_ENDPOINT,
+        sparql_endpoint,
         "https://raw.githubusercontent.com/Kurrawong/kurra/refs/heads/main/tests/test_db/config.ttl",
         TESTING_GRAPH,
     )
@@ -245,15 +245,15 @@ def test_upload_url(fuseki_container, http_client):
             }
         }
         """
-    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
+    r = query(sparql_endpoint, q, return_format="python", return_bindings_only=True)
 
     assert r[0]["c"] == 142
 
     # now test one with Content Negotiation and a redirect
-    clear(SPARQL_ENDPOINT, TESTING_GRAPH, http_client)
+    clear(sparql_endpoint, TESTING_GRAPH, http_client)
 
-    upload(SPARQL_ENDPOINT, "https://linked.data.gov.au/def/vocdermods", TESTING_GRAPH)
+    upload(sparql_endpoint, "https://linked.data.gov.au/def/vocdermods", TESTING_GRAPH)
 
-    r = query(SPARQL_ENDPOINT, q, return_format="python", return_bindings_only=True)
+    r = query(sparql_endpoint, q, return_format="python", return_bindings_only=True)
 
     assert r[0]["c"] == 86

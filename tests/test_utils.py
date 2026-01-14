@@ -111,7 +111,7 @@ def test_load_graph():
 
 
 def test_load_graph_dir():
-    DIR_OF_RDF = Path(__file__).parent / "dir_of_rdf"
+    DIR_OF_RDF = Path(__file__).parent / "rdf"
     g = Graph()
     g.parse(DIR_OF_RDF / "rdf_1.ttl")
     g.parse(DIR_OF_RDF / "rdf_2.ttl")

@@ -5,10 +5,9 @@ from kurra.sparql import query
 
 
 def test_query(fuseki_container, http_client):
-    port = fuseki_container.get_exposed_port(3030)
     with httpx.Client() as client:
-        SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
-        TESTING_GRAPH = "https://example.com/testing-graph"
+        sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+        testing_graph = "https://example.com/testing-graph"
 
         data = """
                 PREFIX ex: <http://example.com/>
@@ -17,7 +16,7 @@ def test_query(fuseki_container, http_client):
                 ex:a2 ex:b2 ex:c2 .
                 """
 
-        upload(SPARQL_ENDPOINT, data, TESTING_GRAPH, False, http_client=http_client)
+        upload(sparql_endpoint, data, testing_graph, False, http_client=http_client)
 
         q = """
             SELECT (COUNT(*) AS ?count) 
@@ -26,10 +25,10 @@ def test_query(fuseki_container, http_client):
                 ?s ?p ?o
               }
             }        
-            """.replace("XXX", TESTING_GRAPH)
+            """.replace("XXX", testing_graph)
 
         r = query(
-            SPARQL_ENDPOINT,
+            sparql_endpoint,
             q,
             http_client=http_client,
             return_format="python",
@@ -38,9 +37,9 @@ def test_query(fuseki_container, http_client):
 
         assert r[0]["count"] == 2
 
-        q = "DROP GRAPH <XXX>".replace("XXX", TESTING_GRAPH)
+        q = "DROP GRAPH <XXX>".replace("XXX", testing_graph)
 
-        r = query(SPARQL_ENDPOINT, q, http_client=http_client)
+        r = query(sparql_endpoint, q, http_client=http_client)
 
         q = """
             SELECT (COUNT(*) AS ?count) 
@@ -49,10 +48,10 @@ def test_query(fuseki_container, http_client):
                 ?s ?p ?o
               }
             }        
-            """.replace("XXX", TESTING_GRAPH)
+            """.replace("XXX", testing_graph)
 
         r = query(
-            SPARQL_ENDPOINT,
+            sparql_endpoint,
             q,
             http_client=http_client,
             return_format="python",

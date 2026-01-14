@@ -45,7 +45,7 @@ def test_format_cli():
             "reformat",
             "--output-format",
             "json-ld",
-            "tests/test_file/minimal1.ttl",
+            "tests/file/minimal1.ttl",
         ]
     )
 

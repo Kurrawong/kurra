@@ -88,6 +88,9 @@ def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> G
 
     # A remote file via HTTP
     elif isinstance(graph_path_or_str, str) and graph_path_or_str.startswith("http"):
+        print("graph_path_or_str")
+        print(graph_path_or_str)
+        print("graph_path_or_str")
         return Graph().parse(graph_path_or_str)
 
     # RDF data in a string
@@ -217,7 +220,7 @@ def convert_sparql_json_to_python(
 
 
 def _guess_query_is_update(query: str) -> bool:
-    if any(x in query for x in ["DROP", "INSERT", "DELETE"]):
+    if any(x in query for x in ["INSERT", "DELETE", "LOAD", "CLEAR", "CREATE", "DROP", "COPY", "MOVE", "ADD"]):
         return True
     else:
         return False

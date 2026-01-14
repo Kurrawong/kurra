@@ -34,11 +34,11 @@ def wait_for_logs(container, text, timeout=30, interval=0.5):
 def fuseki_container(request: pytest.FixtureRequest):
     container = DockerContainer(FUSEKI_IMAGE)
     container.with_volume_mapping(
-        str(Path(__file__).parent.parent / "test_db" / "shiro.ini"),
+        str(Path(__file__).parent.parent / "sparql" / "shiro.ini"),
         "/fuseki/shiro.ini",
     )
     container.with_volume_mapping(
-        str(Path(__file__).parent.parent / "test_db" / "config.ttl"),
+        str(Path(__file__).parent.parent / "db" / "config.ttl"),
         "/fuseki/config.ttl",
     )
     container.with_exposed_ports(3030)
