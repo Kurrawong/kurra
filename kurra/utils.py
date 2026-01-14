@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Union
 
 import httpx
-from rdflib import BNode, Dataset, Graph, Literal, URIRef
+from rdflib import BNode, Dataset, Graph, Literal, URIRef, Namespace
+from rdflib.plugins.parsers.notation3 import BadSyntax
+
 
 RDF_SUFFIX_MAP = {
     ".nt": "application/n-triples",
@@ -26,6 +28,10 @@ RDF_FILE_SUFFIXES = {
     "json-ld": ".jsonld",
     "owl": ".owl",
 }
+
+SYSTEM_GRAPH_IRI = URIRef("https://olis.dev/SystemGraph")
+
+OLIS = Namespace("https://olis.dev/")
 
 
 class RenderFormat(str, Enum):
@@ -284,3 +290,100 @@ def make_httpx_client(
         if sparql_password:
             auth = httpx.BasicAuth(sparql_username, sparql_password)
     return httpx.Client(auth=auth, timeout=timeout)
+
+
+def get_system_graph(system_graph_source: str | Path | Dataset | Graph = None, http_client: httpx.Client | None = None):
+    system_graph = Graph(identifier=SYSTEM_GRAPH_IRI)
+    system_graph.bind("olis", OLIS)
+    if system_graph_source is None:
+        # no incoming System Graph
+        pass
+    elif isinstance(system_graph_source, Path):
+        # we have a Graph or Dataset file, so read it
+        if not system_graph_source.is_file():
+            raise ValueError("system_graph_source must be an existing RDF file")
+
+        if system_graph_source.suffix == ".trig":
+            system_graph += Dataset().parse(system_graph_source, format="trig").get_graph(SYSTEM_GRAPH_IRI)
+        else:
+            system_graph += load_graph(system_graph_source)
+    elif isinstance(system_graph_source, Graph):
+        # we have a Graph, so assume it's a System Graph and load it
+        system_graph += system_graph_source
+    elif isinstance(system_graph_source, Dataset):
+        # we have a Dataset object, so load its system Graph
+        system_graph += system_graph_source.get_graph(str(SYSTEM_GRAPH_IRI))
+    elif system_graph_source and system_graph_source.startswith("http"):
+        # we have a remote SPARQL Endpoint, so read the System Graph
+        # this is simplified GSP get()
+        close_http_client = False
+        if http_client is None:
+            http_client = httpx.Client()
+            close_http_client = True
+
+        r = http_client.get(
+            str(system_graph_source),
+            params={"graph": SYSTEM_GRAPH_IRI},
+            headers={"Accept": "text/turtle"},
+        )
+
+        if close_http_client:
+            http_client.close()
+
+        if r.is_success:
+            system_graph += Graph().parse(data=r.text, format="turtle")
+        else:
+            return r.status_code
+    else:
+        raise ValueError(
+            "The parameter system_graph_source must be either None, a Path to an RDF Graph or Dataset serialised "
+            "in Turtle or Trig, an RDFLib Graph object assumed to be a System Graph, an RDFLib Dataset object containing"
+            "a System Graph or a string URL for a SPARQL Endpoint.")
+
+    return system_graph
+
+
+def put_system_graph(system_graph: Graph, system_graph_source: str | Path | Dataset | Graph = None, http_client: httpx.Client | None = None):
+    if system_graph_source is None:
+        return system_graph
+    elif isinstance(system_graph_source, Path):
+        if system_graph_source.suffix == ".trig":
+            # TODO: deduplicate the Dataset parse in get_system_graph
+            d = Dataset().parse(system_graph_source, format="trig")
+            d.remove_graph(SYSTEM_GRAPH_IRI)
+            d.add_graph(system_graph)
+            d.serialize(destination=system_graph_source, format="trig")
+        else:
+            system_graph.serialize(destination=system_graph_source, format="longturtle")
+
+        return None
+    elif isinstance(system_graph_source, Graph):
+        system_graph_source = system_graph
+        return None
+    elif isinstance(system_graph_source, Dataset):
+        system_graph_source.remove_graph(SYSTEM_GRAPH_IRI)
+        system_graph_source.add_graph(system_graph)
+        return None
+    elif system_graph_source and system_graph_source.startswith("http"):
+        # this is simplified GSP put()
+        close_http_client = False
+        if http_client is None:
+            http_client = httpx.Client()
+            close_http_client = True
+
+        r = http_client.put(
+            system_graph_source,
+            params={"graph": SYSTEM_GRAPH_IRI},
+            headers={"Content-Type": "text/turtle"},
+            content=system_graph.serialize(format="text/turtle"),
+        )
+
+        if close_http_client:
+            http_client.close()
+
+        if r.is_success:
+            return None
+        else:
+            return r.status_code
+    else:
+        return None

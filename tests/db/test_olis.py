@@ -7,10 +7,11 @@ from rdflib.namespace import RDF, SDO
 import kurra.utils
 from kurra.db.olis import include, exclude, OLIS, SYSTEM_GRAPH_IRI
 from pathlib import Path
+from textwrap import dedent
 
 this_dir = Path(__file__).resolve().parent
 
-basic_vg = \
+basic_vg = dedent(
     """
     PREFIX olis: <https://olis.dev/>
     PREFIX schema: <https://schema.org/>
@@ -25,9 +26,9 @@ basic_vg = \
         schema:dateCreated "2026-01-01T17:25:32"^^xsd:dateTime ;
         schema:dateModified "2026-01-10T17:25:32"^^xsd:dateTime ;
     .    
-    """
+    """)
 
-simple_rg_01 = \
+simple_rg_01 = dedent(
     """
     PREFIX ex: <http://example.com/>
     
@@ -35,9 +36,9 @@ simple_rg_01 = \
         ex:b ex:c ;
         ex:d ex:e ;
     .
-    """
+    """)
 
-simple_rg_02 = \
+simple_rg_02 = dedent(
     """
     PREFIX ex: <http://example.com/>
 
@@ -46,7 +47,42 @@ simple_rg_02 = \
         ex:i ex:j ;
         ex:k ex:l ;
     .
+    """)
+
+dataset_trig = dedent(
     """
+PREFIX ex: <http://example.com/>
+PREFIX olis: <https://olis.dev/>
+PREFIX schema: <https://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+<https://olis.dev/SystemGraph> {
+    <http://example.org/g/1>
+        a olis:VirtualGraph ;
+        olis:includes
+            <http://background> ,
+            <http://example.org/g/a> ,
+            <http://example.org/g/b> ;
+        schema:dateCreated "2026-01-01T17:25:32"^^xsd:dateTime ;
+        schema:dateModified "2026-01-10T17:25:32"^^xsd:dateTime ;
+    .
+}
+
+<http://example.org/g/a> {
+    ex:a
+        ex:b ex:c ;
+        ex:d ex:e ;
+    .
+}
+
+<http://example.org/g/b> {
+    ex:f
+        ex:g ex:h ;
+        ex:i ex:j ;
+    .
+}
+    """)
+
 
 def test_include_none():
     sg = include("http://example.org/g/1", ["http://example.org/g/x", "http://example.org/g/y"], None)
@@ -141,36 +177,7 @@ def test_include_local_dataset():
 
     # reset test file
     with open(target_sg, "w") as f:
-        f.write("""PREFIX ex: <http://example.com/>
-PREFIX olis: <https://olis.dev/>
-PREFIX schema: <https://schema.org/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<https://olis.dev/SystemGraph> {
-    <http://example.org/g/1>
-        a olis:VirtualGraph ;
-        olis:includes
-            <http://background> ,
-            <http://example.org/g/a> ,
-            <http://example.org/g/b> ;
-        schema:dateCreated "2026-01-01T17:25:32"^^xsd:dateTime ;
-        schema:dateModified "2026-01-10T17:25:32"^^xsd:dateTime ;
-    .
-}
-
-<http://example.org/g/a> {
-    ex:a
-        ex:b ex:c ;
-        ex:d ex:e ;
-    .
-}
-
-<http://example.org/g/b> {
-    ex:f
-        ex:g ex:h ;
-        ex:i ex:j ;
-    .
-}""")
+        f.write(dataset_trig)
 
 
 def test_include_sparql(fuseki_container):
@@ -190,4 +197,24 @@ def test_include_sparql(fuseki_container):
     assert (including_graph_iri, OLIS.includes, URIRef("http://example.org/g/y")) in sg
 
 
+def test_exclude_local_dataset():
+    start_time = datetime.datetime.now()
+    time.sleep(1)
+    target_sg = this_dir / "olis" / "04-local-dataset.trig"
+    including_graph_iri = URIRef("http://example.org/g/1")
+    exclude(including_graph_iri, ["http://example.org/g/a", "http://example.org/g/z"], target_sg)
 
+    local_dataset = Dataset().parse(target_sg, format="trig")
+    sg = local_dataset.get_graph(SYSTEM_GRAPH_IRI)
+    assert (including_graph_iri, RDF.type, OLIS.VirtualGraph) in sg
+    dc = sg.value(subject=including_graph_iri, predicate=SDO.dateCreated)
+    assert dc.value == datetime.datetime.strptime("2026-01-01T17:25:32", "%Y-%m-%dT%H:%M:%S")
+    dm = sg.value(subject=including_graph_iri, predicate=SDO.dateModified)
+    assert dm.value > start_time
+
+    assert (including_graph_iri, OLIS.includes, URIRef("http://example.org/g/a")) not in sg
+    assert (including_graph_iri, OLIS.includes, URIRef("http://example.org/g/b")) in sg
+
+    # reset test file
+    with open(target_sg, "w") as f:
+        f.write(dataset_trig)
