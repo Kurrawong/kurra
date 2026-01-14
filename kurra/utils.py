@@ -301,7 +301,7 @@ def get_system_graph(system_graph_source: str | Path | Dataset | Graph = None, h
     elif isinstance(system_graph_source, Path):
         # we have a Graph or Dataset file, so read it
         if not system_graph_source.is_file():
-            raise ValueError("system_graph_source must be an existing RDF file")
+            raise ValueError(f"system_graph_source must be an existing RDF file. Value supplied was {system_graph_source}")
 
         if system_graph_source.suffix == ".trig":
             system_graph += Dataset().parse(system_graph_source, format="trig").get_graph(SYSTEM_GRAPH_IRI)

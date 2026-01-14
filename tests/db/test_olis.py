@@ -85,13 +85,15 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 def test_include_none():
-    sg = include("http://example.org/g/1", ["http://example.org/g/x", "http://example.org/g/y"], None)
+    including_graph_iri = URIRef("http://example.org/g/1")
+    sg = include(including_graph_iri, ["http://example.org/g/x", "http://example.org/g/y"], None)
 
-    print(sg.serialize(format="longturtle"))
+    assert (including_graph_iri, RDF.type, OLIS.VirtualGraph) in sg
+    assert (including_graph_iri, SDO.dateCreated, None) in sg
 
 
 def test_include_nothing():
-    remote_sg = this_dir / "01-add-to-nothing.ttl"
+    remote_sg = this_dir / "olis" / "01-add-to-nothing.ttl"
     including_graph_iri = URIRef("http://example.org/g/1")
     include(including_graph_iri, ["http://example.org/g/x", "http://example.org/g/y"], remote_sg)
 
@@ -109,7 +111,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>""")
 def test_include_existing_vg():
     start_time = datetime.datetime.now()
     time.sleep(1)
-    target_sg = this_dir / "02-add-to-vg.ttl"
+    target_sg = this_dir / "olis" / "02-add-to-vg.ttl"
     including_graph_iri = URIRef("http://example.org/g/1")
     include(including_graph_iri, ["http://example.org/g/x", "http://example.org/g/y"], target_sg)
 
@@ -131,7 +133,7 @@ def test_include_existing_vg():
 
 
 def test_include_convert_rg():
-    target_sg = this_dir / "03-convert-rg.ttl"
+    target_sg = this_dir / "olis" / "03-convert-rg.ttl"
     including_graph_iri = URIRef("http://example.org/g/1")
     new_rg_iri = URIRef(str(including_graph_iri) + "-real")
     include(including_graph_iri, ["http://example.org/g/x", "http://example.org/g/y"], target_sg)
@@ -158,7 +160,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 def test_include_local_dataset():
     start_time = datetime.datetime.now()
     time.sleep(1)
-    target_sg = this_dir / "04-local-dataset.trig"
+    target_sg = this_dir / "olis" / "04-local-dataset.trig"
     including_graph_iri = URIRef("http://example.org/g/1")
     include(including_graph_iri, ["http://example.org/g/x", "http://example.org/g/y"], target_sg)
 

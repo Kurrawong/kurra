@@ -88,7 +88,7 @@ def test_load_graph():
     assert isomorphic(g2, g)
 
     # load an RDF file
-    g3 = load_graph(Path(__file__).parent / "test_file" / "minimal1.ttl")
+    g3 = load_graph(Path(__file__).parent / "file" / "minimal1.ttl")
 
     assert isomorphic(g3, g)
 

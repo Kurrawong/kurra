@@ -9,18 +9,17 @@ from kurra.db.gsp import upload
 runner = CliRunner()
 
 LANG_TEST_VOC = (
-    Path(__file__).parent.parent.resolve() / "test_sparql" / "language-test.ttl"
+    Path(__file__).parent.parent.resolve() / "sparql" / "language-test.ttl"
 )
 TESTING_GRAPH = "https://example.com/testing-graph"
 
 
 def test_query_db(fuseki_container, http_client):
-    port = fuseki_container.get_exposed_port(3030)
-    SPARQL_ENDPOINT = f"http://localhost:{port}/ds"
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
     TESTING_GRAPH = "https://example.com/testing-graph"
 
     upload(
-        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+        sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
     )
 
     q = dedent("""
@@ -36,7 +35,7 @@ def test_query_db(fuseki_container, http_client):
         app,
         [
             "sparql",
-            SPARQL_ENDPOINT,
+            sparql_endpoint,
             q,
         ],
     )
@@ -65,17 +64,17 @@ def test_query_file():
 
 
 def test_select(fuseki_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     upload(
-        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+        sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
     )
 
     result = runner.invoke(
         app,
         [
             "sparql",
-            SPARQL_ENDPOINT,
+            sparql_endpoint,
             "SELECT * WHERE { <https://example.com/demo-vocabs/language-test> ?p ?o }",
         ],
     )
@@ -83,17 +82,17 @@ def test_select(fuseki_container, http_client):
 
 
 def test_describe(fuseki_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     upload(
-        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+        sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
     )
 
     result = runner.invoke(
         app,
         [
             "sparql",
-            SPARQL_ENDPOINT,
+            sparql_endpoint,
             "DESCRIBE <https://example.com/demo-vocabs/language-test>",
         ],
     )
@@ -101,14 +100,13 @@ def test_describe(fuseki_container, http_client):
 
 
 def test_fuseki_sparql_drop(fuseki_container):
-    port = fuseki_container.get_exposed_port(3030)
     result = runner.invoke(
         app,
         [
             "db",
             "sparql",
             "DROP ALL",
-            f"http://localhost:{port}",
+            f"http://localhost:{fuseki_container.get_exposed_port(3030)}",
             "-u",
             "admin",
             "-p",

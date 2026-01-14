@@ -9,8 +9,8 @@ from kurra.shacl import sync_validators
 runner = CliRunner()
 
 
-def test_shacl_valid():
-    SHACL_TEST_DIR = Path(__file__).parent.parent.resolve() / "test_shacl"
+def shacl_valid():
+    SHACL_TEST_DIR = Path(__file__).parent.parent.resolve() / "shacl"
 
     result = runner.invoke(
         app,
@@ -28,8 +28,8 @@ def test_shacl_valid():
     assert result.output.strip() == "The data is valid"
 
 
-def test_shacl_invalid():
-    SHACL_TEST_DIR = Path(__file__).parent.parent.resolve() / "test_shacl"
+def shacl_invalid():
+    SHACL_TEST_DIR = Path(__file__).parent.parent.resolve() / "shacl"
 
     result = runner.invoke(
         app,
@@ -44,7 +44,7 @@ def test_shacl_invalid():
 
 
 @pytest.mark.xfail
-def test_shacl_list_validators():
+def shacl_list_validators():
     sync_validators()
 
     result = runner.invoke(

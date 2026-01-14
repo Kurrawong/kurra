@@ -11,8 +11,8 @@ from kurra.utils import load_graph
 runner = CliRunner()
 
 TESTS_DIR = Path(__file__).resolve().parent
-LANG_TEST_VOC = Path(__file__).parent.parent / "test_sparql" / "language-test.ttl"
-THREE_TRIPLE_FILE = Path(__file__).parent.parent / "test_file" / "prefixes-test.ttl"
+LANG_TEST_VOC = Path(__file__).parent.parent / "sparql" / "language-test.ttl"
+THREE_TRIPLE_FILE = Path(__file__).parent.parent / "file" / "prefixes-test.ttl"
 TESTING_GRAPH = "https://example.com/testing-graph"
 
 

@@ -26,93 +26,93 @@ from kurra.sparql import query
 
 
 def test_ping(fuseki_container, http_client):
-    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
+    server_url = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
 
-    r = ping(sparql_endpoint, http_client=http_client)
+    r = ping(server_url, http_client=http_client)
     assert r.startswith(str(datetime.now().year))
 
 
 def test_server(fuseki_container, http_client):
-    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
+    server_url = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
 
-    r = server(sparql_endpoint, http_client=http_client)
+    r = server(server_url, http_client=http_client)
     j = json.loads(r)
     assert j["datasets"][0]["ds.name"] == "/ds"
 
 
 def test_status(fuseki_container, http_client):
-    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
+    server_url = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
 
-    r = status(sparql_endpoint, http_client=http_client)
+    r = status(server_url, http_client=http_client)
     j = json.loads(r)
     assert j["datasets"][0]["ds.name"] == "/ds"
 
 
 def test_stats(fuseki_container, http_client):
-    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
+    server_url = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
 
     # bump Request up by 2
-    query(sparql_endpoint, "ASK WHERE {?s ?p ?o}", http_client=http_client)
-    query(sparql_endpoint, "ASK WHERE {?s ?p ?o}", http_client=http_client)
+    query(server_url + "/ds", "ASK WHERE {?s ?p ?o}", http_client=http_client)
+    query(server_url + "/ds", "ASK WHERE {?s ?p ?o}", http_client=http_client)
 
-    r = stats(sparql_endpoint, None, http_client=http_client)
+    r = stats(server_url, None, http_client=http_client)
     j = json.loads(r)
     assert j["datasets"]["/ds"]["Requests"] == 2
 
     # adding in the name of an existing dataset gets the same result as no name
     # adding in a non-existent name gets a 404 and no result
-    r = stats(sparql_endpoint, "ds", http_client=http_client)
+    r = stats(server_url, "ds", http_client=http_client)
     j = json.loads(r)
     assert j["datasets"]["/ds"]["Requests"] == 2
 
 
 def test_backup(fuseki_container, http_client):
-    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
+    server_url = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
 
     with pytest.raises(NotImplementedError) as e:
-        backup(sparql_endpoint, None, http_client=http_client)
+        backup(server_url, None, http_client=http_client)
 
         assert str(e) == "backup/backups is not implemented yet"
 
 
 def test_backups(fuseki_container, http_client):
-    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
+    server_url = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
 
     with pytest.raises(NotImplementedError) as e:
-        backups(sparql_endpoint, None, http_client=http_client)
+        backups(server_url, None, http_client=http_client)
 
         assert str(e) == "backup/backups is not implemented yet"
 
 
 def test_backups_list(fuseki_container, http_client):
-    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
+    server_url = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
 
-    r = backups_list(sparql_endpoint, http_client=http_client)
+    r = backups_list(server_url, http_client=http_client)
     j = json.loads(r)
     assert j["backups"] == []
 
 
 def test_sleep(fuseki_container, http_client):
-    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
+    server_url = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
 
     with pytest.raises(NotImplementedError) as e:
-        sleep(sparql_endpoint, http_client=http_client)
+        sleep(server_url, http_client=http_client)
 
         assert str(e) == "sleep is not implemented yet"
 
 
 def test_tasks(fuseki_container, http_client):
-    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
+    server_url = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
 
-    r = tasks(sparql_endpoint, None, http_client=http_client)
+    r = tasks(server_url, None, http_client=http_client)
     j = json.loads(r)
     assert j == []
 
 
 def test_metrics(fuseki_container, http_client):
-    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
+    server_url = f"http://localhost:{fuseki_container.get_exposed_port(3030)}"
 
-    r = metrics(sparql_endpoint, http_client=http_client)
+    r = metrics(server_url, http_client=http_client)
     assert "# HELP" in r
 
 
@@ -287,7 +287,7 @@ PREFIX text:      <http://jena.apache.org/text#>
 def test_create_by_config_file_with_existing_dataset(fuseki_container, http_client):
     port = fuseki_container.get_exposed_port(3030)
     base_url = f"http://localhost:{port}"
-    file = Path(__file__).parent.parent / "test_cli/db/config.ttl"
+    file = Path(__file__).parent.parent / "cli/db/config.ttl"
     graph = Graph().parse(file, format="turtle")
     fuseki_service = graph.value(
         None, RDF.type, URIRef("http://jena.apache.org/fuseki#Service")
