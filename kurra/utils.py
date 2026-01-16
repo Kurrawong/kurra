@@ -5,9 +5,8 @@ from pathlib import Path
 from typing import Union
 
 import httpx
-from rdflib import BNode, Dataset, Graph, Literal, URIRef, Namespace
+from rdflib import BNode, Dataset, Graph, Literal, Namespace, URIRef
 from rdflib.plugins.parsers.notation3 import BadSyntax
-
 
 RDF_SUFFIX_MAP = {
     ".nt": "application/n-triples",
@@ -94,9 +93,6 @@ def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> G
 
     # A remote file via HTTP
     elif isinstance(graph_path_or_str, str) and graph_path_or_str.startswith("http"):
-        print("graph_path_or_str")
-        print(graph_path_or_str)
-        print("graph_path_or_str")
         return Graph().parse(graph_path_or_str)
 
     # RDF data in a string
@@ -226,7 +222,20 @@ def convert_sparql_json_to_python(
 
 
 def _guess_query_is_update(query: str) -> bool:
-    if any(x in query for x in ["INSERT", "DELETE", "LOAD", "CLEAR", "CREATE", "DROP", "COPY", "MOVE", "ADD"]):
+    if any(
+        x in query
+        for x in [
+            "INSERT",
+            "DELETE",
+            "LOAD",
+            "CLEAR",
+            "CREATE",
+            "DROP",
+            "COPY",
+            "MOVE",
+            "ADD",
+        ]
+    ):
         return True
     else:
         return False
@@ -292,7 +301,11 @@ def make_httpx_client(
     return httpx.Client(auth=auth, timeout=timeout)
 
 
-def get_system_graph(system_graph_source: str | Path | Dataset | Graph = None, http_client: httpx.Client | None = None):
+def get_system_graph(
+    system_graph_source: str | Path | Dataset | Graph = None,
+    http_client: httpx.Client | None = None,
+):
+    """Returns a System Graph, graph and can accept many source options"""
     system_graph = Graph(identifier=SYSTEM_GRAPH_IRI)
     system_graph.bind("olis", OLIS)
     if system_graph_source is None:
@@ -301,10 +314,16 @@ def get_system_graph(system_graph_source: str | Path | Dataset | Graph = None, h
     elif isinstance(system_graph_source, Path):
         # we have a Graph or Dataset file, so read it
         if not system_graph_source.is_file():
-            raise ValueError(f"system_graph_source must be an existing RDF file. Value supplied was {system_graph_source}")
+            raise ValueError(
+                f"system_graph_source must be an existing RDF file. Value supplied was {system_graph_source}"
+            )
 
         if system_graph_source.suffix == ".trig":
-            system_graph += Dataset().parse(system_graph_source, format="trig").get_graph(SYSTEM_GRAPH_IRI)
+            system_graph += (
+                Dataset()
+                .parse(system_graph_source, format="trig")
+                .get_graph(SYSTEM_GRAPH_IRI)
+            )
         else:
             system_graph += load_graph(system_graph_source)
     elif isinstance(system_graph_source, Graph):
@@ -334,16 +353,23 @@ def get_system_graph(system_graph_source: str | Path | Dataset | Graph = None, h
             system_graph += Graph().parse(data=r.text, format="turtle")
         else:
             return r.status_code
+    elif system_graph_source and not system_graph_source.startswith("http"):
+        system_graph += load_graph(system_graph_source)
     else:
         raise ValueError(
             "The parameter system_graph_source must be either None, a Path to an RDF Graph or Dataset serialised "
             "in Turtle or Trig, an RDFLib Graph object assumed to be a System Graph, an RDFLib Dataset object containing"
-            "a System Graph or a string URL for a SPARQL Endpoint.")
+            "a System Graph or a string URL for a SPARQL Endpoint."
+        )
 
     return system_graph
 
 
-def put_system_graph(system_graph: Graph, system_graph_source: str | Path | Dataset | Graph = None, http_client: httpx.Client | None = None):
+def put_system_graph(
+    system_graph: Graph,
+    system_graph_source: str | Path | Dataset | Graph = None,
+    http_client: httpx.Client | None = None,
+):
     if system_graph_source is None:
         return system_graph
     elif isinstance(system_graph_source, Path):
@@ -385,5 +411,7 @@ def put_system_graph(system_graph: Graph, system_graph_source: str | Path | Data
             return None
         else:
             return r.status_code
+    elif system_graph_source and not system_graph_source.startswith("http"):
+        return system_graph
     else:
         return None

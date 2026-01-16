@@ -6,7 +6,9 @@ from kurra.sparql import query
 
 def test_query(fuseki_container, http_client):
     with httpx.Client() as client:
-        sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+        sparql_endpoint = (
+            f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+        )
         testing_graph = "https://example.com/testing-graph"
 
         data = """

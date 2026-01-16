@@ -8,9 +8,7 @@ from kurra.db.gsp import upload
 
 runner = CliRunner()
 
-LANG_TEST_VOC = (
-    Path(__file__).parent.parent.resolve() / "sparql" / "language-test.ttl"
-)
+LANG_TEST_VOC = Path(__file__).parent.parent.resolve() / "sparql" / "language-test.ttl"
 TESTING_GRAPH = "https://example.com/testing-graph"
 
 

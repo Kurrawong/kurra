@@ -5,8 +5,14 @@ from pickle import dump, load
 import pytest
 from rdflib import Dataset, URIRef
 from rdflib.namespace import RDF, SH
+from kurra.sparql import query
 
-from kurra.shacl import list_local_validators, sync_validators, validate, check_validator_known
+from kurra.shacl import (
+    check_validator_known,
+    list_local_validators,
+    sync_validators,
+    validate,
+)
 from kurra.utils import load_graph
 
 SHACL_TEST_DIR = Path(__file__).parent.resolve()
@@ -41,12 +47,28 @@ def test_sync_validators():
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
 
+    # get number of SemBack validators
+    q = """
+        PREFIX owl: <http://www.w3.org/2002/07/owl#>
+        PREFIX schema: <https://schema.org/>
+        
+        SELECT (COUNT(*) AS ?count)
+        WHERE {
+          <https://data.kurrawong.ai/sb/validators>
+                schema:hasPart ?o ;
+          .
+          
+          ?o a owl:Ontology .
+        }
+        """
+    num_remote_validators = query("https://fuseki.dev.kurrawong.ai/semback/sparql", q, return_format="python", return_bindings_only=True)[0]["count"]
+
     if Path.is_dir(kurra_cache):
         shutil.rmtree(kurra_cache)
 
     known_validators = sync_validators()
 
-    assert len(known_validators) == 11
+    assert len(known_validators) == num_remote_validators
 
     d = load(open(validators_cache, "rb"))
     d: Dataset
@@ -54,11 +76,11 @@ def test_sync_validators():
     with open(validators_cache, "wb") as f:
         dump(d, f)
 
-    assert len(list_local_validators().keys()) == 10
+    assert len(list_local_validators().keys()) == (num_remote_validators - 1)
 
     known_validators = sync_validators()
 
-    assert len(known_validators) == 11
+    assert len(known_validators) == num_remote_validators
 
 
 def test_list_local_validators():
@@ -69,7 +91,7 @@ def test_list_local_validators():
 
     sync_validators()
 
-    assert len(list_local_validators().keys()) == 11
+    assert len(list_local_validators().keys()) == 12
 
 
 def test_validate_by_id():

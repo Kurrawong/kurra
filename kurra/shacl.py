@@ -74,7 +74,7 @@ def validate(
         # Try and resolve a validator IRI to a graph
         if isinstance(shacl_graph_or_file_or_url_or_id, str):
             if shacl_graph_or_file_or_url_or_id.startswith("http"):
-                shapes_graph = _get_shapes_from_iri()
+                shapes_graph = _get_shapes_from_iri(shacl_graph_or_file_or_url_or_id)
 
     if shapes_graph is None:
         raise RuntimeError(

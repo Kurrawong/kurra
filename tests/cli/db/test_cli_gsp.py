@@ -140,11 +140,7 @@ def test_put(fuseki_container, http_client):
             "db",
             "gsp",
             "put",
-            str(
-                Path(__file__).parent.parent.resolve().parent
-                / "rdf"
-                / "rdf_1.ttl"
-            ),
+            str(Path(__file__).parent.parent.resolve().parent / "rdf" / "rdf_1.ttl"),
             "-g",
             "default",
             # no -g so default
@@ -175,11 +171,7 @@ def test_post(fuseki_container, http_client):
             "db",
             "gsp",
             "post",
-            str(
-                Path(__file__).parent.parent.resolve().parent
-                / "rdf"
-                / "rdf_1.ttl"
-            ),
+            str(Path(__file__).parent.parent.resolve().parent / "rdf" / "rdf_1.ttl"),
             "-g",
             TESTING_GRAPH,
             SPARQL_ENDPOINT,
