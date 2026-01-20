@@ -1,0 +1,8 @@
+PREFIX ex: <http://example.com/>
+
+RULE {
+    ?x ex:grandParent ?y
+}
+WHERE {
+    ?x ex:parent/ex:parent ?y
+}

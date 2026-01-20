@@ -21,10 +21,7 @@ def shacl_valid():
             f"{SHACL_TEST_DIR / 'validator-vocpub-410.ttl'}",
         ],
     )
-    if result.exception:
-        print(result.exception)
-    else:
-        print(result.output)
+
     assert result.output.strip() == "The data is valid"
 
 

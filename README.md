@@ -9,6 +9,7 @@ This library uses the [RDFLib](https://pypi.org/project/rdflib/) under-the-hood 
 * manipulate local RDF files
 * send commands to RDF databases "triplestores"
 * SPARQL query files or databases
+* SHACL validate or apply rules to RDF data
 
 kurra is for convenience: the functions it provides are simple but kurra saves you having to reinvent wheels.
 
@@ -16,25 +17,7 @@ kurra is for convenience: the functions it provides are simple but kurra saves y
 
 kurra presents a Command Line Interface that can be used on Mac, Linux and Windows (WSL) command prompts.
 
-The hierarchy of functions provided is:
-
-* **db** - run commands against RDF databases
-    * list
-    * create
-    * upload
-    * clear
-    * delete
-    * sparql
-* **file** - run commands on local RDF files
-    * format
-    * upload
-    * quads
-    * sparql
-* **shacl**
-    * validate - SHACL validate a file
-* **sparql** - SPARQL query files or databases
-
-Once you have installed kurra (see below), you can ask it to tell you what each command does and what inputs are needed
+Once you have installed kurra (see below), you can ask it to tell you what commands it supports 
 by using the `--help` or just `-h`, command, e.g.:
 
 ```bash
@@ -76,19 +59,17 @@ To get further help for the particular commands. For `db`, you will see somethin
 ```bash
  Usage: kurra db [OPTIONS] COMMAND [ARGS]...
                                 
- RDF database commands. Currently only Fuseki is supported 
+ RDF database commands
  
-╭─ Options ─────────────────────────────────────────────────────────────────────────╮
-│ --help  -h        Show this message and exit.                                     │
-╰───────────────────────────────────────────────────────────────────────────────────╯
-╭─ Commands ────────────────────────────────────────────────────────────────────────╮
-│ list     Get the list of database repositories                                    │
-│ create   Create a new database repository. Provide either the dataset name and... │
-│ upload   Upload file(s) to a database repository                                  │
-│ clear    Clear a database repository                                              │
-│ delete   Delete a database repository                                             │
-│ sparql   Query a database repository                                              │
-╰───────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ─────────────────────────────────────────────────────────────────────╮
+│ --help  -h        Show this message and exit.                                 │
+╰───────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ────────────────────────────────────────────────────────────────────╮
+│ sparql   SPARQL query an RDF database                                         │
+│ fuseki   Fuseki database commands                                             │
+│ gsp      Graph Store Protocol commands                                        │
+│ olis     Olis commands                                                        │
+╰───────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ## Installation
@@ -120,7 +101,7 @@ Use the relevant command to add dependencies to your project if you are using a 
 Then import it and use in your code, e.g. for the format functions:
 
 ```python
-from kurra.file import _format_file, make_dataset, export_quads
+from kurra.file import reformat, make_dataset, export_quads
 ```
 
 ## Development
@@ -148,9 +129,7 @@ To build a new release:
 6. build the release - `uv build`
 7. publish the release on PyPI - `uv publish -u __token__ -p {TOKEN}`, {TOKEN} is an actual token
 8. make the release on GitHub - https://github.com/Kurrawong/kurra/releases
-
-* don't forget to add the dist zips & wheels to it
-
+    * don't forget to add the dist zips & wheels to it
 9. update version number in pyproject.toml to next alpha & push
 
 ## License
@@ -170,13 +149,3 @@ Please contact them for all use & support issues.
 You can also log issues at the kurra issue tracker:
 
 * <https://github.com/Kurrawong/kurra/issues>
-
-## Release Procedure
-
-* update version in pyproject.toml
-* commit all updates
-* tag with version
-* `uv build`
-* `uv publish -u __token__ -p {TOKEN}`
-* make a GitHub Release
-    * add release notes

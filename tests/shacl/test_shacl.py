@@ -5,7 +5,6 @@ from pickle import dump, load
 import pytest
 from rdflib import Dataset, URIRef
 from rdflib.namespace import RDF, SH
-from kurra.sparql import query
 
 from kurra.shacl import (
     check_validator_known,
@@ -13,6 +12,7 @@ from kurra.shacl import (
     sync_validators,
     validate,
 )
+from kurra.sparql import query
 from kurra.utils import load_graph
 
 SHACL_TEST_DIR = Path(__file__).parent.resolve()
@@ -61,7 +61,12 @@ def test_sync_validators():
           ?o a owl:Ontology .
         }
         """
-    num_remote_validators = query("https://fuseki.dev.kurrawong.ai/semback/sparql", q, return_format="python", return_bindings_only=True)[0]["count"]
+    num_remote_validators = query(
+        "https://fuseki.dev.kurrawong.ai/semback/sparql",
+        q,
+        return_format="python",
+        return_bindings_only=True,
+    )[0]["count"]
 
     if Path.is_dir(kurra_cache):
         shutil.rmtree(kurra_cache)

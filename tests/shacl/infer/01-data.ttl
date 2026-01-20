@@ -1,0 +1,17 @@
+PREFIX ex: <http://example.com/>
+
+ex:nick
+    ex:parent
+        ex:george ,
+        ex:cathy ;
+.
+
+ex:george
+    ex:parent
+        ex:miko ,
+        ex:vasma ;
+.
+
+ex:miko
+    ex:parent ex:ivor ;
+.

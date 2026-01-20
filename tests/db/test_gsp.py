@@ -207,8 +207,6 @@ def test_upload(fuseki_container, http_client):
 def test_upload_no_graph(fuseki_container, http_client):
     sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
-    print(upload(sparql_endpoint, LANG_TEST_VOC, None, http_client=http_client))
-
     q = """
         SELECT (COUNT(?s) AS ?c)
         WHERE {

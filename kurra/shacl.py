@@ -5,6 +5,8 @@ import httpx
 from pyshacl import validate as v
 from rdflib import Dataset, Graph, URIRef
 from rdflib.namespace import SDO
+from srl.engine import RuleEngine
+from srl.parser import SRLParser
 
 from kurra.db.gsp import get as gsp_get
 from kurra.sparql import query
@@ -250,3 +252,27 @@ def check_validator_known(validator_iri: str) -> bool:
             return True
 
     return False
+
+
+def infer(data: Graph | Path | str, rules: Graph | Path | str) -> Graph:
+    """Applies rules to the data graph and returns a graph of calculated results"""
+    if not isinstance(rules, (Path, str)):
+        raise NotImplementedError(
+            "Only SHACL Rules in files ending .srl or as a string containing the Shape Rules Language (SRL) syntax is "
+            "currently supported. The RDF format will be supported soon."
+        )
+
+    if isinstance(rules, Path):
+        if rules.suffix == ".srl":
+            rules = rules.read_text()
+        else:
+            raise ValueError(
+                f"You have specified an unknown file type for the rules. It must end with .srl. You supplied a file with: {rules.suffix}"
+            )
+
+    data_graph = load_graph(data)
+    interim_result = RuleEngine(SRLParser().parse(rules)).evaluate(
+        data_graph, inplace=False
+    )
+
+    return interim_result - data_graph

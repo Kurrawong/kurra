@@ -6,6 +6,7 @@ from typer.testing import CliRunner
 from kurra.cli import app
 
 runner = CliRunner()
+from click.utils import strip_ansi
 
 
 def strip_ansi(text):
@@ -33,7 +34,9 @@ def test_fuseki_create(fuseki_container):
         ],
     )
     assert result.exit_code == 0
-    assert f"Dataset myds created at http://localhost:{port}." in result.output
+    assert f"Dataset myds created at http://localhost:{port}." in strip_ansi(
+        result.output
+    )
 
 
 def test_fuseki_create_with_both_dataset_name_and_config_file(fuseki_container):
@@ -88,7 +91,7 @@ def test_fuseki_create_with_config_file(fuseki_container):
     assert result.exit_code == 0
     assert (
         f"Dataset myds created using assembler config at http://localhost:{port}."
-        in result.output
+        in strip_ansi(result.output)
     )
 
 
@@ -113,7 +116,8 @@ def test_fuseki_create_existing_dataset(fuseki_container):
     )
     assert result.exit_code == 1
     assert (
-        f"Failed to create dataset {dataset_name} at {sparql_endpoint}" in result.output
+        f"Failed to create dataset {dataset_name} at {sparql_endpoint}"
+        in strip_ansi(result.output)
     )
 
 
@@ -136,7 +140,7 @@ def test_fuseki_delete(fuseki_container):
         ],
     )
     assert result.exit_code == 0
-    assert "'ds.name': '/ds'" in result.output
+    assert "'ds.name': '/ds'" in strip_ansi(result.output)
 
     result = runner.invoke(
         app,
@@ -153,7 +157,7 @@ def test_fuseki_delete(fuseki_container):
         ],
     )
     assert result.exit_code == 0
-    assert "Dataset ds deleted." in result.output
+    assert "Dataset ds deleted." in strip_ansi(result.output)
 
     result = runner.invoke(
         app,
@@ -169,7 +173,7 @@ def test_fuseki_delete(fuseki_container):
         ],
     )
     assert result.exit_code == 0
-    assert "'ds.name': '/ds'" not in result.output
+    assert "'ds.name': '/ds'" not in strip_ansi(result.output)
 
 
 def test_fuseki_describe(fuseki_container):
@@ -188,4 +192,4 @@ def test_fuseki_describe(fuseki_container):
         ],
     )
     assert result.exit_code == 0
-    assert "'ds.name': '/ds'" in result.output
+    assert "'ds.name': '/ds'" in strip_ansi(result.output)
