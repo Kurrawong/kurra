@@ -18,3 +18,17 @@ def test_rules():
     results_graph_received = infer(data_graph, rules)
 
     assert isomorphic(results_graph_expected, results_graph_received)
+
+
+def test_rules_removed():
+    data_graph = Path(__file__).parent / "infer" / "01-data.ttl"
+
+    rules = Path(__file__).parent / "infer" / "02-rules.srl"
+
+    results_graph_expected = load_graph(
+        Path(__file__).parent / "infer" / "02-results.ttl"
+    )
+
+    results_graph_received = infer(data_graph, rules, remove=True)
+
+    assert isomorphic(results_graph_expected, results_graph_received)

@@ -1,0 +1,12 @@
+PREFIX ex: <http://example.com/>
+
+DELETE {
+    ?x ?p ?y
+}
+WHERE {
+    VALUES ?p {
+        ex:mother
+        ex:name
+    }
+    ?x ?p ?y
+}

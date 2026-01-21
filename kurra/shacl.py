@@ -8,6 +8,7 @@ from rdflib.namespace import SDO
 from srl.engine import RuleEngine
 from srl.parser import SRLParser
 
+import kurra.sparql
 from kurra.db.gsp import get as gsp_get
 from kurra.sparql import query
 from kurra.utils import load_graph
@@ -254,8 +255,13 @@ def check_validator_known(validator_iri: str) -> bool:
     return False
 
 
-def infer(data: Graph | Path | str, rules: Graph | Path | str) -> Graph:
+def infer(data: Graph | Path | str, rules: Graph | Path | str, remove=False) -> Graph:
     """Applies rules to the data graph and returns a graph of calculated results"""
+    data_graph = load_graph(data)
+
+    if remove:
+        return kurra.sparql.query(data_graph, rules.read_text())
+
     if not isinstance(rules, (Path, str)):
         raise NotImplementedError(
             "Only SHACL Rules in files ending .srl or as a string containing the Shape Rules Language (SRL) syntax is "
@@ -270,7 +276,6 @@ def infer(data: Graph | Path | str, rules: Graph | Path | str) -> Graph:
                 f"You have specified an unknown file type for the rules. It must end with .srl. You supplied a file with: {rules.suffix}"
             )
 
-    data_graph = load_graph(data)
     interim_result = RuleEngine(SRLParser().parse(rules)).evaluate(
         data_graph, inplace=False
     )

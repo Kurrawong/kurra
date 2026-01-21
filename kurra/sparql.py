@@ -86,31 +86,46 @@ def query(
 
     elif "INSERT" in q or "DELETE" in q or "DROP" in q:
         if str(p).startswith("http"):
+            close_http_client = False
+            if http_client is None:
+                http_client = httpx.Client()
+                close_http_client = True
+
             r = db_query(p, q, namespaces, http_client, return_format, False)
 
-            if r == "":
+            if close_http_client:
+                http_client.close()
+
+            if r == "" or r is None:
                 return ""
-        else:
+
+        if "DROP" in q and not isinstance(p, Dataset):
             raise NotImplementedError(
-                "Update commands are not yet implemented for files"
+                f"DROP commands cannot be applied to Graphs or files or triples data, only Datasets or RDF DBs. You specified {p}"
             )
+        elif isinstance(p, (Graph, str, Path)):
+            g = load_graph(p)
+            g.update(q)
+            return g
+        else:
+            raise NotImplementedError("Update SPARQL commands on Datasets are not yet supported")
 
     else:  # SELECT or ASK
-        close_http_client = False
-        if http_client is None:
-            http_client = httpx.Client()
-            close_http_client = True
-
         r = None
         if str(p).startswith("http"):
+            close_http_client = False
+            if http_client is None:
+                http_client = httpx.Client()
+                close_http_client = True
+
             r = db_query(
                 p, q, namespaces, http_client, return_format, return_bindings_only
             )
 
-        if close_http_client:
-            http_client.close()
+            if close_http_client:
+                http_client.close()
 
-        if r is not None:
+        if r is not None:  # we have a result from the DB query to return
             return r
         else:  # querying a file or string RDF data
             r = load_graph(p).query(q).serialize(format="json")

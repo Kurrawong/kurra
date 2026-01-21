@@ -4,21 +4,14 @@ ex:nick
     ex:parent
         ex:george ,
         ex:cathy ;
-    ex:name "Nick" ;
-    ex:mother ex:cathy ;
 .
 
 ex:george
     ex:parent
         ex:miko ,
         ex:vasma ;
-    ex:name "George" ;
 .
 
 ex:miko
     ex:parent ex:ivor ;
-.
-
-ex:vasma
-    ex:mother ex:meri ;
 .
