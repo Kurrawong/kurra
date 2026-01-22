@@ -78,6 +78,12 @@ def infer_command(
         ...,
         help="The path of the file containing the rules to apply to the data. SHACL Rules ending .srl only",
     ),
+    include_base: str = typer.Option(
+        "false",
+        "--include-base",
+        "-ib",
+        help="whether to include the data triples in output",
+    ),
 ):
     data = Path(data)
     rules = Path(rules)
@@ -88,5 +94,5 @@ def infer_command(
     if not Path(rules).is_file() or not Path(rules).suffix == ".srl":
         console.print("You must provide a path to a .srl file for the rules")
 
-    results_graph = kurra.shacl.infer(data, rules)
+    results_graph = kurra.shacl.infer(data, rules, include_base=True if include_base == "true" else False)
     console.print(results_graph.serialize(format="longturtle"))

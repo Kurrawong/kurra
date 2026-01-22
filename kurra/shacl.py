@@ -255,12 +255,17 @@ def check_validator_known(validator_iri: str) -> bool:
     return False
 
 
-def infer(data: Graph | Path | str, rules: Graph | Path | str, remove=False) -> Graph:
-    """Applies rules to the data graph and returns a graph of calculated results"""
-    data_graph = load_graph(data)
+def infer(data: Graph | Path | str, rules: Graph | Path | str, include_base=False) -> Graph:
+    """Applies rules to the data graph and returns a graph of calculated results
 
-    if remove:
-        return kurra.sparql.query(data_graph, rules.read_text())
+    Args:
+        data: the data to apply the rules to
+        rules: the rules to apply, in SHACL Rules SPARQL syntax
+        include_base: whether to include the data triples in output
+
+    Returns:
+    """
+    data_graph = load_graph(data)
 
     if not isinstance(rules, (Path, str)):
         raise NotImplementedError(
@@ -276,8 +281,17 @@ def infer(data: Graph | Path | str, rules: Graph | Path | str, remove=False) -> 
                 f"You have specified an unknown file type for the rules. It must end with .srl. You supplied a file with: {rules.suffix}"
             )
 
+    if "DELETE" in rules:
+        if isinstance(rules, Path):
+            rules = rules.read_text()
+
+        return kurra.sparql.query(data_graph, rules)
+
     interim_result = RuleEngine(SRLParser().parse(rules)).evaluate(
         data_graph, inplace=False
     )
 
-    return interim_result - data_graph
+    if include_base:
+        return interim_result
+    else:
+        return interim_result - data_graph
