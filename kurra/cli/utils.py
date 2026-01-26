@@ -5,9 +5,11 @@ from rdflib.namespace import RDF, SH
 from rdflib.plugins.sparql.processor import SPARQLResult
 from rich.table import Table
 
+from kurra.utils import is_construct_or_describe_query
+
 
 def format_sparql_response_as_rich_table(response, query):
-    if "CONSTRUCT" in query or "DESCRIBE" in query:
+    if is_construct_or_describe_query(query):
         return response.serialize(format="longturtle")
 
     if isinstance(response, Graph):

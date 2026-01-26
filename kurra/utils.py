@@ -7,6 +7,13 @@ from typing import Union
 import httpx
 from rdflib import BNode, Dataset, Graph, Literal, Namespace, URIRef
 from rdflib.plugins.parsers.notation3 import BadSyntax
+from sparqlkit import (
+    QuerySubType,
+    SparqlStatementType,
+    SparqlType,
+    UpdateSubType,
+    statement_type_from_string,
+)
 
 RDF_SUFFIX_MAP = {
     ".nt": "application/n-triples",
@@ -221,33 +228,85 @@ def convert_sparql_json_to_python(
         return r
 
 
-def _guess_query_is_update(query: str) -> bool:
-    if any(
-        x in query
-        for x in [
-            "INSERT",
-            "DELETE",
-            "LOAD",
-            "CLEAR",
-            "CREATE",
-            "DROP",
-            "COPY",
-            "MOVE",
-            "ADD",
-        ]
-    ):
-        return True
-    else:
-        return False
-
-
-def _guess_return_type_for_sparql_query(query: str) -> str:
-    if any(x in query for x in ["SELECT", "INSERT", "ASK"]):
-        return "application/sparql-results+json"
-    elif "CONSTRUCT" in query or "DESCRIBE" in query:
+def sparql_statement_return_type(
+    query: str, statement: SparqlStatementType | None = None
+) -> str:
+    statement = _ensure_statement_type(query, statement)
+    if is_construct_or_describe_query(query, statement):
         return "text/turtle"
-    else:
-        return "application/sparql-results+json"
+    return "application/sparql-results+json"
+
+
+def statement_type_for_query(query: str) -> SparqlStatementType:
+    return statement_type_from_string(query)
+
+
+def _ensure_statement_type(
+    query: str, statement: SparqlStatementType | None = None
+) -> SparqlStatementType:
+    return statement if statement is not None else statement_type_for_query(query)
+
+
+def is_construct_query(
+    query: str, statement: SparqlStatementType | None = None
+) -> bool:
+    statement = _ensure_statement_type(query, statement)
+    return (
+        statement.type == SparqlType.QUERY
+        and statement.subtype == QuerySubType.CONSTRUCT
+    )
+
+
+def is_describe_query(query: str, statement: SparqlStatementType | None = None) -> bool:
+    statement = _ensure_statement_type(query, statement)
+    return (
+        statement.type == SparqlType.QUERY
+        and statement.subtype == QuerySubType.DESCRIBE
+    )
+
+
+def is_select_query(query: str, statement: SparqlStatementType | None = None) -> bool:
+    statement = _ensure_statement_type(query, statement)
+    return (
+        statement.type == SparqlType.QUERY and statement.subtype == QuerySubType.SELECT
+    )
+
+
+def is_ask_query(query: str, statement: SparqlStatementType | None = None) -> bool:
+    statement = _ensure_statement_type(query, statement)
+    return statement.type == SparqlType.QUERY and statement.subtype == QuerySubType.ASK
+
+
+def is_construct_or_describe_query(
+    query: str, statement: SparqlStatementType | None = None
+) -> bool:
+    statement = _ensure_statement_type(query, statement)
+    return statement.type == SparqlType.QUERY and statement.subtype in {
+        QuerySubType.CONSTRUCT,
+        QuerySubType.DESCRIBE,
+    }
+
+
+def is_select_or_ask_query(
+    query: str, statement: SparqlStatementType | None = None
+) -> bool:
+    statement = _ensure_statement_type(query, statement)
+    return statement.type == SparqlType.QUERY and statement.subtype in {
+        QuerySubType.SELECT,
+        QuerySubType.ASK,
+    }
+
+
+def is_update_query(query: str, statement: SparqlStatementType | None = None) -> bool:
+    statement = _ensure_statement_type(query, statement)
+    return statement.type == SparqlType.UPDATE
+
+
+def is_drop_update(query: str, statement: SparqlStatementType | None = None) -> bool:
+    statement = _ensure_statement_type(query, statement)
+    return (
+        statement.type == SparqlType.UPDATE and statement.subtype == UpdateSubType.DROP
+    )
 
 
 def make_sparql_dataframe(sparql_result: dict):

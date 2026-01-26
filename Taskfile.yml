@@ -9,7 +9,7 @@ env:
 tasks:
   install:
     cmds:
-      - uv sync
+      - uv sync --all-extras
 
   format:
     desc: Format Python code.

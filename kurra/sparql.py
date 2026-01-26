@@ -9,8 +9,13 @@ from kurra.db.sparql import query as db_query
 from kurra.utils import (
     add_namespaces_to_query_or_data,
     convert_sparql_json_to_python,
+    is_construct_or_describe_query,
+    is_drop_update,
+    is_select_or_ask_query,
+    is_update_query,
     load_graph,
     make_sparql_dataframe,
+    statement_type_for_query,
 )
 
 
@@ -42,14 +47,10 @@ def query(
     if http_client is None:
         http_client = httpx.Client()
 
+    statement = statement_type_for_query(q)
+
     if return_format == "dataframe":
-        if (
-            "CONSTRUCT" in q
-            or "DESCRIBE" in q
-            or "INSERT" in q
-            or "DELETE" in q
-            or "DROP" in q
-        ):
+        if not is_select_or_ask_query(q, statement):
             raise ValueError(
                 'Only SELECT and ASK queries can have return_format set to "dataframe"'
             )
@@ -61,7 +62,7 @@ def query(
                 'You selected the output format "dataframe" by the pandas Python package is not installed.'
             )
 
-    if "CONSTRUCT" in q or "DESCRIBE" in q:
+    if is_construct_or_describe_query(q, statement):
         s = None
         f = None
         if str(p).startswith("http"):
@@ -84,7 +85,7 @@ def query(
                 else f.graph.serialize(format="longturtle")
             )
 
-    elif "INSERT" in q or "DELETE" in q or "DROP" in q:
+    elif is_update_query(q, statement):
         if str(p).startswith("http"):
             close_http_client = False
             if http_client is None:
@@ -99,7 +100,7 @@ def query(
             if r == "" or r is None:
                 return ""
 
-        if "DROP" in q and not isinstance(p, Dataset):
+        if is_drop_update(q, statement) and not isinstance(p, Dataset):
             raise NotImplementedError(
                 f"DROP commands cannot be applied to Graphs or files or triples data, only Datasets or RDF DBs. You specified {p}"
             )
@@ -108,7 +109,9 @@ def query(
             g.update(q)
             return g
         else:
-            raise NotImplementedError("Update SPARQL commands on Datasets are not yet supported")
+            raise NotImplementedError(
+                "Update SPARQL commands on Datasets are not yet supported"
+            )
 
     else:  # SELECT or ASK
         r = None
