@@ -6,7 +6,17 @@ from rdflib.compare import isomorphic
 
 from kurra.utils import (
     RenderFormat,
+    _guess_query_is_update,
+    _guess_return_type_for_sparql_query,
     guess_format_from_data,
+    is_ask_query,
+    is_construct_or_describe_query,
+    is_construct_query,
+    is_describe_query,
+    is_drop_update,
+    is_select_or_ask_query,
+    is_select_query,
+    is_update_query,
     load_graph,
     render_sparql_result,
 )
@@ -467,3 +477,39 @@ def test_convert_sparql_json_to_python_db():
 def test_convert_sparql_json_to_python_file():
     """See test_sparql test_deep_python_file()"""
     pass
+
+
+def test_sparql_statement_helpers():
+    select_query = "PREFIX ex: <http://example.com/> SELECT * WHERE { ?s ?p ?o }"
+    ask_query = "ask where { ?s ?p ?o }"
+    construct_query = "CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }"
+    describe_query = "DESCRIBE <http://example.com/a>"
+    insert_query = "INSERT DATA { <http://example.com/a> <http://example.com/b> <http://example.com/c> }"
+    delete_query = "DELETE WHERE { ?s ?p ?o }"
+    drop_query = "DROP GRAPH <http://example.com/g>"
+
+    assert is_select_query(select_query)
+    assert is_ask_query(ask_query)
+    assert is_select_or_ask_query(select_query)
+    assert is_select_or_ask_query(ask_query)
+
+    assert is_construct_query(construct_query)
+    assert is_describe_query(describe_query)
+    assert is_construct_or_describe_query(construct_query)
+    assert is_construct_or_describe_query(describe_query)
+
+    assert is_update_query(insert_query)
+    assert is_update_query(delete_query)
+    assert is_drop_update(drop_query)
+    assert not is_update_query(select_query)
+
+    assert _guess_query_is_update(insert_query)
+    assert not _guess_query_is_update(select_query)
+    assert _guess_return_type_for_sparql_query(select_query) == (
+        "application/sparql-results+json"
+    )
+    assert _guess_return_type_for_sparql_query(construct_query) == "text/turtle"
+    assert _guess_return_type_for_sparql_query(describe_query) == "text/turtle"
+    assert _guess_return_type_for_sparql_query(insert_query) == (
+        "application/sparql-results+json"
+    )

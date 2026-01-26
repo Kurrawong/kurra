@@ -7,7 +7,10 @@ from kurra.utils import (
     _guess_return_type_for_sparql_query,
     add_namespaces_to_query_or_data,
     convert_sparql_json_to_python,
+    is_construct_or_describe_query,
+    is_select_or_ask_query,
     make_sparql_dataframe,
+    statement_type_for_query,
 )
 
 
@@ -37,14 +40,10 @@ def query(
     if http_client is None:
         http_client = httpx.Client()
 
+    statement = statement_type_for_query(q)
+
     if return_format == "dataframe":
-        if (
-            "CONSTRUCT" in q
-            or "DESCRIBE" in q
-            or "INSERT" in q
-            or "DELETE" in q
-            or "DROP" in q
-        ):
+        if not is_select_or_ask_query(q, statement):
             raise ValueError(
                 'Only SELECT and ASK queries can have return_format set to "dataframe"'
             )
@@ -56,12 +55,12 @@ def query(
                 'You selected the output format "dataframe" by the pandas Python package is not installed.'
             )
 
-    if _guess_query_is_update(q):
+    if _guess_query_is_update(q, statement):
         headers = {"Content-Type": "application/sparql-update"}
     else:
         headers = {"Content-Type": "application/sparql-query"}
 
-    headers["Accept"] = _guess_return_type_for_sparql_query(q)
+    headers["Accept"] = _guess_return_type_for_sparql_query(q, statement)
 
     r = http_client.post(
         sparql_endpoint,
@@ -87,7 +86,7 @@ def query(
     if status_code == 204:
         return ""
 
-    if "CONSTRUCT" in q or "DESCRIBE" in q:
+    if is_construct_or_describe_query(q, statement):
         return r.text
 
     if return_format == "python":
