@@ -3,13 +3,13 @@ from typing import Literal as LiteralType
 import httpx
 
 from kurra.utils import (
-    _guess_query_is_update,
-    _guess_return_type_for_sparql_query,
     add_namespaces_to_query_or_data,
     convert_sparql_json_to_python,
     is_construct_or_describe_query,
     is_select_or_ask_query,
+    is_update_query,
     make_sparql_dataframe,
+    sparql_statement_return_type,
     statement_type_for_query,
 )
 
@@ -55,12 +55,12 @@ def query(
                 'You selected the output format "dataframe" by the pandas Python package is not installed.'
             )
 
-    if _guess_query_is_update(q, statement):
+    if is_update_query(q, statement):
         headers = {"Content-Type": "application/sparql-update"}
     else:
         headers = {"Content-Type": "application/sparql-query"}
 
-    headers["Accept"] = _guess_return_type_for_sparql_query(q, statement)
+    headers["Accept"] = sparql_statement_return_type(q, statement)
 
     r = http_client.post(
         sparql_endpoint,

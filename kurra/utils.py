@@ -228,13 +228,7 @@ def convert_sparql_json_to_python(
         return r
 
 
-def _guess_query_is_update(
-    query: str, statement: SparqlStatementType | None = None
-) -> bool:
-    return is_update_query(query, statement)
-
-
-def _guess_return_type_for_sparql_query(
+def sparql_statement_return_type(
     query: str, statement: SparqlStatementType | None = None
 ) -> str:
     statement = _ensure_statement_type(query, statement)

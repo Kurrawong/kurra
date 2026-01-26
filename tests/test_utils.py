@@ -6,8 +6,6 @@ from rdflib.compare import isomorphic
 
 from kurra.utils import (
     RenderFormat,
-    _guess_query_is_update,
-    _guess_return_type_for_sparql_query,
     guess_format_from_data,
     is_ask_query,
     is_construct_or_describe_query,
@@ -19,6 +17,7 @@ from kurra.utils import (
     is_update_query,
     load_graph,
     render_sparql_result,
+    sparql_statement_return_type,
 )
 
 
@@ -503,13 +502,13 @@ def test_sparql_statement_helpers():
     assert is_drop_update(drop_query)
     assert not is_update_query(select_query)
 
-    assert _guess_query_is_update(insert_query)
-    assert not _guess_query_is_update(select_query)
-    assert _guess_return_type_for_sparql_query(select_query) == (
+    assert is_update_query(insert_query)
+    assert not is_update_query(select_query)
+    assert sparql_statement_return_type(select_query) == (
         "application/sparql-results+json"
     )
-    assert _guess_return_type_for_sparql_query(construct_query) == "text/turtle"
-    assert _guess_return_type_for_sparql_query(describe_query) == "text/turtle"
-    assert _guess_return_type_for_sparql_query(insert_query) == (
+    assert sparql_statement_return_type(construct_query) == "text/turtle"
+    assert sparql_statement_return_type(describe_query) == "text/turtle"
+    assert sparql_statement_return_type(insert_query) == (
         "application/sparql-results+json"
     )
