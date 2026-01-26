@@ -39,9 +39,9 @@ def test_rules_include_base():
 
     rules = Path(__file__).parent / "infer" / "01-rules.srl"
 
-    results_graph_expected = load_graph(
-        Path(__file__).parent / "infer" / "01-results.ttl"
-    ) + data_graph
+    results_graph_expected = (
+        load_graph(Path(__file__).parent / "infer" / "01-results.ttl") + data_graph
+    )
 
     results_graph_received = infer(data_graph, rules, include_base=True)
 
