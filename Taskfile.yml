@@ -27,4 +27,5 @@ tasks:
   test:
     desc: Run tests
     cmds:
+      - uv sync --extra dataframe
       - uv run pytest tests -rP
