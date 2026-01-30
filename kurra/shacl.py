@@ -29,7 +29,7 @@ def validate(
 
     Raises:
         ValueError: If the ID of the SHACL validator is invalid
-        RuntimeError: If the IRI of the SHACL validator is not able to be resolved locally or against the Semantic Background's validators
+        RuntimeError: If the IRI of the SHACL validator cannot be resolved locally or against the Semantic Background's validators
     """
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"

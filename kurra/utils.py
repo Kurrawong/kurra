@@ -314,7 +314,7 @@ def make_sparql_dataframe(sparql_result: dict):
         from pandas import DataFrame
     except ImportError:
         raise ValueError(
-            'You selected the output format "dataframe" by the pandas Python package is not installed.'
+            'You selected the output format "dataframe" but the pandas Python package is not installed.'
         )
 
     if sparql_result.get("results") is not None:  # SELECT
