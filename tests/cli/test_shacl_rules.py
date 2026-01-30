@@ -1,10 +1,11 @@
 from pathlib import Path
 
+import click
 from rdflib.compare import isomorphic
 from typer.testing import CliRunner
-from kurra.utils import load_graph
+
 from kurra.cli import app
-import click
+from kurra.utils import load_graph
 
 runner = CliRunner()
 

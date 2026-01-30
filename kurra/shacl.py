@@ -255,7 +255,9 @@ def check_validator_known(validator_iri: str) -> bool:
     return False
 
 
-def infer(data: Graph | Path | str, rules: Graph | Path | str, include_base=False) -> Graph:
+def infer(
+    data: Graph | Path | str, rules: Graph | Path | str, include_base=False
+) -> Graph:
     """Applies rules to the data graph and returns a graph of calculated results
 
     Args:
