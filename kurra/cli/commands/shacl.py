@@ -9,7 +9,6 @@ from kurra.cli.utils import (
     format_shacl_graph_as_rich_table,
 )
 from kurra.shacl import list_local_validators, sync_validators, validate
-from kurra.utils import load_graph
 
 app = typer.Typer(help="SHACL commands")
 

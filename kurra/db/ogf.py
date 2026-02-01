@@ -6,11 +6,9 @@ from pathlib import Path
 import httpx
 from rdflib import Dataset, Graph, Literal, URIRef
 from rdflib.namespace import RDF, SDO, XSD, DefinedNamespace, Namespace
-from rdflib.plugins.parsers.notation3 import BadSyntax
 
-import kurra.db.gsp
 from kurra.shacl import validate
-from kurra.utils import get_system_graph, load_graph, put_system_graph
+from kurra.utils import get_system_graph, put_system_graph
 
 OLIS = Namespace("https://olis.dev/")
 SYSTEM_GRAPH_IRI = URIRef("https://olis.dev/SystemGraph")

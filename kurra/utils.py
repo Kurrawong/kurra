@@ -6,7 +6,6 @@ from typing import Union
 
 import httpx
 from rdflib import BNode, Dataset, Graph, Literal, Namespace, URIRef
-from rdflib.plugins.parsers.notation3 import BadSyntax
 from sparqlkit import (
     QuerySubType,
     SparqlStatementType,
