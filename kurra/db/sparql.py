@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Literal as LiteralType
 
 import httpx
@@ -16,7 +17,7 @@ from kurra.utils import (
 
 def query(
     sparql_endpoint: str,
-    q: str,
+    q: str | Path,
     namespaces: dict[str, str] | None = None,
     http_client: httpx.Client = None,
     return_format: LiteralType["original", "python", "dataframe"] = "original",
@@ -28,6 +29,9 @@ def query(
 
     if q is None:
         raise ValueError("You must supply a query")
+
+    if Path(q).is_file():
+        q = Path(q).read_text()
 
     if return_format not in ["original", "python", "dataframe"]:
         raise ValueError(

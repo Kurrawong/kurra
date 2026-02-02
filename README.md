@@ -115,22 +115,34 @@ task install
 Format code:
 
 ```bash
-task code
+task format
 ```
+
+Test:
+
+```
+task test
+```
+
+You can test the command like app while in development with:
+
+```
+uv tool kurra {COMMANDS}
+```
+
+With `{COMMANDS}` as per the usual kurra CLI.
+
+### Releasing
 
 To build a new release:
 
-0. format all code: `task code`
-1. test: `task test`
-2. update the version in pyproject.toml
-3. commit & push all changes
-4. git tag with the same version number
-5. push the tag - `git push --tags`
-6. build the release - `uv build`
-7. publish the release on PyPI - `uv publish -u __token__ -p {TOKEN}`, {TOKEN} is an actual token
-8. make the release on GitHub - https://github.com/Kurrawong/kurra/releases
-    * don't forget to add the dist zips & wheels to it
-9. update version number in pyproject.toml to next alpha & push
+* format code: `task format`
+* pass tests: `task test`
+* update version in pyproject.toml
+* commit all updates: `git commit -a "..."`
+* make GitHub release
+  * this will trigger pypi.yml workflow to publish to PyPI
+* update version in pyproject.toml to next release alpha and push
 
 ## License
 

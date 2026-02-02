@@ -657,3 +657,31 @@ def test_deep_python_file():
         """
     r = query(d, q, return_format="python")
     assert isinstance(r["results"]["bindings"][0]["di"], datetime.datetime)
+
+
+def test_query_file():
+    assert (
+        query(
+            LANG_TEST_VOC,
+            str(Path(__file__).parent / "q.sparql"),
+            return_format="python",
+            return_bindings_only=True,
+        )[0]["count"]
+        == 7
+    )
+
+    q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+    
+        SELECT (COUNT(?c) AS ?count)
+        WHERE {
+            ?c a skos:Concept ;
+        }
+        """
+
+    assert (
+        query(LANG_TEST_VOC, q, return_format="python", return_bindings_only=True)[0][
+            "count"
+        ]
+        == 7
+    )

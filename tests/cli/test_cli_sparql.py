@@ -113,3 +113,40 @@ def test_fuseki_sparql_drop(fuseki_container):
     )
     # assert result.exit_code == 0  # TODO: work out why this isn't returning 0
     assert result.output == ""
+
+
+def test_query_file():
+    LANG_TEST_VOC_PATH_STR = str(
+        Path(__file__).parent.parent / "sparql/language-test.ttl"
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "sparql",
+            LANG_TEST_VOC_PATH_STR,
+            str(Path(__file__).parent.parent / "sparql/q.sparql"),
+        ],
+    )
+
+    assert "count" in result.output
+
+    q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+        SELECT (COUNT(?c) AS ?count)
+        WHERE {
+            ?c a skos:Concept ;
+        }
+        """
+
+    result = runner.invoke(
+        app,
+        [
+            "sparql",
+            LANG_TEST_VOC_PATH_STR,
+            q,
+        ],
+    )
+
+    assert "count" in result.output

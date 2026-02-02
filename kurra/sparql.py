@@ -21,7 +21,7 @@ from kurra.utils import (
 
 def query(
     p: Path | str | Graph | Dataset,
-    q: str,
+    q: str | Path,
     namespaces: dict[str, str] | None = None,
     http_client: httpx.Client = None,
     return_format: Literal["original", "python", "dataframe"] = "original",
@@ -35,6 +35,9 @@ def query(
 
     if q is None:
         raise ValueError("You must supply a query")
+
+    if Path(q).is_file():
+        q = Path(q).read_text()
 
     if return_format not in ["original", "python", "dataframe"]:
         raise ValueError(
@@ -84,7 +87,6 @@ def query(
                 if s is not None
                 else f.graph.serialize(format="longturtle")
             )
-
     elif is_update_query(q, statement):
         if str(p).startswith("http"):
             close_http_client = False
