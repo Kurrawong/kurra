@@ -36,8 +36,10 @@ def query(
     if q is None:
         raise ValueError("You must supply a query")
 
-    if Path(q).is_file():
-        q = Path(q).read_text()
+    if isinstance(q, str):
+        if len(q) < 260:
+            if Path(q).is_file():
+                q = Path(q).read_text()
 
     if return_format not in ["original", "python", "dataframe"]:
         raise ValueError(

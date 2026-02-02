@@ -38,8 +38,10 @@ def sparql_command(
     if str(path_or_url).startswith("http"):
         path_or_url = str(path_or_url).replace(":/", "://")
 
-    if Path(q).is_file():
-        q = Path(q).read_text()
+    if isinstance(q, str):
+        if len(q) < 260:
+            if Path(q).is_file():
+                q = Path(q).read_text()
 
     auth = (
         (username, password) if username is not None and password is not None else None
