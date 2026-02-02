@@ -139,10 +139,14 @@ To build a new release:
 * format code: `task format`
 * pass tests: `task test`
 * update version in pyproject.toml
-* commit all updates: `git commit -a "..."`
+* Git commit & push all updates
+* Git tag with release version
+  * `git tag 2.2.4`
+  * `git push --tags`
 * make GitHub release
   * this will trigger pypi.yml workflow to publish to PyPI
 * update version in pyproject.toml to next release alpha and push
+  * with message `2.2.4 post release`
 
 ## License
 
