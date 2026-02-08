@@ -4,7 +4,7 @@ from pickle import dump, load
 import httpx
 from pyshacl import validate as v
 from rdflib import Dataset, Graph, URIRef
-from rdflib.namespace import SDO
+from rdflib.namespace import RDF, SDO, SH
 from srl.engine import RuleEngine
 from srl.parser import SRLParser
 
@@ -17,6 +17,7 @@ from kurra.utils import load_graph
 def validate(
     data_file_or_dir_or_graph_or_list: Path | Graph | list[Path] | list[Graph],
     shacl_graph_or_file_or_url_or_id: Graph | Path | str | int,
+    hide_warnings: bool = False,
 ) -> tuple[bool, Graph, str]:
     """Validates a data graph using a shapes graph.
 
@@ -91,7 +92,15 @@ def validate(
         for x in data_file_or_dir_or_graph_or_list:
             data_graph += load_graph(x)
 
-    return v(data_graph, shacl_graph=shapes_graph, allow_warnings=True)
+    tf, g, msg = v(data_graph, shacl_graph=shapes_graph, allow_warnings=True)
+
+    if hide_warnings:
+        for s in g.subjects(predicate=RDF.type, object=SH.ValidationResult):
+            if not g.value(subject=s, predicate=SH.resultSeverity) == SH.Violation:
+                g = g - g.cbd(s)
+
+    return tf, g, msg
+
 
 
 def list_local_validators() -> dict[str, dict[str, int]] | None:
