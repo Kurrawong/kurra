@@ -102,7 +102,6 @@ def validate(
     return tf, g, msg
 
 
-
 def list_local_validators() -> dict[str, dict[str, int]] | None:
     """Lists SHACL validators - IRI & name - stored in the local system's calidator cache.
 

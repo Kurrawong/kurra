@@ -1,7 +1,7 @@
 from pathlib import Path
+from typing import Annotated
 
 import typer
-from typing import Annotated
 from rich.table import Table
 
 import kurra.shacl
@@ -26,10 +26,17 @@ def validate_command(
         ...,
         help="The file, directory of files, IRI of or the kurra ID for the SHACL graph to validate with",
     ),
-    hide_warnings: Annotated[bool, typer.Option("--hide-warnings", "-hw", help="Hides Shapes results of Warning and Info")] = False
+    hide_warnings: Annotated[
+        bool,
+        typer.Option(
+            "--hide-warnings", "-hw", help="Hides Shapes results of Warning and Info"
+        ),
+    ] = False,
 ) -> None:
     """Validate a given file or directory of files using a given SHACL file or directory of files"""
-    valid, g, txt = validate(file_or_dir, shacl_graph_or_file_or_url_or_id, hide_warnings=hide_warnings)
+    valid, g, txt = validate(
+        file_or_dir, shacl_graph_or_file_or_url_or_id, hide_warnings=hide_warnings
+    )
 
     if valid:
         console.print("The data is valid")
