@@ -96,22 +96,19 @@ def test_list_local_validators():
 
     sync_validators()
 
-    assert len(list_local_validators().keys()) == 12
+    assert len(list_local_validators().keys()) == 14
 
 
 def test_validate_by_id():
     """Awaiting sync_validators()"""
-    kurra_cache = Path().home() / ".kurra"
-    validators_cache = kurra_cache / "validators.pkl"
-
     sync_validators()
 
-    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-valid.ttl", 9)
+    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-valid.ttl", 11)
     assert (
         len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 1
     )  # Warning
 
-    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-invalid.ttl", 9)
+    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-invalid.ttl", 11)
     assert len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 6
 
 
