@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Annotated
 
 import httpx
+import rdflib
 import typer
 
 from kurra.cli.console import console
@@ -11,7 +12,8 @@ from kurra.cli.utils import (
 )
 from kurra.sparql import query
 
-app = typer.Typer()
+app = typer.Typer(context_settings={"terminal_width": 10000})
+# app = typer.Typer()
 
 
 @app.command(name="sparql", help="SPARQL queries to local RDF files or a database")
@@ -53,7 +55,11 @@ def sparql_command(
             console.print("Operation completed successfully")
             return
 
-        if response_format == "table":
+        # if it is a graph, just print return the serialized form plainly, not via console.print()
+        # to avoid terminal width breaking long literals, as per Issue 37
+        if isinstance(r, rdflib.Graph):
+            print(r.serialize(format="longturtle"))
+        elif response_format == "table":
             console.print(format_sparql_response_as_rich_table(r, q))
         else:
             console.print(format_sparql_response_as_json(r))
