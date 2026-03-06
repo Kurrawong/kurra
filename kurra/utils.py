@@ -64,38 +64,35 @@ def guess_format_from_data(rdf: str) -> str | None:
 
 def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> Graph:
     """
-    Presents an RDFLib Graph object from a pre-existing Graph, a pickle file, an RDF file or directory of files or RDF
-    data in a string
+    Presents an RDFLib Graph object from a pre-existing Graph, a pickle-cached RDF file, an RDF file or directory of
+    files, or RDF data in a string. Missing filesystem paths raise FileNotFoundError.
     """
     # Pre-existing Graph
     if isinstance(graph_path_or_str, Graph):
         return graph_path_or_str
 
-    # Pickle file
+    # Serialized RDF file or dir of files, optionally using a sibling pickle cache
     if isinstance(graph_path_or_str, Path):
         if graph_path_or_str.is_file():
             pkl_path = graph_path_or_str.with_suffix(".pkl")
             if pkl_path.is_file():
                 return pickle.load(open(pkl_path, "rb"))
-
-    # Serialized RDF file or dir of files
-    if isinstance(graph_path_or_str, Path):
-        if Path(graph_path_or_str).is_file():
             if str(graph_path_or_str).endswith(".trig") or str(
                 graph_path_or_str
             ).endswith(".jsonld"):
                 return Dataset().parse(str(graph_path_or_str))
             return Graph().parse(graph_path_or_str)
-        elif Path(graph_path_or_str).is_dir():
+        elif graph_path_or_str.is_dir():
             g = Graph()
             if recursive:
-                gl = Path(graph_path_or_str).rglob("*.ttl")
+                gl = graph_path_or_str.rglob("*.ttl")
             else:
-                gl = Path(graph_path_or_str).glob("*.ttl")
+                gl = graph_path_or_str.glob("*.ttl")
             for f in gl:
                 if f.is_file():
                     g.parse(f)
             return g
+        raise FileNotFoundError(f"Graph path does not exist: {graph_path_or_str}")
 
     # A remote file via HTTP
     elif isinstance(graph_path_or_str, str) and graph_path_or_str.startswith("http"):
