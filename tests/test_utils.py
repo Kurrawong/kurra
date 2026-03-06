@@ -1,6 +1,8 @@
 import json
+import pickle
 from pathlib import Path
 
+import pytest
 from rdflib import Graph
 from rdflib.compare import isomorphic
 
@@ -117,6 +119,42 @@ def test_load_graph():
     )
 
     assert len(g5) > 10
+
+
+def test_load_graph_missing_path():
+    missing_path = Path(__file__).parent / "file" / "does-not-exist.ttl"
+
+    with pytest.raises(FileNotFoundError, match="Graph path does not exist"):
+        load_graph(missing_path)
+
+
+def test_load_graph_prefers_pickle_cache_for_existing_file(tmp_path):
+    rdf_graph = Graph()
+    rdf_graph.parse(
+        data="""
+            PREFIX ex: <http://example.com/>
+
+            ex:a ex:b ex:c .
+            """
+    )
+
+    pickle_graph = Graph()
+    pickle_graph.parse(
+        data="""
+            PREFIX ex: <http://example.com/>
+
+            ex:x ex:y ex:z .
+            """
+    )
+
+    rdf_path = tmp_path / "cached.ttl"
+    rdf_path.write_text(rdf_graph.serialize(format="turtle"), encoding="utf-8")
+    pickle_path = rdf_path.with_suffix(".pkl")
+    pickle_path.write_bytes(pickle.dumps(pickle_graph))
+
+    loaded_graph = load_graph(rdf_path)
+
+    assert isomorphic(loaded_graph, pickle_graph)
 
 
 def test_load_graph_dir():
