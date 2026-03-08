@@ -96,7 +96,7 @@ def get(
             else:
                 return Graph().parse(data=r.text, format=accept_type)
     else:
-        return r.status_code
+        return r.status_code, r.text
 
 
 def put(
@@ -134,9 +134,9 @@ def put(
         http_client.close()
 
     if r.is_success:
-        return True
+        return True, None
     else:
-        return r.status_code
+        return r.status_code, r.text
 
 
 def post(
@@ -177,9 +177,9 @@ def post(
         http_client.close()
 
     if r.is_success:
-        return True
+        return True, None
     else:
-        return r.status_code
+        return r.status_code, r.text
 
 
 def delete(
@@ -207,9 +207,9 @@ def delete(
         http_client.close()
 
     if r.is_success:
-        return True
+        return True, None
     else:
-        return r.status_code
+        return r.status_code, r.text
 
 
 def clear(
