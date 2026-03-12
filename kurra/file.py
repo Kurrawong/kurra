@@ -26,9 +26,13 @@ def do_format(
             else:
                 break
 
-        content_no_comments = "\n".join(lines[len(comments):])
+        content_no_comments = "\n".join(lines[len(comments) :])
         graph = load_graph(content_no_comments)
-        new_content = "\n".join(comments) + "\n" + graph.serialize(format=output_format, canon=True)
+        new_content = (
+            "\n".join(comments)
+            + "\n"
+            + graph.serialize(format=output_format, canon=True)
+        )
     else:
         graph = load_graph(content)
         new_content = graph.serialize(format=output_format, canon=True)
