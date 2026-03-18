@@ -28,13 +28,18 @@ def do_format(
 
         content_no_comments = "\n".join(lines[len(comments) :])
         graph = load_graph(content_no_comments)
-        new_content = (
-            "\n".join(comments)
-            + "\n"
-            + graph.serialize(format=output_format, canon=True)
-        )
+        if comments != []:
+            header = "\n".join(comments) + "\n"
+        else:
+            header = ""
+        new_content = header + graph.serialize(format=output_format, canon=True)
     else:
-        graph = load_graph(content)
+        clean_content = ""
+        for line in content.split("\n"):
+            if not line.startswith("#") and line != "":
+                clean_content += line + "\n"
+
+        graph = load_graph(clean_content)
         new_content = graph.serialize(format=output_format, canon=True)
 
     changed = content != new_content
