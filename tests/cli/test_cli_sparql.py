@@ -164,3 +164,28 @@ def test_query_file():
     )
 
     assert "Expected one of" in str(result.exception)
+
+
+def test_issue_37():
+    u = """
+        PREFIX ex: <http://example.com/>
+        
+        DELETE {
+            ?x ex:description ?d
+        }
+        INSERT {
+            ?x ex:description ?d
+        }
+        WHERE {
+            ?x ex:description ?d
+        }
+        """
+    result = runner.invoke(
+        app,
+        [
+            "sparql",
+            str(Path(__file__).parent / "issue-37.ttl"),
+            u,
+        ],
+    )
+    assert len(result.output.split("\n")) == 7  # same length as original issue-37.ttl

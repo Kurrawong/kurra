@@ -1,15 +1,15 @@
-import subprocess
 import warnings
 from pathlib import Path
 from textwrap import dedent
 
 from rdflib import Dataset, Graph, URIRef
 
+import kurra.file
 from kurra.file import _format_file, export_quads, make_dataset, reformat
 from kurra.utils import load_graph
 
 
-def test_format_rdf_one():
+def test_reformat_rdf_one():
     input_file = Path(__file__).parent / "minimal1.ttl"
     output_file = Path(__file__).parent / "minimal1-out.ttl"
     comparison = """PREFIX ex: <http://example.com/>
@@ -37,34 +37,31 @@ ex:a
     output_file.unlink(missing_ok=True)
 
 
-def test_format_cli():
-    subprocess.check_output(
-        [
-            "kurra",
-            "file",
-            "reformat",
-            "--output-format",
-            "json-ld",
-            "tests/file/minimal1.ttl",
-        ]
-    )
+def test_reformat_headers():
+    input_file = Path(__file__).parent / "header.ttl"
+    output_file = input_file.with_suffix(".2.ttl")
+    kurra.file.reformat(input_file, False, output_filename=output_file)
 
-    comparison = """[
-  {
-    "@id": "http://example.com/a",
-    "http://example.com/b": [
-      {
-        "@id": "http://example.com/c"
-      }
-    ]
-  }
-]"""
+    expected = dedent(
+        """
+        # some pointless comment
+        
+        # another
+        
+        PREFIX ex: <http://example.com/>
+        
+        ex:a
+            ex:b ex:c ;
+        .
+        """
+    ).strip()
 
-    output_file = Path(__file__).parent / "minimal1.jsonld"
+    with open(output_file) as f:
+        actual = f.read().strip()
 
-    assert open(output_file).read() == comparison
+    assert expected == actual
 
-    Path.unlink(output_file)
+    Path.unlink(output_file, missing_ok=True)
 
 
 def test_make_dataset():
@@ -158,6 +155,7 @@ def test_directory():
 
     reformat(d, False, output_format="json-ld")
 
+    # keep the input JSON-LD file
     for ef in expected_files:
         if ef.name != "minimal5.jsonld":
             print(f"removing {ef}")

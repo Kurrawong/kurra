@@ -55,7 +55,7 @@ def test_get(fuseki_container, http_client):
     assert isinstance(g2.identifier, rdflib.BNode)
 
     g3 = get(sparql_endpoint, "http://nothing.com", http_client=http_client)
-    assert g3 == 404
+    assert g3[0] == 404
 
     g4 = get(
         sparql_endpoint, "default", http_client=http_client, return_format="original"

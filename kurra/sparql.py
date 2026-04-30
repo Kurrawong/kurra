@@ -89,6 +89,7 @@ def query(
                 if s is not None
                 else f.graph.serialize(format="longturtle")
             )
+
     elif is_update_query(q, statement):
         if str(p).startswith("http"):
             close_http_client = False

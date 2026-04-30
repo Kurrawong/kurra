@@ -14,30 +14,34 @@ class FailOnChangeError(Exception):
     """
 
 
-def get_topbraid_metadata(content: str) -> str:
-    """Get the TopBraid Composer metadata at the top of an ontology file."""
-    lines = content.split("\n")
-    comments = []
-    for line in lines:
-        if line.startswith("#"):
-            comments.append(line)
-        else:
-            break
-
-    if comments:
-        return "\n".join(comments) + "\n"
-    else:
-        return ""
-
-
 def do_format(
     content: str, output_format: RDF_FILE_SUFFIXES.keys() = "longturtle"
 ) -> Tuple[str, bool]:
-    metadata = get_topbraid_metadata(content)
+    if output_format in ["turtle", "longturtle", "ttl", "nt", "n3"]:
+        lines = content.split("\n")
+        comments = []
+        for i, line in enumerate(lines):
+            if line.startswith("#") or line == "":
+                comments.append(line)
+            else:
+                break
 
-    graph = load_graph(content)
-    new_content = graph.serialize(format=output_format, canon=True)
-    new_content = metadata + new_content
+        content_no_comments = "\n".join(lines[len(comments) :])
+        graph = load_graph(content_no_comments)
+        if comments != []:
+            header = "\n".join(comments) + "\n"
+        else:
+            header = ""
+        new_content = header + graph.serialize(format=output_format, canon=True)
+    else:
+        clean_content = ""
+        for line in content.split("\n"):
+            if not line.startswith("#") and line != "":
+                clean_content += line + "\n"
+
+        graph = load_graph(clean_content)
+        new_content = graph.serialize(format=output_format, canon=True)
+
     changed = content != new_content
     return new_content, changed
 

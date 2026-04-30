@@ -96,20 +96,20 @@ def test_list_local_validators():
 
     sync_validators()
 
-    assert len(list_local_validators().keys()) == 14
+    assert len(list_local_validators().keys()) == 16
 
 
 def test_validate_by_id():
     """Awaiting sync_validators()"""
     sync_validators()
 
-    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-valid.ttl", 11)
+    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-valid.ttl", 12)
     assert (
-        len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 1
+        len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 0
     )  # Warning
 
-    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-invalid.ttl", 11)
-    assert len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 6
+    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-invalid.ttl", 12)
+    assert len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 3
 
 
 def test_check_validator_known():

@@ -1,0 +1,7 @@
+# some pointless comment
+
+# another
+
+PREFIX ex: <http://example.com/>
+
+<http://example.com/a> <http://example.com/b> <http://example.com/c> .

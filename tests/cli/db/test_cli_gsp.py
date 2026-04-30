@@ -89,7 +89,7 @@ def test_get(fuseki_container, http_client):
             SPARQL_ENDPOINT,
         ],
     )
-    assert "Graph not found" in result.output
+    assert result.output == ""
 
     # default graph
     result = runner.invoke(
@@ -205,7 +205,7 @@ def test_delete(fuseki_container, http_client):
     )
 
     r = get(SPARQL_ENDPOINT, TESTING_GRAPH, http_client=http_client)
-    assert r == 404
+    assert r[0] == 404
 
 
 def test_clear(fuseki_container, http_client):
@@ -231,7 +231,7 @@ def test_clear(fuseki_container, http_client):
     )
 
     r = get(SPARQL_ENDPOINT, TESTING_GRAPH, http_client=http_client)
-    assert r == 404
+    assert r[0] == 404
 
 
 @pytest.mark.xfail  # This test fails with the testcontainer Fuseki image but works on 'rea' Fuseki installations
