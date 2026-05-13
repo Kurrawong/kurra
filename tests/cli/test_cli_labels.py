@@ -33,7 +33,7 @@ def test_get_command():
         color=False,
     )
 
-    assert "sdo:dateCreated" in result.output
+    assert 'date created' in result.output
 
 
 def test_get_command_table():

@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from textwrap import dedent
 
@@ -5,6 +6,15 @@ from typer.testing import CliRunner
 
 from kurra.cli import app
 from kurra.db.gsp import upload
+
+
+def strip_ansi_and_non_ascii(text: str) -> str:
+    # Remove ANSI escape sequences
+    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    text = ansi_escape.sub("", text)
+    # Remove remaining non-ASCII characters
+    return text.encode("ascii", errors="ignore").decode("ascii")
+
 
 runner = CliRunner()
 
@@ -189,3 +199,32 @@ def test_issue_37():
         ],
     )
     assert len(result.output.split("\n")) == 7  # same length as original issue-37.ttl
+
+
+def test_return_csv():
+    LANG_TEST_VOC_PATH_STR = str(
+        Path(__file__).parent.parent / "sparql/language-test.ttl"
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "sparql",
+            LANG_TEST_VOC_PATH_STR,
+            str(Path(__file__).parent.parent / "sparql/q2.sparql"),
+            "-f",
+            "csv",
+        ],
+    )
+
+    assert (
+        strip_ansi_and_non_ascii(result.output.strip())
+        == """c
+https://example.com/demo-vocabs/language-test/altlabels
+https://example.com/demo-vocabs/language-test/en-id-labels
+https://example.com/demo-vocabs/language-test/en-only
+https://example.com/demo-vocabs/language-test/en-variant
+https://example.com/demo-vocabs/language-test/lang-and-no-lang
+https://example.com/demo-vocabs/language-test/no-lang
+https://example.com/demo-vocabs/language-test/three-lang"""
+    )

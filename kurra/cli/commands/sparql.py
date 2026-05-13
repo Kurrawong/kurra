@@ -7,6 +7,7 @@ import typer
 
 from kurra.cli.console import console
 from kurra.cli.utils import (
+    format_sparql_response_as_csv,
     format_sparql_response_as_json,
     format_sparql_response_as_rich_table,
 )
@@ -24,7 +25,7 @@ def sparql_command(
         "table",
         "--response-format",
         "-f",
-        help="The response format of the SPARQL query. Either 'table' (default) or 'json'",
+        help="The response format of the SPARQL query. Either 'table' (default), 'json' or 'csv'",
     ),
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
@@ -45,6 +46,11 @@ def sparql_command(
             if Path(q).is_file():
                 q = Path(q).read_text()
 
+    if response_format not in ["table", "json", "csv"]:
+        raise typer.BadParameter(
+            "response_format must be either 'table' (default), 'json' or 'csv'"
+        )
+
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -61,5 +67,7 @@ def sparql_command(
             print(r.serialize(format="longturtle"))
         elif response_format == "table":
             console.print(format_sparql_response_as_rich_table(r, q))
+        elif response_format == "csv":
+            console.print(format_sparql_response_as_csv(r, q))
         else:
             console.print(format_sparql_response_as_json(r))

@@ -1,3 +1,5 @@
+import csv
+import io
 from json import loads
 
 from rdflib import Graph
@@ -38,6 +40,35 @@ def format_sparql_response_as_json(response):
         response = loads(response.serialize(format="json").decode())
 
     return response
+
+
+def format_sparql_response_as_csv(response, query):
+    if is_construct_or_describe_query(query):
+        return response.serialize(format="longturtle")
+
+    if isinstance(response, Graph):
+        return response.serialize(format="longturtle")
+
+    s = io.StringIO()
+    writer = csv.writer(s)
+
+    # ASK
+    if not response.get("results"):
+        writer.writerow("Ask")
+    else:  # SELECT
+        fieldnames = []
+        for x in response["head"]["vars"]:
+            fieldnames.append(x)
+
+        writer.writerow(fieldnames)
+
+        for row in response["results"]["bindings"]:
+            r = []
+            for k, v in row.items():
+                r.append(str(v))
+            writer.writerow(r)
+
+    return s.getvalue()
 
 
 def format_shacl_graph_as_rich_table(g: Graph):
