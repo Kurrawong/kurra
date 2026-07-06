@@ -24,7 +24,7 @@ def exists_command(
             "-g",
             help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-    ] = "default",
+    ] = None,
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
     ] = None,
@@ -63,7 +63,7 @@ def get_command(
             "-g",
             help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-    ] = "default",
+    ] = None,
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
     ] = None,
@@ -112,7 +112,7 @@ def put_command(
             "-g",
             help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-    ] = "default",
+    ] = None,
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
     ] = None,
@@ -156,7 +156,7 @@ def post_command(
             "-g",
             help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-    ] = "default",
+    ] = None,
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
     ] = None,
@@ -197,7 +197,7 @@ def delete_command(
             "-g",
             help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-    ] = "default",
+    ] = None,
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
     ] = None,
@@ -236,7 +236,7 @@ def clear_command(
             "-g",
             help='ID - IRI or URN - of the graph to upload into. If not set, the default graph is targeted. If set to the string "file", the URN urn:file:FILE_NAME will be used per file',
         ),
-    ] = "default",
+    ] = None,
     username: Annotated[
         str, typer.Option("--username", "-u", help="Fuseki username.")
     ] = None,
@@ -336,7 +336,7 @@ def upload_command(
                     upload(
                         sparql_endpoint,
                         file,
-                        graph_identifier if graph_identifier is not None else "default",
+                        graph_identifier,
                         http_client=http_client,
                     )  # str and None handled by upload()
             except Exception as err:

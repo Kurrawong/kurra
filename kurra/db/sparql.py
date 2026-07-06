@@ -12,6 +12,7 @@ from kurra.utils import (
     make_sparql_dataframe,
     sparql_statement_return_type,
     statement_type_for_query,
+    make_system_specific_sparql_endpoint,
 )
 
 
@@ -68,8 +69,10 @@ def query(
 
     headers["Accept"] = sparql_statement_return_type(q, statement)
 
+    ssse = make_system_specific_sparql_endpoint(sparql_endpoint, q, statement)
+
     r = http_client.post(
-        sparql_endpoint,
+        ssse,
         headers=headers,
         content=q,
     )

@@ -39,6 +39,13 @@ SYSTEM_GRAPH_IRI = URIRef("https://olis.dev/SystemGraph")
 OLIS = Namespace("https://olis.dev/")
 
 
+class GspType(str, Enum):
+    get = "get"
+    put = "put"
+    post = "post"
+    delete = "delete"
+    
+    
 class RenderFormat(str, Enum):
     original = "original"
     json = "json"
@@ -470,3 +477,27 @@ def put_system_graph(
         return system_graph
     else:
         return None
+
+
+def make_system_specific_sparql_endpoint(sparql_endpoint: str, q: str = None, statement: SparqlStatementType = None, gsp_query_type: GspType = None) -> str:
+    """Alters a given SPARQL Endpoint to meet specific system requirements.
+
+    e.g. GraphDB using /statements at the end of the base SPARQL Endpoint for updates"""
+
+    # GraphDB SPARQL
+    if q is not None and statement is not None:
+        # GraphDB: Update
+        if (
+            "/repositories/" in sparql_endpoint
+                and is_update_query(q, statement)
+                and not sparql_endpoint.endswith("/statements")
+        ):
+            return sparql_endpoint + "/statements"
+
+
+    # GraphDB GSP
+    if gsp_query_type is not None:
+        if "/repositories/" in sparql_endpoint:
+            return sparql_endpoint + "/rdf-graphs/service"
+
+    return sparql_endpoint

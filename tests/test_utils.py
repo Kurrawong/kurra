@@ -20,6 +20,9 @@ from kurra.utils import (
     load_graph,
     render_sparql_result,
     sparql_statement_return_type,
+    statement_type_for_query,
+    make_system_specific_sparql_endpoint,
+    GspType,
 )
 
 
@@ -550,3 +553,79 @@ def test_sparql_statement_helpers():
     assert sparql_statement_return_type(insert_query) == (
         "application/sparql-results+json"
     )
+
+
+def test_make_system_specific_sparql_endpoint():
+    q_query = """SELECT * WHERE {?s ?p ?o}"""
+    q_query_statement = statement_type_for_query(q_query)
+    q_update = """INSERT {?s a <http://example.com/Person>} WHERE {?s a <http://example.com/Child>}"""
+    q_update_statement = statement_type_for_query(q_update)
+
+    #
+    # Fuseki
+    #
+
+    # Fuseki, SPARQL Query
+    se = "http://localhost:3030/test"
+    ssse = make_system_specific_sparql_endpoint(se, q_query, q_query_statement)
+    assert ssse == "http://localhost:3030/test"
+    
+    # Fuseki, SPARQL Update
+    se = "http://localhost:3030/test"
+    ssse = make_system_specific_sparql_endpoint(se, q_query, q_query_statement)
+    assert ssse == "http://localhost:3030/test"
+
+    # Fuseki, GSP Get
+    se = "http://localhost:3030/test"
+    ssse = make_system_specific_sparql_endpoint(se, gsp_query_type=GspType.get)
+    assert ssse == "http://localhost:3030/test"
+
+    # Fuseki, GSP Put
+    se = "http://localhost:3030/test"
+    ssse = make_system_specific_sparql_endpoint(se, gsp_query_type=GspType.put)
+    assert ssse == "http://localhost:3030/test"
+
+    # Fuseki, GSP Post
+    se = "http://localhost:3030/test"
+    ssse = make_system_specific_sparql_endpoint(se, gsp_query_type=GspType.post)
+    assert ssse == "http://localhost:3030/test"
+
+    # Fuseki, GSP Delete
+    se = "http://localhost:3030/test"
+    ssse = make_system_specific_sparql_endpoint(se, gsp_query_type=GspType.delete)
+    assert ssse == "http://localhost:3030/test"
+
+    #
+    # GraphDB
+    #
+
+    # GraphDB, SPARQL Query
+    se = "http://localhost:7200/repositories/test"
+    ssse = make_system_specific_sparql_endpoint(se, q_update, q_update_statement)
+    assert ssse == "http://localhost:7200/repositories/test"
+
+    # GraphDB, SPARQL Update
+    se = "http://localhost:7200/repositories/test"
+    ssse = make_system_specific_sparql_endpoint(se, q_update, q_update_statement)
+    assert ssse == "http://localhost:7200/repositories/test/statements"
+
+    # GraphDB, GSP Get
+    se = "http://localhost:7200/repositories/test"
+    ssse = make_system_specific_sparql_endpoint(se, gsp_query_type=GspType.get)
+    assert ssse == "http://localhost:7200/repositories/test/rdf-graphs/service"
+
+    # GraphDB, GSP Put
+    se = "http://localhost:7200/repositories/test"
+    ssse = make_system_specific_sparql_endpoint(se, gsp_query_type=GspType.put)
+    assert ssse == "http://localhost:7200/repositories/test/rdf-graphs/service"
+
+    # GraphDB, GSP Post
+    se = "http://localhost:7200/repositories/test"
+    ssse = make_system_specific_sparql_endpoint(se, gsp_query_type=GspType.post)
+    assert ssse == "http://localhost:7200/repositories/test/rdf-graphs/service"
+
+    # GraphDB, GSP Delete
+    se = "http://localhost:7200/repositories/test"
+    ssse = make_system_specific_sparql_endpoint(se, gsp_query_type=GspType.delete)
+    assert ssse == "http://localhost:7200/repositories/test/rdf-graphs/service"
+    

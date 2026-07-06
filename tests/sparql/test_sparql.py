@@ -16,7 +16,132 @@ TESTING_GRAPH = "https://example.com/testing-graph"
 
 def test_query_db(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
-    # SPARQL_ENDPOINT = "http://localhost:3030/test"
+    TESTING_GRAPH = "https://example.com/testing-graph"
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
+
+    q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#> 
+        SELECT * 
+        WHERE { 
+            GRAPH ?g {
+                ?c a skos:Concept .
+            } 
+        }"""
+
+    assert "--- | ---" in render_sparql_result(
+        query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="python")
+    )
+
+    assert (
+        "c"
+        in json.loads(
+            (
+                render_sparql_result(
+                    query(
+                        SPARQL_ENDPOINT,
+                        q,
+                        http_client=http_client,
+                        return_format="python",
+                    ),
+                    RenderFormat.json,
+                )
+            )
+        )["head"]["vars"]
+    )
+
+    # test return format options
+
+    q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#> 
+        SELECT *
+        WHERE {
+            GRAPH ?g {
+                ?c a skos:Concept ;
+                    skos:prefLabel "English only"@en ;
+                .
+            }
+        }"""
+    r = query(
+        SPARQL_ENDPOINT,
+        q,
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=True,
+    )
+    assert r[0]["c"] == "https://example.com/demo-vocabs/language-test/en-only"
+
+    r = query(
+        SPARQL_ENDPOINT,
+        q,
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=False,
+    )
+    assert (
+        r["results"]["bindings"][0]["c"]
+        == "https://example.com/demo-vocabs/language-test/en-only"
+    )
+
+    r = query(SPARQL_ENDPOINT, q, http_client=http_client)
+    r2 = json.loads(r)
+    assert (
+        r2["results"]["bindings"][0]["c"]["value"]
+        == "https://example.com/demo-vocabs/language-test/en-only"
+    )
+
+    r = query(
+        SPARQL_ENDPOINT,
+        q,
+        http_client=http_client,
+        return_format="original",
+        return_bindings_only=True,
+    )
+    # return_bindings_only=True is ignored since return format is not "python"
+    assert isinstance(r, str)
+    r2 = json.loads(r)
+    assert (
+        r2["results"]["bindings"][0]["c"]["value"]
+        == "https://example.com/demo-vocabs/language-test/en-only"
+    )
+
+    q = "ASK {?s ?p ?o}"
+    r = query(SPARQL_ENDPOINT, q, http_client=http_client)  # original, False
+    assert '"boolean"' in r
+
+    q = "ASK { GRAPH ?g { ?s ?p ?o} }"
+    r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_format="python")
+    assert r["boolean"]
+
+    q = "ASK { GRAPH ?g { ?s ?p ?o} }"
+    r = query(
+        SPARQL_ENDPOINT,
+        q,
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=True,
+    )
+    assert r
+
+    q = "ASK {?s ?p ?o}"
+    # return_bindings_only=True is ignored since return format is not "python"
+    r = query(SPARQL_ENDPOINT, q, http_client=http_client, return_bindings_only=True)
+    assert '"boolean"' in r
+
+    q = "ASK {?s ?p <http://nothing.com/x>}"
+    r = query(
+        SPARQL_ENDPOINT,
+        q,
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=True,
+    )
+    assert not r
+
+
+def test_query_db_graphdb(graphdb_container, http_client):
+    SPARQL_ENDPOINT = f"http://localhost:{graphdb_container.get_exposed_port(7200)}/repositories/test"
     TESTING_GRAPH = "https://example.com/testing-graph"
     upload(
         SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client

@@ -7,7 +7,7 @@ from typing import Union
 import httpx
 from rdflib import Graph
 
-from kurra.utils import RDF_SUFFIX_MAP, load_graph
+from kurra.utils import RDF_SUFFIX_MAP, load_graph, GspType, make_system_specific_sparql_endpoint
 
 
 def exists(
@@ -17,17 +17,21 @@ def exists(
     if not sparql_endpoint.startswith("http"):
         raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
 
-    if not graph_iri:
-        raise ValueError("You must supply a graph IRI")
-
     close_http_client = False
     if http_client is None:
         http_client = httpx.Client()
         close_http_client = True
 
+    ssse = make_system_specific_sparql_endpoint(
+        sparql_endpoint, gsp_query_type=GspType.get
+    )
+
+    if graph_iri is None:
+        ssse += "?default"
+
     r = http_client.head(
-        sparql_endpoint,
-        params={"graph": graph_iri if graph_iri is not None else "default"},
+        ssse,
+        params={"graph": graph_iri} if graph_iri is not None else None,
     )
 
     if close_http_client:
@@ -38,7 +42,7 @@ def exists(
 
 def get(
     sparql_endpoint: str,
-    graph_iri: str = "default",
+    graph_iri: str = None,
     accept_type="text/turtle",
     return_format: LiteralType["original", "python"] = "python",
     http_client: httpx.Client | None = None,
@@ -76,9 +80,16 @@ def get(
         http_client = httpx.Client()
         close_http_client = True
 
+    ssse = make_system_specific_sparql_endpoint(
+        sparql_endpoint, gsp_query_type=GspType.get
+    )
+
+    if graph_iri is None:
+        ssse += "?default"
+
     r = http_client.get(
-        sparql_endpoint,
-        params={"graph": graph_iri if graph_iri is not None else "default"},
+        ssse,
+        params={"graph": graph_iri} if graph_iri is not None else None,
         headers={"Accept": accept_type},
     )
 
@@ -102,7 +113,7 @@ def get(
 def put(
     sparql_endpoint: str,
     file_or_str_or_graph: Union[Path, str, Graph],
-    graph_iri: str = "default",
+    graph_iri: str = None,
     content_type="text/turtle",
     http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
@@ -123,9 +134,17 @@ def put(
     if http_client is None:
         http_client = httpx.Client()
         close_http_client = True
+
+    ssse = make_system_specific_sparql_endpoint(
+        sparql_endpoint, gsp_query_type=GspType.put
+    )
+
+    if graph_iri is None:
+        ssse += "?default"
+
     r = http_client.put(
-        sparql_endpoint,
-        params={"graph": graph_iri if graph_iri is not None else "default"},
+        ssse,
+        params={"graph": graph_iri} if graph_iri is not None else None,
         headers={"Content-Type": content_type},
         content=load_graph(file_or_str_or_graph).serialize(format=content_type),
     )
@@ -142,7 +161,7 @@ def put(
 def post(
     sparql_endpoint: str,
     file_or_str_or_graph: Union[Path, str, Graph],
-    graph_iri: str = "default",
+    graph_iri: str = None,
     content_type="text/turtle",
     http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
@@ -164,9 +183,16 @@ def post(
         http_client = httpx.Client()
         close_http_client = True
 
+    ssse = make_system_specific_sparql_endpoint(
+        sparql_endpoint, gsp_query_type=GspType.post
+    )
+
+    if graph_iri is None:
+        ssse += "?default"
+
     r = http_client.post(
-        sparql_endpoint,
-        params={"graph": graph_iri if graph_iri is not None else "default"},
+        ssse,
+        params={"graph": graph_iri} if graph_iri is not None else None,
         headers={
             "Content-Type": content_type,
         },
@@ -184,7 +210,7 @@ def post(
 
 def delete(
     sparql_endpoint: str,
-    graph_iri: str = "default",
+    graph_iri: str = None,
     http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
     """Graph Store Protocol's HTTP DELETE: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-delete
@@ -198,9 +224,16 @@ def delete(
         http_client = httpx.Client()
         close_http_client = True
 
+    ssse = make_system_specific_sparql_endpoint(
+        sparql_endpoint, gsp_query_type=GspType.delete
+    )
+
+    if graph_iri is None:
+        ssse += "?default"
+
     r = http_client.delete(
-        sparql_endpoint,
-        params={"graph": graph_iri if graph_iri is not None else "default"},
+        ssse,
+        params={"graph": graph_iri} if graph_iri is not None else None,
     )
 
     if close_http_client:
