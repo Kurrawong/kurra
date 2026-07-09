@@ -80,6 +80,7 @@ def get_missing_labels(
     iris: list[URIRef],
     context: Graph | str | Path = "https://fuseki.dev.kurrawong.ai/semback/sparql",
     return_type: Literal["graph", "dict"] = "graph",
+    http_client: httpx.Client = None,
 ) -> Graph | dict[URIRef, str]:
     """Gets labels for given IRIs from a given context"""
     values = ""
@@ -104,7 +105,7 @@ def get_missing_labels(
             }}
             {where_clause} 
             """
-        return query(context, q, return_format="python")
+        return query(context, q, http_client=http_client, return_format="python")
     else:
         q = f"""
             PREFIX schema: <https://schema.org/>
@@ -113,6 +114,6 @@ def get_missing_labels(
             {where_clause}
             """
         d = {}
-        for r in query(context, q, return_format="python", return_bindings_only=True):
+        for r in query(context, q, http_client=http_client,  return_format="python", return_bindings_only=True):
             d[r["iri"]] = r["label"]
         return d
