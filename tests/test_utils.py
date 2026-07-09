@@ -602,7 +602,7 @@ def test_make_system_specific_sparql_endpoint():
     # GraphDB, SPARQL Query
     se = "http://localhost:7200/repositories/test"
     ssse = make_system_specific_sparql_endpoint(se, q_update, q_update_statement)
-    assert ssse == "http://localhost:7200/repositories/test"
+    assert ssse == "http://localhost:7200/repositories/test/statements"
 
     # GraphDB, SPARQL Update
     se = "http://localhost:7200/repositories/test"
