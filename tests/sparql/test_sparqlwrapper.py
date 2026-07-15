@@ -14,7 +14,7 @@ from kurra.sparql import query
 _SPARQL_DEFAULT = ["application/sparql-results+xml", "application/rdf+xml", "*/*"]
 _SPARQL_XML = ["application/sparql-results+xml"]
 _SPARQL_JSON = [
-    "application/x-sparqlstar-results+json", # prevents serialization of quoted/embedded triples in GraphDB, see https://graphdb.ontotext.com/documentation/10.7/rdf-sparql-star.html
+    "application/x-sparqlstar-results+json",  # prevents serialization of quoted/embedded triples in GraphDB, see https://graphdb.ontotext.com/documentation/10.7/rdf-sparql-star.html
     "application/sparql-results+json",
     "application/json",
     "text/javascript",
@@ -47,19 +47,23 @@ FUSEKI_LOV = "https://lov.linkeddata.es/dataset/lov/sparql"  # Fuseki - version 
 STARDOG_LINDAS = "https://lindas.admin.ch/query"  # human UI https://lindas.admin.ch/sparql/
 STORE4_1_1_4_CHISE = "http://rdf.chise.org/sparql"  # 4store SPARQL server v1.1.4
 
+
 # Test parameters
-@pytest.fixture(params=[
-    VIRTUOSO_8_03_3334_dbpedia,
-    BLAZEGRAPH_WIKIDATA,
-    RDF4J_GEOSCIML,
-    ALLEGROGRAPH_AGROVOC,
-    ALLEGROGRAPH_4_14_1_MMI,
-    FUSEKI_LOV,
-    STARDOG_LINDAS,
-    STORE4_1_1_4_CHISE
-])
+@pytest.fixture(
+    params=[
+        VIRTUOSO_8_03_3334_dbpedia,
+        BLAZEGRAPH_WIKIDATA,
+        RDF4J_GEOSCIML,
+        ALLEGROGRAPH_AGROVOC,
+        ALLEGROGRAPH_4_14_1_MMI,
+        FUSEKI_LOV,
+        STARDOG_LINDAS,
+        STORE4_1_1_4_CHISE,
+    ]
+)
 def endpoint(request):
     return request.param
+
 
 @pytest.fixture
 def endpoint_config(endpoint):
@@ -98,7 +102,7 @@ def endpoint_config(endpoint):
 """,
             "describe_query": """
     DESCRIBE <http://aims.fao.org/aos/agrovoc/c_aca7ac6d>
-"""
+""",
         }
 
     elif endpoint == ALLEGROGRAPH_4_14_1_MMI:
@@ -138,7 +142,7 @@ def endpoint_config(endpoint):
 """,
             "describe_query": """
     DESCRIBE <http://mmisw.org/ont/ioos/platform/aircraft>
-"""
+""",
         }
 
     elif endpoint == BLAZEGRAPH_WIKIDATA:
@@ -174,7 +178,7 @@ def endpoint_config(endpoint):
 """,
             "describe_query": """
     DESCRIBE <http://www.wikidata.org/entity/Q3934>
-"""
+""",
         }
 
     elif endpoint == FUSEKI_LOV:
@@ -209,7 +213,7 @@ def endpoint_config(endpoint):
 """,
             "describe_query": """
     DESCRIBE <http://lov.linkeddata.es/dataset/lov/vocabulary>
-"""
+""",
         }
 
     elif endpoint == RDF4J_GEOSCIML:
@@ -248,7 +252,7 @@ def endpoint_config(endpoint):
 """,
             "describe_query": """
     DESCRIBE <http://resource.geosciml.org/classifier/ics/ischart/Jurassic>
-"""
+""",
         }
 
     elif endpoint == STARDOG_LINDAS:
@@ -283,7 +287,7 @@ def endpoint_config(endpoint):
 """,
             "describe_query": """
     DESCRIBE <https://lindas.admin.ch/resource/Example>
-"""
+""",
         }
 
     elif endpoint == STORE4_1_1_4_CHISE:
@@ -319,7 +323,7 @@ def endpoint_config(endpoint):
 """,
             "describe_query": """
     DESCRIBE <http://www.chise.org/est/view/character/a2.ucs@bucs=0x5C08>
-"""
+""",
         }
 
     else:
@@ -355,28 +359,34 @@ def endpoint_config(endpoint):
 """,
             "describe_query": """
     DESCRIBE <http://dbpedia.org/resource/Asturias>
-"""
+""",
         }
+
 
 @pytest.fixture
 def prefixes(endpoint_config):
     return endpoint_config["prefixes"]
 
+
 @pytest.fixture
 def select_query(endpoint_config):
     return endpoint_config["select_query"]
+
 
 @pytest.fixture
 def select_query_csv_tsv(endpoint_config):
     return endpoint_config["select_query_csv_tsv"]
 
+
 @pytest.fixture
 def ask_query(endpoint_config):
     return endpoint_config["ask_query"]
 
+
 @pytest.fixture
 def construct_query(endpoint_config):
     return endpoint_config["construct_query"]
+
 
 @pytest.fixture
 def describe_query(endpoint_config):
@@ -386,8 +396,10 @@ def describe_query(endpoint_config):
 def test_select_query(endpoint, prefixes, select_query):
     """Test SELECT queries against each public endpoint."""
     if endpoint == FUSEKI_LOV:
-        pytest.skip("2026-07: LOV failing with timeout due to extremely long response time")
-        
+        pytest.skip(
+            "2026-07: LOV failing with timeout due to extremely long response time"
+        )
+
     result = query(endpoint, prefixes + select_query, return_format="python")
 
     assert isinstance(result, dict)
@@ -409,7 +421,9 @@ def test_ask_query(endpoint, prefixes, ask_query):
 def test_construct_query(endpoint, prefixes, construct_query):
     """Test CONSTRUCT queries against each public endpoint."""
     if endpoint == FUSEKI_LOV:
-        pytest.skip("2026-07: LOV failing with timeout due to extremely long response time")
+        pytest.skip(
+            "2026-07: LOV failing with timeout due to extremely long response time"
+        )
 
     result = query(endpoint, prefixes + construct_query, return_format="python")
 
@@ -419,7 +433,9 @@ def test_construct_query(endpoint, prefixes, construct_query):
 def test_describe_query(endpoint, prefixes, describe_query):
     """Test DESCRIBE queries against each public endpoint."""
     if endpoint == FUSEKI_LOV:
-        pytest.skip("2026-07: LOV failing with timeout due to extremely long response time")
+        pytest.skip(
+            "2026-07: LOV failing with timeout due to extremely long response time"
+        )
 
     result = query(endpoint, prefixes + describe_query, return_format="python")
 
