@@ -69,47 +69,81 @@ def guess_format_from_data(rdf: str) -> str | None:
         return None
 
 
-def load_graph(graph_path_or_str: Union[Graph, Path, str], recursive=False) -> Graph:
+GraphInput = Union[Graph, Path, str]
+
+
+def load_graph(
+    source: Union[GraphInput, list[GraphInput], tuple[GraphInput, ...]],
+    *additional_graph_paths_or_str: GraphInput,
+    recursive: bool = False,
+) -> Graph:
     """
-    Presents an RDFLib Graph object from a pre-existing Graph, a pickle-cached RDF file, an RDF file or directory of
-    files, or RDF data in a string. Missing filesystem paths raise FileNotFoundError.
+    Presents an RDFLib Graph from one or more existing Graphs, pickle-cached RDF
+    files, RDF files or directories, remote RDF URLs, or RDF data strings.
+
+    Multiple inputs may be supplied as positional arguments or as a list or tuple.
+    Missing filesystem paths raise FileNotFoundError.
     """
+    # Preserve the former ``load_graph(path, recursive)`` positional call form.
+    if (
+        len(additional_graph_paths_or_str) == 1
+        and isinstance(additional_graph_paths_or_str[0], bool)
+    ):
+        recursive = additional_graph_paths_or_str[0]
+        additional_graph_paths_or_str = ()
+
+    if isinstance(source, (list, tuple)):
+        graph_inputs = (*source, *additional_graph_paths_or_str)
+    else:
+        graph_inputs = (source, *additional_graph_paths_or_str)
+
+    if not graph_inputs:
+        return Graph()
+
+    if len(graph_inputs) > 1:
+        graph = Graph()
+        for graph_input in graph_inputs:
+            graph += load_graph(graph_input, recursive=recursive)
+        return graph
+
+    source = graph_inputs[0]
+
     # Pre-existing Graph
-    if isinstance(graph_path_or_str, Graph):
-        return graph_path_or_str
+    if isinstance(source, Graph):
+        return source
 
     # Serialized RDF file or dir of files, optionally using a sibling pickle cache
-    if isinstance(graph_path_or_str, Path):
-        if graph_path_or_str.is_file():
-            pkl_path = graph_path_or_str.with_suffix(".pkl")
+    if isinstance(source, Path):
+        if source.is_file():
+            pkl_path = source.with_suffix(".pkl")
             if pkl_path.is_file():
                 return pickle.load(open(pkl_path, "rb"))
-            if str(graph_path_or_str).endswith(".trig") or str(
-                graph_path_or_str
+            if str(source).endswith(".trig") or str(
+                source
             ).endswith(".jsonld"):
-                return Dataset().parse(str(graph_path_or_str))
-            return Graph().parse(graph_path_or_str)
-        elif graph_path_or_str.is_dir():
+                return Dataset().parse(str(source))
+            return Graph().parse(source)
+        elif source.is_dir():
             g = Graph()
             if recursive:
-                gl = graph_path_or_str.rglob("*.ttl")
+                gl = source.rglob("*.ttl")
             else:
-                gl = graph_path_or_str.glob("*.ttl")
+                gl = source.glob("*.ttl")
             for f in gl:
                 if f.is_file():
                     g.parse(f)
             return g
-        raise FileNotFoundError(f"Graph path does not exist: {graph_path_or_str}")
+        raise FileNotFoundError(f"Graph path does not exist: {source}")
 
     # A remote file via HTTP
-    elif isinstance(graph_path_or_str, str) and graph_path_or_str.startswith("http"):
-        return Graph().parse(graph_path_or_str)
+    elif isinstance(source, str) and source.startswith("http"):
+        return Graph().parse(source)
 
     # RDF data in a string
     else:
         return Graph().parse(
-            data=graph_path_or_str,
-            format=guess_format_from_data(graph_path_or_str),
+            data=source,
+            format=guess_format_from_data(source),
         )
 
 

@@ -131,6 +131,38 @@ def test_load_graph_missing_path():
         load_graph(missing_path)
 
 
+def test_load_graph_multiple_files(tmp_path):
+    turtle_path = tmp_path / "first.ttl"
+    turtle_path.write_text(
+        "@prefix ex: <http://example.com/> . ex:a ex:p ex:b .",
+        encoding="utf-8",
+    )
+    xml_path = tmp_path / "second.rdf"
+    Graph().parse(
+        data="@prefix ex: <http://example.com/> . ex:c ex:p ex:d .",
+        format="turtle",
+    ).serialize(destination=xml_path, format="xml")
+
+    loaded_graph = load_graph(turtle_path, xml_path)
+
+    assert len(loaded_graph) == 2
+
+
+def test_load_graph_list_of_files(tmp_path):
+    paths = []
+    for index in range(3):
+        path = tmp_path / f"graph-{index}.ttl"
+        path.write_text(
+            f"<http://example.com/s{index}> <http://example.com/p> <http://example.com/o> .",
+            encoding="utf-8",
+        )
+        paths.append(path)
+
+    loaded_graph = load_graph(paths)
+
+    assert len(loaded_graph) == 3
+
+
 def test_load_graph_prefers_pickle_cache_for_existing_file(tmp_path):
     rdf_graph = Graph()
     rdf_graph.parse(
@@ -176,6 +208,8 @@ def test_load_graph_dir():
     g3 = load_graph(DIR_OF_RDF, recursive=True)
 
     assert len(g3) == len(g)
+
+    assert len(load_graph(DIR_OF_RDF, True)) == len(g)
 
 
 def test_render_sparql_result():
@@ -628,4 +662,3 @@ def test_make_system_specific_sparql_endpoint():
     se = "http://localhost:7200/repositories/test"
     ssse = make_system_specific_sparql_endpoint(se, gsp_query_type=GspType.delete)
     assert ssse == "http://localhost:7200/repositories/test/rdf-graphs/service"
-    
