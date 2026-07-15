@@ -1,6 +1,7 @@
 import itertools
 from pathlib import Path
 from typing import Optional, Tuple, Union
+from typing import Literal as TypingLiteral
 
 from rdflib import Dataset, Graph, URIRef
 
@@ -12,6 +13,31 @@ class FailOnChangeError(Exception):
     This exception is raised when running format and the
     check bool is set to true and the file has resulted in a change.
     """
+
+
+def merge(
+    *files: Path,
+    destination: Optional[Path] = None,
+    output_format: TypingLiteral["turtle", "xml", "json-ld", "nt"]  = "turtle"
+) -> None:
+    """Merge RDF files and serialize their triples in a single RDF document.
+
+    RDFLib infers each input format from its filename. The merged graph is printed
+    when ``destination`` is not supplied; otherwise it is written to that path.
+    """
+    if output_format not in ["turtle", "xml", "json-ld", "nt"]:
+        raise ValueError("If you supply an output_format value, it must be one of 'turtle', 'xml', 'json-ld' or 'nt'")
+
+    g = Graph()
+    for file in files:
+        g.parse(source=Path(file))
+
+    serialized = g.serialize(format=output_format)
+
+    if destination is None:
+        print(serialized, end="" if serialized.endswith("\n") else "\n")
+    else:
+        Path(destination).write_text(serialized, encoding="utf-8")
 
 
 def do_format(

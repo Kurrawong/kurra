@@ -5,8 +5,45 @@ from textwrap import dedent
 from rdflib import Dataset, Graph, URIRef
 
 import kurra.file
-from kurra.file import _format_file, export_quads, make_dataset, reformat
+from kurra.file import _format_file, export_quads, make_dataset, merge, reformat
 from kurra.utils import load_graph
+
+
+def test_merge_prints_turtle(tmp_path, capsys):
+    turtle_file = tmp_path / "first.ttl"
+    turtle_file.write_text(
+        "@prefix ex: <http://example.com/> . ex:a ex:p ex:b .",
+        encoding="utf-8",
+    )
+    xml_file = tmp_path / "second.rdf"
+    Graph().parse(
+        data="@prefix ex: <http://example.com/> . ex:c ex:p ex:d .",
+        format="turtle",
+    ).serialize(destination=xml_file, format="xml")
+
+    merge(turtle_file, xml_file)
+
+    merged = Graph().parse(data=capsys.readouterr().out, format="turtle")
+    assert len(merged) == 2
+
+
+def test_merge_writes_requested_format(tmp_path):
+    first = tmp_path / "first.nt"
+    first.write_text(
+        "<http://example.com/a> <http://example.com/p> <http://example.com/b> .\n",
+        encoding="utf-8",
+    )
+    second = tmp_path / "second.ttl"
+    second.write_text(
+        "@prefix ex: <http://example.com/> . ex:c ex:p ex:d .",
+        encoding="utf-8",
+    )
+    destination = tmp_path / "merged.jsonld"
+
+    merge(first, second, destination=destination, output_format="json-ld")
+
+    merged = Graph().parse(destination, format="json-ld")
+    assert len(merged) == 2
 
 
 def test_reformat_rdf_one():
@@ -160,3 +197,30 @@ def test_directory():
         if ef.name != "minimal5.jsonld":
             print(f"removing {ef}")
             ef.unlink()
+
+
+def test_quads():
+    d = Path(__file__).parent
+
+    export_quads(make_dataset(d / "minimal2.ttl", "http://example.com/x/"), d / "minimal2.nt")
+
+    assert Path(d / "minimal2.nt").exists()
+    assert "http://example.com/x/" in Path(d / "minimal2.nt").read_text()
+
+    Path(d / "minimal2.nt").unlink()
+
+
+def test_merge():
+    d = Path(__file__).parent
+    merge(
+        d / "minimal1.ttl",
+        d / "minimal2.ttl",
+        destination=d / "merged.nt",
+        output_format="nt"
+    )
+    
+    assert Path(d / "merged.nt").exists()
+    assert "http://example.com/b" in Path(d / "merged.nt").read_text()
+    assert "http://example.com/b2" in Path(d / "merged.nt").read_text()
+
+    Path(d / "merged.nt").unlink()

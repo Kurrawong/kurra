@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from rdflib.plugin import plugins
+from rdflib.serializer import Serializer
 
 from kurra.cli.commands.db.gsp import upload_command as gsp_upload_command
 from kurra.cli.commands.sparql import sparql_command as gsp_sparql_command
@@ -11,6 +13,7 @@ from kurra.file import (
     FailOnChangeError,
     export_quads,
     make_dataset,
+    merge,
     reformat,
 )
 from kurra.utils import RDF_FILE_SUFFIXES
@@ -49,12 +52,43 @@ def reformat_command(
         sys.exit(1)
 
 
+@app.command(name="merge", help="Merge RDF files")
+def merge_command(
+    files: Annotated[
+        list[Path], typer.Argument(help="The RDF files to merge")
+    ],
+    destination: Annotated[
+        Path | None,
+        typer.Option(
+            "--destination",
+            "-d",
+            help="The output file path. If omitted, the merged RDF is printed.",
+        ),
+    ] = None,
+    output_format: Annotated[
+        str,
+        typer.Option(
+            "--output-format",
+            "-f",
+            help=f"The RDFLib serialization format for the merged RDF. Available are {', '.join(["turtle", "xml", "json-ld", "nt"] )}.",
+        ),
+    ] = "turtle",
+) -> None:
+    merge(*files, destination=destination, output_format=output_format)
+
+
 @app.command(
     name="quads",
     help="Exports (prints or saves) triples as quads with a given identifier",
 )
-def quads_command(path_or_str: Path, identifier: str, destination: Path = None):
-    r = export_quads(make_dataset(path_or_str, identifier), destination)
+def quads_command(
+    path_or_str: Path,
+    graph_iri: str,
+    destination: Annotated[
+        Path, typer.Option("--destination", "-d", help="The path of the file to save. None prints to screen")
+    ] = None,
+):
+    r = export_quads(make_dataset(path_or_str, graph_iri), destination)
     if not destination:
         console.print(r)
 
