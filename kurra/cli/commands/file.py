@@ -49,27 +49,6 @@ def reformat_command(
         sys.exit(1)
 
 
-@app.command(name="upload", help="Upload files to a database repository")
-def upload_command(
-    path: Path = typer.Argument(
-        ..., help="The path of a file or directory to be uploaded."
-    ),
-    sparql_endpoint: str = typer.Argument(
-        ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
-    ),
-    username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
-    ] = None,
-    password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
-    ] = None,
-    timeout: Annotated[
-        int, typer.Option("--timeout", "-t", help="Timeout per request")
-    ] = 60,
-) -> None:
-    gsp_upload_command(path, sparql_endpoint, username, password, timeout)
-
-
 @app.command(
     name="quads",
     help="Exports (prints or saves) triples as quads with a given identifier",
