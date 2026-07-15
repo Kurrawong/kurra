@@ -215,7 +215,7 @@ wheels = [
 
 [[package]]
 name = "kurra"
-version = "2.3.8"
+version = "2.3.9a0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
