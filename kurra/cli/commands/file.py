@@ -70,9 +70,9 @@ def merge_command(
         typer.Option(
             "--output-format",
             "-f",
-            help=f"The RDFLib serialization format for the merged RDF. Available are {', '.join(["turtle", "xml", "json-ld", "nt"] )}.",
+            help=f"The RDFLib serialization format for the merged RDF. Available are {', '.join(["longturtle", "turtle", "xml", "json-ld", "nt"] )}.",
         ),
-    ] = "turtle",
+    ] = "longturtle",
 ) -> None:
     merge(*files, destination=destination, output_format=output_format)
 

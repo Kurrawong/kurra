@@ -18,14 +18,14 @@ class FailOnChangeError(Exception):
 def merge(
     *files: Path,
     destination: Optional[Path] = None,
-    output_format: TypingLiteral["turtle", "xml", "json-ld", "nt"]  = "turtle"
+    output_format: TypingLiteral["longturtle", "turtle", "xml", "json-ld", "nt"]  = "longturtle"
 ) -> None:
     """Merge RDF files and serialize their triples in a single RDF document.
 
     RDFLib infers each input format from its filename. The merged graph is printed
     when ``destination`` is not supplied; otherwise it is written to that path.
     """
-    if output_format not in ["turtle", "xml", "json-ld", "nt"]:
+    if output_format not in ["longturtle", "turtle", "xml", "json-ld", "nt"]:
         raise ValueError("If you supply an output_format value, it must be one of 'turtle', 'xml', 'json-ld' or 'nt'")
 
     g = Graph()

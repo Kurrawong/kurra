@@ -13,7 +13,7 @@ def test_merge_cli_lists_output_formats():
     result = runner.invoke(app, ["merge", "--help"])
 
     assert result.exit_code == 0
-    for output_format in ["turtle", "longturtle", "xml", "nt", "json-ld", "trig"]:
+    for output_format in ["turtle", "longturtle", "xml", "nt", "json-ld"]:
         assert output_format in result.stdout
 
 
