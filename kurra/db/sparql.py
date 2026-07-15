@@ -14,7 +14,9 @@ from kurra.utils import (
     statement_type_for_query,
     make_system_specific_sparql_endpoint,
 )
+from kurra import __version__
 
+USER_AGENT_STRING = f"kurra/{__version__} (https://pypi.org/project/kurra/; info@kurrawong.ai)"
 
 def query(
     sparql_endpoint: str,
@@ -23,6 +25,7 @@ def query(
     http_client: httpx.Client = None,
     return_format: LiteralType["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
+    user_agent: str = USER_AGENT_STRING,
 ):
     """Pose a SPARQL query to a SPARQL Endpoint"""
     if sparql_endpoint is None:
@@ -47,6 +50,9 @@ def query(
     if http_client is None:
         http_client = httpx.Client()
 
+    headers = {}
+    headers["Content-Type"] = "application/sparql-update"
+
     statement = statement_type_for_query(q)
 
     if return_format == "dataframe":
@@ -63,11 +69,12 @@ def query(
             )
 
     if is_update_query(q, statement):
-        headers = {"Content-Type": "application/sparql-update"}
+        headers["Content-Type"] = "application/sparql-update" 
     else:
         headers = {"Content-Type": "application/sparql-query"}
 
     headers["Accept"] = sparql_statement_return_type(q, statement)
+    headers["User-Agent"] = user_agent
 
     ssse = make_system_specific_sparql_endpoint(sparql_endpoint, q, statement)
 
@@ -75,16 +82,20 @@ def query(
         ssse,
         headers=headers,
         content=q,
+        follow_redirects=True,
+        timeout=25,
     )
 
     status_code = r.status_code
 
     # in case the endpoint doesn't allow POST
-    if status_code == 405 or status_code == 422:
+    if 400 <= status_code < 600:
         r = http_client.get(
             sparql_endpoint,
             headers=headers,
             params={"query": q},
+            follow_redirects=True,
+            timeout=25,
         )
 
         status_code = r.status_code
