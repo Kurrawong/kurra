@@ -7,6 +7,8 @@
 # 2026-07-15: SPARQLWrapper on test_pubic_endpoints.py: 77 failed, 504 passed, 267 skipped, 199 warnings in 1069.45s (0:17:49)
 
 import pytest
+from rdflib import Graph
+
 from kurra.sparql import query
 
 _SPARQL_DEFAULT = ["application/sparql-results+xml", "application/rdf+xml", "*/*"]
@@ -381,3 +383,44 @@ def describe_query(endpoint_config):
     return endpoint_config["describe_query"]
 
 
+def test_select_query(endpoint, prefixes, select_query):
+    """Test SELECT queries against each public endpoint."""
+    if endpoint == FUSEKI_LOV:
+        pytest.skip("2026-07: LOV failing with timeout due to extremely long response time")
+        
+    result = query(endpoint, prefixes + select_query, return_format="python")
+
+    assert isinstance(result, dict)
+    assert isinstance(result["head"]["vars"], list)
+    assert isinstance(result["results"]["bindings"], list)
+
+
+def test_ask_query(endpoint, prefixes, ask_query):
+    """Test ASK queries against each public endpoint."""
+    if endpoint == FUSEKI_LOV:
+        pytest.skip("2026-07: LOV failing with a 502, as per their online UI")
+
+    result = query(endpoint, prefixes + ask_query, return_format="python")
+
+    assert isinstance(result, dict)
+    assert isinstance(result["boolean"], bool)
+
+
+def test_construct_query(endpoint, prefixes, construct_query):
+    """Test CONSTRUCT queries against each public endpoint."""
+    if endpoint == FUSEKI_LOV:
+        pytest.skip("2026-07: LOV failing with timeout due to extremely long response time")
+
+    result = query(endpoint, prefixes + construct_query, return_format="python")
+
+    assert isinstance(result, Graph)
+
+
+def test_describe_query(endpoint, prefixes, describe_query):
+    """Test DESCRIBE queries against each public endpoint."""
+    if endpoint == FUSEKI_LOV:
+        pytest.skip("2026-07: LOV failing with timeout due to extremely long response time")
+
+    result = query(endpoint, prefixes + describe_query, return_format="python")
+
+    assert isinstance(result, Graph)
