@@ -14,18 +14,34 @@ from kurra.shacl import list_local_validators, sync_validators, validate
 app = typer.Typer(help="SHACL commands")
 
 
+def _parse_shacl(value: str | Path | int) -> Path | str | int:
+    """Convert a CLI SHACL value to the type expected by ``validate``."""
+    if isinstance(value, (Path, int)):
+        return value
+    if value.isdigit():
+        return int(value)
+
+    path = Path(value)
+    return path if path.exists() else value
+
+
 @app.command(
     name="validate",
     help="Validate a given file or directory of RDF files using a given SHACL file or directory of files",
 )
 def validate_command(
-    file_or_dir: Path = typer.Argument(
-        ..., help="The file or directory of RDF files to be validated"
-    ),
-    shacl_graph_or_file_or_url_or_id: str = typer.Argument(
-        ...,
-        help="The file, directory of files, IRI of or the kurra ID for the SHACL graph to validate with",
-    ),
+    data: Annotated[
+        list[Path], typer.Argument(help="The file, files or directory of RDF files to be validated")
+    ],
+    shacl: Annotated[
+        str,
+        typer.Option(
+            "--shacl",
+            "-s",
+            callback=_parse_shacl,
+            help="The file, directory of files, IRI of or the kurra ID for the SHACL graph to validate with",
+        ),
+    ],
     hide_warnings: Annotated[
         bool,
         typer.Option(
@@ -34,9 +50,7 @@ def validate_command(
     ] = False,
 ) -> None:
     """Validate a given file or directory of files using a given SHACL file or directory of files"""
-    valid, g, txt = validate(
-        file_or_dir, shacl_graph_or_file_or_url_or_id, hide_warnings=hide_warnings
-    )
+    valid, g, txt = validate(data, shacl, hide_warnings=hide_warnings)
 
     if valid:
         console.print("The data is valid")

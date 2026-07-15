@@ -15,15 +15,15 @@ from kurra.utils import load_graph
 
 
 def validate(
-    data_file_or_dir_or_graph_or_list: Path | Graph | list[Path] | list[Graph],
-    shacl_graph_or_file_or_url_or_id: Graph | Path | str | int,
+    data: Path | Graph | list[Path] | list[Graph],
+    shacl: Graph | Path | str | int,
     hide_warnings: bool = False,
 ) -> tuple[bool, Graph, str]:
     """Validates a data graph using a shapes graph.
 
     Args:
-        data_file_or_dir_or_graph_or_list: The path to an RDF data file, a graph, a list of Paths or a list of Graphs to validate. List items will be merged
-        shacl_graph_or_file_or_url_or_id: The sHACL shapes to validate with
+        data: The path to an RDF data file, a graph, a list of Paths or a list of Graphs to validate. List items will be merged
+        shacl: The sHACL shapes to validate with
 
     Returns:
         Tuple[bool, Graph, str]: The validation status, results graph and message, all from pySHACL
@@ -57,39 +57,39 @@ def validate(
                 return cv.get_graph(URIRef(k))
 
     # Try and resolve a validator IRI or string ID to a graph
-    if isinstance(shacl_graph_or_file_or_url_or_id, str):
-        if shacl_graph_or_file_or_url_or_id.startswith("http"):
-            shapes_graph = _get_shapes_from_iri(shacl_graph_or_file_or_url_or_id)
-        elif shacl_graph_or_file_or_url_or_id.isnumeric():
-            shapes_graph = _get_shapes_from_id(shacl_graph_or_file_or_url_or_id)
+    if isinstance(shacl, str):
+        if shacl.startswith("http"):
+            shapes_graph = _get_shapes_from_iri(shacl)
+        elif shacl.isnumeric():
+            shapes_graph = _get_shapes_from_id(shacl)
         else:
-            shapes_graph = get_validator_graph(shacl_graph_or_file_or_url_or_id)
+            shapes_graph = get_validator_graph(shacl)
 
     # Try and resolve an int validator ID to a graph
-    elif isinstance(shacl_graph_or_file_or_url_or_id, int):
-        shapes_graph = _get_shapes_from_id(shacl_graph_or_file_or_url_or_id)
+    elif isinstance(shacl, int):
+        shapes_graph = _get_shapes_from_id(shacl)
 
     # Try and load the file/URL/path directly - Path
     else:
-        shapes_graph = get_validator_graph(shacl_graph_or_file_or_url_or_id)
+        shapes_graph = get_validator_graph(shacl)
 
     # If the shapes graph is not yet loaded, try updating validators from the Semantic Background and try again
     if shapes_graph is None:
         # Try and resolve a validator IRI to a graph
-        if isinstance(shacl_graph_or_file_or_url_or_id, str):
-            if shacl_graph_or_file_or_url_or_id.startswith("http"):
-                shapes_graph = _get_shapes_from_iri(shacl_graph_or_file_or_url_or_id)
+        if isinstance(shacl, str):
+            if shacl.startswith("http"):
+                shapes_graph = _get_shapes_from_iri(shacl)
 
     if shapes_graph is None:
         raise RuntimeError(
-            f"Not able to load shapes graph: {shacl_graph_or_file_or_url_or_id}"
+            f"Not able to load shapes graph: {shacl}"
         )
 
-    if isinstance(data_file_or_dir_or_graph_or_list, (Path, Graph)):
-        data_graph = load_graph(data_file_or_dir_or_graph_or_list)
-    elif isinstance(data_file_or_dir_or_graph_or_list, list):
+    if isinstance(data, (Path, Graph)):
+        data_graph = load_graph(data)
+    elif isinstance(data, list):
         data_graph = Graph()
-        for x in data_file_or_dir_or_graph_or_list:
+        for x in data:
             data_graph += load_graph(x)
 
     tf, g, msg = v(data_graph, shacl_graph=shapes_graph, allow_warnings=True)
