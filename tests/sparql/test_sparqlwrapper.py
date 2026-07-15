@@ -47,6 +47,8 @@ FUSEKI_LOV = "https://lov.linkeddata.es/dataset/lov/sparql"  # Fuseki - version 
 STARDOG_LINDAS = "https://lindas.admin.ch/query"  # human UI https://lindas.admin.ch/sparql/
 STORE4_1_1_4_CHISE = "http://rdf.chise.org/sparql"  # 4store SPARQL server v1.1.4
 
+# new, not in SPARQLWrapper
+KURRAWONG_DEMO = "https://api.data.kurrawong.ai/sparql"
 
 # Test parameters
 @pytest.fixture(
@@ -59,6 +61,7 @@ STORE4_1_1_4_CHISE = "http://rdf.chise.org/sparql"  # 4store SPARQL server v1.1.
         FUSEKI_LOV,
         STARDOG_LINDAS,
         STORE4_1_1_4_CHISE,
+        KURRAWONG_DEMO,
     ]
 )
 def endpoint(request):
@@ -326,40 +329,82 @@ def endpoint_config(endpoint):
 """,
         }
 
-    else:
+    elif endpoint == KURRAWONG_DEMO:
         return {
             "prefixes": """
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-""",
+                        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+                        """,
             "select_query": """
-    SELECT ?label
-    WHERE {
-    <http://dbpedia.org/resource/Asturias> rdfs:label ?label .
-    }
-""",
+                        SELECT ?iri ?pl
+                        WHERE {
+                            ?iri 
+                                a skos:ConceptScheme ;
+                                skos:prefLabel ?pl ;
+                            .
+                        }
+                        LIMIT 5
+                        """,
             "select_query_csv_tsv": """
-    SELECT ?label ?wikiPageID
-    WHERE {
-    <http://dbpedia.org/resource/Asturias> rdfs:label ?label ;
-        <http://dbpedia.org/ontology/wikiPageID> ?wikiPageID
-    }
-""",
+                        SELECT ?iri ?pl
+                        WHERE {
+                            ?iri 
+                                a skos:ConceptScheme ;
+                                skos:prefLabel ?pl ;
+                            .
+                        }
+                        LIMIT 5
+                        """,
             "ask_query": """
-    ASK { <http://dbpedia.org/resource/Asturias> a ?type }
-""",
+                        ASK { <http://dbpedia.org/resource/Asturias> a ?type }
+                        """,
             "construct_query": """
-    CONSTRUCT {
-        _:v rdfs:label ?label .
-        _:v rdfs:comment "this is only a mock node to test library"
-    }
-    WHERE {
-        <http://dbpedia.org/resource/Asturias> rdfs:label ?label .
-    }
-""",
+                        CONSTRUCT {
+                            _:v rdfs:label ?label .
+                            _:v rdfs:comment "this is only a mock node to test library"
+                        }
+                        WHERE {
+                            <http://dbpedia.org/resource/Asturias> rdfs:label ?label .
+                        }
+                        """,
             "describe_query": """
-    DESCRIBE <http://dbpedia.org/resource/Asturias>
-""",
+                        DESCRIBE <http://dbpedia.org/resource/Asturias>
+                        """,
+        }
+
+    else:  # used for Virtuoso DBPedia
+        return {
+            "prefixes": """
+                    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+                    """,
+            "select_query": """
+                    SELECT DISTINCT ?s WHERE {
+                         ?s a ?o .
+                    } LIMIT 100
+                    """,
+            "select_query_csv_tsv": """
+                    SELECT DISTINCT ?s ?o WHERE {
+                        ?s a ?o .
+                    } LIMIT 100
+                    """,
+            "ask_query": """
+                    ASK {
+                        ?type a <http://rdf.chise.org/rdf/type/character/ggg/super-abstract-character> .
+                    }
+                    """,
+            "construct_query": """
+                    CONSTRUCT {
+                        _:v rdfs:type ?type .
+                        _:v rdfs:comment "this is only a mock node to test library" .
+                    }
+                    WHERE {
+                        <http://www.chise.org/est/view/character/a2.ucs@bucs=0x5C08> rdfs:type ?type .
+                    }
+                    """,
+            "describe_query": """
+                    DESCRIBE <http://www.chise.org/est/view/character/a2.ucs@bucs=0x5C08>
+                    """,
         }
 
 
@@ -440,3 +485,19 @@ def test_describe_query(endpoint, prefixes, describe_query):
     result = query(endpoint, prefixes + describe_query, return_format="python")
 
     assert isinstance(result, Graph)
+
+
+def test_select_results(endpoint, prefixes, select_query):
+    if endpoint == KURRAWONG_DEMO:
+        result = query(endpoint, prefixes + select_query, return_format="python")
+
+        assert "iri" in result["head"]["vars"]
+        assert "pl" in result["head"]["vars"]
+
+        assert "iri" in result["results"]["bindings"][0].keys()
+        assert "pl" in result["results"]["bindings"][0].keys()
+
+        assert result["results"]["bindings"][0]["iri"].startswith("http")
+
+    else:
+        pytest.skip("Only testing results for a few endpoints")
