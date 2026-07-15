@@ -31,7 +31,10 @@ def _parse_shacl(value: str | Path | int) -> Path | str | int:
 )
 def validate_command(
     data: Annotated[
-        list[Path], typer.Argument(help="The file, files or directory of RDF files to be validated")
+        list[Path],
+        typer.Argument(
+            help="The file, files or directory of RDF files to be validated"
+        ),
     ],
     shacl: Annotated[
         str,

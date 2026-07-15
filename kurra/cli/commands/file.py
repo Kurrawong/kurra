@@ -54,9 +54,7 @@ def reformat_command(
 
 @app.command(name="merge", help="Merge RDF files")
 def merge_command(
-    files: Annotated[
-        list[Path], typer.Argument(help="The RDF files to merge")
-    ],
+    files: Annotated[list[Path], typer.Argument(help="The RDF files to merge")],
     destination: Annotated[
         Path | None,
         typer.Option(
@@ -70,7 +68,7 @@ def merge_command(
         typer.Option(
             "--output-format",
             "-f",
-            help=f"The RDFLib serialization format for the merged RDF. Available are {', '.join(["longturtle", "turtle", "xml", "json-ld", "nt"] )}.",
+            help=f"The RDFLib serialization format for the merged RDF. Available are {', '.join(['longturtle', 'turtle', 'xml', 'json-ld', 'nt'])}.",
         ),
     ] = "longturtle",
 ) -> None:
@@ -85,7 +83,12 @@ def quads_command(
     path_or_str: Path,
     graph_iri: str,
     destination: Annotated[
-        Path, typer.Option("--destination", "-d", help="The path of the file to save. None prints to screen")
+        Path,
+        typer.Option(
+            "--destination",
+            "-d",
+            help="The path of the file to save. None prints to screen",
+        ),
     ] = None,
 ):
     r = export_quads(make_dataset(path_or_str, graph_iri), destination)

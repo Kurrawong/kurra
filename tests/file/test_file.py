@@ -202,7 +202,9 @@ def test_directory():
 def test_quads():
     d = Path(__file__).parent
 
-    export_quads(make_dataset(d / "minimal2.ttl", "http://example.com/x/"), d / "minimal2.nt")
+    export_quads(
+        make_dataset(d / "minimal2.ttl", "http://example.com/x/"), d / "minimal2.nt"
+    )
 
     assert Path(d / "minimal2.nt").exists()
     assert "http://example.com/x/" in Path(d / "minimal2.nt").read_text()
@@ -216,9 +218,9 @@ def test_merge():
         d / "minimal1.ttl",
         d / "minimal2.ttl",
         destination=d / "merged.nt",
-        output_format="nt"
+        output_format="nt",
     )
-    
+
     assert Path(d / "merged.nt").exists()
     assert "http://example.com/b" in Path(d / "merged.nt").read_text()
     assert "http://example.com/b2" in Path(d / "merged.nt").read_text()

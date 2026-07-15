@@ -44,8 +44,8 @@ class GspType(str, Enum):
     put = "put"
     post = "post"
     delete = "delete"
-    
-    
+
+
 class RenderFormat(str, Enum):
     original = "original"
     json = "json"
@@ -85,9 +85,8 @@ def load_graph(
     Missing filesystem paths raise FileNotFoundError.
     """
     # Preserve the former ``load_graph(path, recursive)`` positional call form.
-    if (
-        len(additional_graph_paths_or_str) == 1
-        and isinstance(additional_graph_paths_or_str[0], bool)
+    if len(additional_graph_paths_or_str) == 1 and isinstance(
+        additional_graph_paths_or_str[0], bool
     ):
         recursive = additional_graph_paths_or_str[0]
         additional_graph_paths_or_str = ()
@@ -118,9 +117,7 @@ def load_graph(
             pkl_path = source.with_suffix(".pkl")
             if pkl_path.is_file():
                 return pickle.load(open(pkl_path, "rb"))
-            if str(source).endswith(".trig") or str(
-                source
-            ).endswith(".jsonld"):
+            if str(source).endswith(".trig") or str(source).endswith(".jsonld"):
                 return Dataset().parse(str(source))
             return Graph().parse(source)
         elif source.is_dir():
@@ -513,7 +510,12 @@ def put_system_graph(
         return None
 
 
-def make_system_specific_sparql_endpoint(sparql_endpoint: str, q: str = None, statement: SparqlStatementType = None, gsp_query_type: GspType = None) -> str:
+def make_system_specific_sparql_endpoint(
+    sparql_endpoint: str,
+    q: str = None,
+    statement: SparqlStatementType = None,
+    gsp_query_type: GspType = None,
+) -> str:
     """Alters a given SPARQL Endpoint to meet specific system requirements.
 
     e.g. GraphDB using /statements at the end of the base SPARQL Endpoint for updates"""
@@ -523,11 +525,10 @@ def make_system_specific_sparql_endpoint(sparql_endpoint: str, q: str = None, st
         # GraphDB: Update
         if (
             "/repositories/" in sparql_endpoint
-                and is_update_query(q, statement)
-                and not sparql_endpoint.endswith("/statements")
+            and is_update_query(q, statement)
+            and not sparql_endpoint.endswith("/statements")
         ):
             return sparql_endpoint + "/statements"
-
 
     # GraphDB GSP
     if gsp_query_type is not None:

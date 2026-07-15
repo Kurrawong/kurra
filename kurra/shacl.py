@@ -81,9 +81,7 @@ def validate(
                 shapes_graph = _get_shapes_from_iri(shacl)
 
     if shapes_graph is None:
-        raise RuntimeError(
-            f"Not able to load shapes graph: {shacl}"
-        )
+        raise RuntimeError(f"Not able to load shapes graph: {shacl}")
 
     if isinstance(data, (Path, Graph)):
         data_graph = load_graph(data)

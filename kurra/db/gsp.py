@@ -7,7 +7,12 @@ from typing import Union
 import httpx
 from rdflib import Graph
 
-from kurra.utils import RDF_SUFFIX_MAP, load_graph, GspType, make_system_specific_sparql_endpoint
+from kurra.utils import (
+    RDF_SUFFIX_MAP,
+    GspType,
+    load_graph,
+    make_system_specific_sparql_endpoint,
+)
 
 
 def exists(

@@ -64,7 +64,9 @@ def test_get(fuseki_container, http_client):
 
 
 def test_get_graphdb(graphdb_container, http_client):
-    sparql_endpoint = f"http://localhost:{graphdb_container.get_exposed_port(7200)}/repositories/test"
+    sparql_endpoint = (
+        f"http://localhost:{graphdb_container.get_exposed_port(7200)}/repositories/test"
+    )
 
     g_result = load_graph(LANG_TEST_VOC)
 
@@ -85,19 +87,19 @@ def test_get_graphdb(graphdb_container, http_client):
     upload(sparql_endpoint, d, None, http_client)
 
     g2 = get(sparql_endpoint, None, http_client=http_client)
-    assert len(g2) == 100  # because GraphDB contains junk in the default graph - RDFS etc
+    assert (
+        len(g2) == 100
+    )  # because GraphDB contains junk in the default graph - RDFS etc
     assert isinstance(g2.identifier, rdflib.BNode)
 
     g3 = get(sparql_endpoint, "http://nothing.com/", http_client=http_client)
     assert len(g3) == 0
     print(g3.serialize())
 
-    g4 = get(
-        sparql_endpoint, None, http_client=http_client, return_format="original"
-    )
+    g4 = get(sparql_endpoint, None, http_client=http_client, return_format="original")
     assert "http://example.com/" in g4
     assert len(g4) == 4423
-    
+
 
 def test_put(fuseki_container, http_client):
     sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
@@ -191,7 +193,9 @@ def test_delete(fuseki_container, http_client):
 
 
 def test_delete_graphdb(graphdb_container, http_client):
-    sparql_endpoint = f"http://localhost:{graphdb_container.get_exposed_port(7200)}/repositories/test"
+    sparql_endpoint = (
+        f"http://localhost:{graphdb_container.get_exposed_port(7200)}/repositories/test"
+    )
 
     put(sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
 
@@ -219,7 +223,9 @@ def test_delete_graphdb(graphdb_container, http_client):
     assert r[0]["count"] == 0
 
     gx = get(sparql_endpoint, TESTING_GRAPH, http_client=http_client)
-    assert len(gx) == 0  # GraphDB thinks any NAmed Graph exists but will return zero triples for one that does not exist
+    assert (
+        len(gx) == 0
+    )  # GraphDB thinks any NAmed Graph exists but will return zero triples for one that does not exist
     # assert not exists(sparql_endpoint, TESTING_GRAPH)
 
 

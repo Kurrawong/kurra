@@ -7,6 +7,7 @@ from rdflib import Graph
 from rdflib.compare import isomorphic
 
 from kurra.utils import (
+    GspType,
     RenderFormat,
     guess_format_from_data,
     is_ask_query,
@@ -18,11 +19,10 @@ from kurra.utils import (
     is_select_query,
     is_update_query,
     load_graph,
+    make_system_specific_sparql_endpoint,
     render_sparql_result,
     sparql_statement_return_type,
     statement_type_for_query,
-    make_system_specific_sparql_endpoint,
-    GspType,
 )
 
 
@@ -603,7 +603,7 @@ def test_make_system_specific_sparql_endpoint():
     se = "http://localhost:3030/test"
     ssse = make_system_specific_sparql_endpoint(se, q_query, q_query_statement)
     assert ssse == "http://localhost:3030/test"
-    
+
     # Fuseki, SPARQL Update
     se = "http://localhost:3030/test"
     ssse = make_system_specific_sparql_endpoint(se, q_query, q_query_statement)

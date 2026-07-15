@@ -28,7 +28,9 @@ def format_sparql_response_as_rich_table(response, query):
             t.add_column(x)
         for row in response["results"]["bindings"]:
             cols = []
-            for k, v in {key: row[key] for key in response["head"]["vars"] if key in row}.items():
+            for k, v in {
+                key: row[key] for key in response["head"]["vars"] if key in row
+            }.items():
                 cols.append(str(v))
             t.add_row(*tuple(cols))
 
@@ -60,7 +62,9 @@ def format_sparql_response_as_csv(response, query):
 
         for row in response["results"]["bindings"]:
             r = []
-            for k, v in {key: row[key] for key in response["head"]["vars"] if key in row}.items():
+            for k, v in {
+                key: row[key] for key in response["head"]["vars"] if key in row
+            }.items():
                 r.append(str(v))
             writer.writerow(r)
 

@@ -44,11 +44,14 @@ RDF4J_GEOSCIML = "http://vocabs.ands.org.au/repository/api/sparql/csiro_internat
 ALLEGROGRAPH_AGROVOC = "https://agrovoc.fao.org/sparql"
 ALLEGROGRAPH_4_14_1_MMI = "https://mmisw.org/sparql"  # AllegroServe/1.3.28 http://mmisw.org:10035/doc/release-notes.html
 FUSEKI_LOV = "https://lov.linkeddata.es/dataset/lov/sparql"  # Fuseki - version 1.1.1 (Build date: 2014-10-02T16:36:17+0100)
-STARDOG_LINDAS = "https://lindas.admin.ch/query"  # human UI https://lindas.admin.ch/sparql/
+STARDOG_LINDAS = (
+    "https://lindas.admin.ch/query"  # human UI https://lindas.admin.ch/sparql/
+)
 STORE4_1_1_4_CHISE = "http://rdf.chise.org/sparql"  # 4store SPARQL server v1.1.4
 
 # new, not in SPARQLWrapper
 KURRAWONG_DEMO = "https://api.data.kurrawong.ai/sparql"
+
 
 # Test parameters
 @pytest.fixture(

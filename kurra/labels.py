@@ -114,6 +114,12 @@ def get_missing_labels(
             {where_clause}
             """
         d = {}
-        for r in query(context, q, http_client=http_client,  return_format="python", return_bindings_only=True):
+        for r in query(
+            context,
+            q,
+            http_client=http_client,
+            return_format="python",
+            return_bindings_only=True,
+        ):
             d[r["iri"]] = r["label"]
         return d

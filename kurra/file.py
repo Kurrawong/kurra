@@ -1,7 +1,7 @@
 import itertools
 from pathlib import Path
-from typing import Optional, Tuple, Union
 from typing import Literal as TypingLiteral
+from typing import Optional, Tuple, Union
 
 from rdflib import Dataset, Graph, URIRef
 
@@ -18,7 +18,9 @@ class FailOnChangeError(Exception):
 def merge(
     *files: Path,
     destination: Optional[Path] = None,
-    output_format: TypingLiteral["longturtle", "turtle", "xml", "json-ld", "nt"]  = "longturtle"
+    output_format: TypingLiteral[
+        "longturtle", "turtle", "xml", "json-ld", "nt"
+    ] = "longturtle",
 ) -> None:
     """Merge RDF files and serialize their triples in a single RDF document.
 
@@ -26,7 +28,9 @@ def merge(
     when ``destination`` is not supplied; otherwise it is written to that path.
     """
     if output_format not in ["longturtle", "turtle", "xml", "json-ld", "nt"]:
-        raise ValueError("If you supply an output_format value, it must be one of 'turtle', 'xml', 'json-ld' or 'nt'")
+        raise ValueError(
+            "If you supply an output_format value, it must be one of 'turtle', 'xml', 'json-ld' or 'nt'"
+        )
 
     g = Graph()
     for file in files:

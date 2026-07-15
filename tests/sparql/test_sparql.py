@@ -141,7 +141,9 @@ def test_query_db(fuseki_container, http_client):
 
 
 def test_query_db_graphdb(graphdb_container, http_client):
-    SPARQL_ENDPOINT = f"http://localhost:{graphdb_container.get_exposed_port(7200)}/repositories/test"
+    SPARQL_ENDPOINT = (
+        f"http://localhost:{graphdb_container.get_exposed_port(7200)}/repositories/test"
+    )
     TESTING_GRAPH = "https://example.com/testing-graph"
     upload(
         SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client

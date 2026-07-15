@@ -3,6 +3,7 @@ from typing import Literal as LiteralType
 
 import httpx
 
+from kurra import __version__
 from kurra.utils import (
     add_namespaces_to_query_or_data,
     convert_sparql_json_to_python,
@@ -10,13 +11,15 @@ from kurra.utils import (
     is_select_or_ask_query,
     is_update_query,
     make_sparql_dataframe,
+    make_system_specific_sparql_endpoint,
     sparql_statement_return_type,
     statement_type_for_query,
-    make_system_specific_sparql_endpoint,
 )
-from kurra import __version__
 
-USER_AGENT_STRING = f"kurra/{__version__} (https://pypi.org/project/kurra/; info@kurrawong.ai)"
+USER_AGENT_STRING = (
+    f"kurra/{__version__} (https://pypi.org/project/kurra/; info@kurrawong.ai)"
+)
+
 
 def query(
     sparql_endpoint: str,
@@ -69,7 +72,7 @@ def query(
             )
 
     if is_update_query(q, statement):
-        headers["Content-Type"] = "application/sparql-update" 
+        headers["Content-Type"] = "application/sparql-update"
     else:
         headers = {"Content-Type": "application/sparql-query"}
 
