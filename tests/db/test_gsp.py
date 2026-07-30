@@ -229,8 +229,43 @@ def test_delete_graphdb(graphdb_container, http_client):
     # assert not exists(sparql_endpoint, TESTING_GRAPH)
 
 
-def test_clear():
-    pass  # alias of delete
+def test_clear(fuseki_container, http_client):
+    # only testing the parts different from basic delete
+    sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+
+    # test clear all
+    put(sparql_endpoint, LANG_TEST_VOC, TESTING_GRAPH, http_client=http_client)
+    put(sparql_endpoint, THREE_TRIPLE_FILE, "http://other", http_client=http_client)
+
+    q = """
+        SELECT DISTINCT ?g
+        WHERE {
+            GRAPH ?g {
+                ?s ?p ?o
+            }
+        }
+        ORDER BY ?g
+        """
+    r = query(
+        sparql_endpoint,
+        q,
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=True,
+    )
+    assert len(r) == 2
+
+    assert clear(sparql_endpoint, "all", http_client=http_client)[0]
+
+    r = query(
+        sparql_endpoint,
+        q,
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=True,
+    )
+    assert len(r) == 0
+
 
 
 def test_upload(fuseki_container, http_client):

@@ -6,6 +6,7 @@ from typing import Union
 
 import httpx
 from rdflib import Graph
+from kurra.db.sparql import query
 
 from kurra.utils import (
     RDF_SUFFIX_MAP,
@@ -253,13 +254,35 @@ def delete(
 def clear(
     sparql_endpoint: str, graph_iri: str, http_client: httpx.Client | None = None
 ):
-    """SPARQL Update Clear function: https://www.w3.org/TR/sparql12-update/#clear
+    """Clears - remove all triples from - a graph identified by graph_iri. Special values for graph_iri are 'default' - clears the default graph - and 'all' which clears all graphs.
 
-    Clears - remove all triples from - an identified graph or from all graphs if "all" is given as the graph_id.
-
-    This is an alias of delete()
+    This function operates much like SPARQL Update's Clear function - https://www.w3.org/TR/sparql12-update/#clear - but uses GSP Delete under the hood and handles the 'default' and 'all' special cases.
     """
-    delete(sparql_endpoint, graph_iri, http_client)
+    if graph_iri == "default":
+        return delete(sparql_endpoint, None, http_client=http_client)
+    elif graph_iri == "all":
+        # list all graphs in system
+        deletion_results = []
+        q = """
+            SELECT DISTINCT ?g
+            WHERE {
+                GRAPH ?g {
+                    ?s ?p ?o
+                }
+            }
+            ORDER BY ?g
+            """
+        for r in query(sparql_endpoint, q, http_client=http_client, return_format="python", return_bindings_only=True):
+            deletion_results.append(delete(sparql_endpoint, r["g"], http_client=http_client))
+        deletion_results.append(delete(sparql_endpoint, None, http_client=http_client))  # default graph too
+
+        # if even one graph is deleted correctly, return true
+        for dr in deletion_results:
+            if dr[0]:
+                return (True, None)
+        return (False, None)
+    else:
+        return delete(sparql_endpoint, graph_iri, http_client)
 
 
 def upload(
