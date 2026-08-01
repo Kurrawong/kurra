@@ -1,0 +1,4 @@
+# Fuseki
+
+::: kurra.db.fuseki
+

@@ -1,0 +1,4 @@
+# SHACL
+
+::: kurra.shacl
+

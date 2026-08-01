@@ -1,0 +1,4 @@
+# Labels
+
+::: kurra.labels
+
