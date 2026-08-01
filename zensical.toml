@@ -1,0 +1,59 @@
+[project]
+site_name = "kurra"
+site_url = "https://kurrawong.github.io/kurra/"
+site_description = "RDF data manipulation with Python and the command line"
+docs_dir = "docs"
+repo_url = "https://github.com/kurrawong/kurra"
+repo_name = "kurrawong/kurra"
+nav = [
+    { "Home" = "index.md" },
+    { "Getting started" = "getting-started.md" },
+    { "API reference" = [
+        { "Overview" = "api/index.md" },
+        { "Files" = "api/file.md" },
+        { "Labels" = "api/labels.md" },
+        { "SHACL" = "api/shacl.md" },
+        { "SPARQL" = "api/sparql.md" },
+        { "Utilities" = "api/utils.md" },
+        { "Database" = [
+            { "Fuseki" = "api/db/fuseki.md" },
+            { "Graph Store Protocol" = "api/db/gsp.md" },
+            { "Olis Graph Functions" = "api/db/ogf.md" },
+            { "SPARQL endpoints" = "api/db/sparql.md" },
+        ] },
+        { "CLI" = [
+            { "Application" = "api/cli/app.md" },
+            { "Console" = "api/cli/console.md" },
+            { "Utilities" = "api/cli/utils.md" },
+            { "File commands" = "api/cli/commands/file.md" },
+            { "Label commands" = "api/cli/commands/labels.md" },
+            { "SHACL commands" = "api/cli/commands/shacl.md" },
+            { "SPARQL commands" = "api/cli/commands/sparql.md" },
+            { "Fuseki commands" = "api/cli/commands/db/fuseki.md" },
+            { "GSP commands" = "api/cli/commands/db/gsp.md" },
+            { "Olis commands" = "api/cli/commands/db/olis.md" },
+        ] },
+    ] },
+]
+
+[project.theme]
+features = [
+    "content.code.copy",
+    "navigation.indexes",
+    "navigation.sections",
+    "navigation.top",
+    "search.suggest",
+]
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["."]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "google"
+inherited_members = true
+members_order = "source"
+merge_init_into_class = true
+show_root_heading = true
+show_signature_annotations = true
+show_source = true
+
