@@ -6,8 +6,8 @@ from typing import Union
 
 import httpx
 from rdflib import Graph
-from kurra.db.sparql import query
 
+from kurra.db.sparql import query
 from kurra.utils import (
     RDF_SUFFIX_MAP,
     GspType,
@@ -21,7 +21,7 @@ def exists(
 ) -> bool:
     """Returns True if a graph with the given graph_iri exists at the SPARQL Endpoint or else False"""
     if not sparql_endpoint.startswith("http"):
-        raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
+        raise ValueError("SPARQL Endpoint given does not start with 'http'")
 
     close_http_client = False
     if http_client is None:
@@ -49,7 +49,7 @@ def exists(
 def get(
     sparql_endpoint: str,
     graph_iri: str = None,
-    accept_type="text/turtle",
+    accept_type: str = "text/turtle",
     return_format: LiteralType["original", "python"] = "python",
     http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
@@ -69,7 +69,7 @@ def get(
           format. If a graph, the graph identifier will be the graph_iri or a Blank Node if None/default
     """
     if not sparql_endpoint.startswith("http"):
-        raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
+        raise ValueError("SPARQL Endpoint given does not start with 'http'")
 
     if accept_type not in RDF_SUFFIX_MAP.values():
         raise ValueError(
@@ -129,7 +129,7 @@ def put(
 
     Will replace existing content."""
     if not sparql_endpoint.startswith("http"):
-        raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
+        raise ValueError("SPARQL Endpoint given does not start with 'http'")
 
     if content_type not in RDF_SUFFIX_MAP.values():
         raise ValueError(
@@ -177,7 +177,7 @@ def post(
 
     Will add to existing content."""
     if not sparql_endpoint.startswith("http"):
-        raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
+        raise ValueError("SPARQL Endpoint given does not start with 'http'")
 
     if content_type not in RDF_SUFFIX_MAP.values():
         raise ValueError(
@@ -223,7 +223,7 @@ def delete(
 
     Deletes the graph identified by graph_id or the default graph."""
     if not sparql_endpoint.startswith("http"):
-        raise ValueError(f"SPARQL Endpoint given does not start with 'http'")
+        raise ValueError("SPARQL Endpoint given does not start with 'http'")
 
     close_http_client = False
     if http_client is None:

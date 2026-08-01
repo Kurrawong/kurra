@@ -245,7 +245,7 @@ def get_validator_graph(
 
     try:
         return load_graph(graph_or_file_or_url_or_id)
-    except:
+    except Exception:
         return None
 
 
@@ -267,7 +267,9 @@ def check_validator_known(validator_iri: str) -> bool:
 
 
 def infer(
-    data: Graph | Path | str, rules: Graph | Path | str, include_base=False
+    data: Graph | Path | str,
+    rules: Graph | Path | str,
+    include_base: bool = False,
 ) -> Graph:
     """Applies rules to the data graph and returns a graph of calculated results
 
