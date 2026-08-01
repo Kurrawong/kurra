@@ -1,5 +1,7 @@
 import json
 import pickle
+import warnings
+from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
 from typing import Union
@@ -72,6 +74,46 @@ def guess_format_from_data(rdf: str) -> str | None:
 GraphInput = Union[Graph, Path, str]
 
 
+@contextmanager
+def _suppress_rdflib_dataset_deprecations():
+    """Hide RDFLib 7.x deprecations emitted by its own parser/serializer code."""
+    with warnings.catch_warnings():
+        for message in (
+            "ConjunctiveGraph is deprecated, use Dataset instead.",
+            "Dataset.contexts is deprecated, use Dataset.graphs instead.",
+            "Dataset.default_context is deprecated, use Dataset.default_graph instead.",
+        ):
+            warnings.filterwarnings(
+                "ignore",
+                message=message,
+                category=DeprecationWarning,
+            )
+        yield
+
+
+def _parse_graph(source=None, *, data=None, format=None) -> Graph:
+    """Parse a context-less graph while isolating RDFLib compatibility warnings."""
+    with _suppress_rdflib_dataset_deprecations():
+        return Graph().parse(source=source, data=data, format=format)
+
+
+def _parse_dataset(source=None, *, data=None, format=None) -> Dataset:
+    """Parse a dataset while isolating RDFLib compatibility warnings."""
+    with _suppress_rdflib_dataset_deprecations():
+        return Dataset().parse(source=source, data=data, format=format)
+
+
+def _serialize_dataset(
+    dataset: Dataset,
+    *,
+    destination: Path | str | None = None,
+    format: str = "trig",
+) -> str | None:
+    """Serialize a dataset while isolating RDFLib compatibility warnings."""
+    with _suppress_rdflib_dataset_deprecations():
+        return dataset.serialize(destination=destination, format=format)
+
+
 def load_graph(
     source: Union[GraphInput, list[GraphInput], tuple[GraphInput, ...]],
     *additional_graph_paths_or_str: GraphInput,
@@ -116,10 +158,11 @@ def load_graph(
         if source.is_file():
             pkl_path = source.with_suffix(".pkl")
             if pkl_path.is_file():
-                return pickle.load(open(pkl_path, "rb"))
-            if str(source).endswith(".trig") or str(source).endswith(".jsonld"):
-                return Dataset().parse(str(source))
-            return Graph().parse(source)
+                with pkl_path.open("rb") as pickle_file:
+                    return pickle.load(pickle_file)
+            if source.suffix.lower() == ".trig":
+                return _parse_dataset(source)
+            return _parse_graph(source)
         elif source.is_dir():
             g = Graph()
             if recursive:
@@ -134,11 +177,11 @@ def load_graph(
 
     # A remote file via HTTP
     elif isinstance(source, str) and source.startswith("http"):
-        return Graph().parse(source)
+        return _parse_graph(source)
 
     # RDF data in a string
     else:
-        return Graph().parse(
+        return _parse_graph(
             data=source,
             format=guess_format_from_data(source),
         )
@@ -412,11 +455,9 @@ def get_system_graph(
             )
 
         if system_graph_source.suffix == ".trig":
-            system_graph += (
-                Dataset()
-                .parse(system_graph_source, format="trig")
-                .get_graph(SYSTEM_GRAPH_IRI)
-            )
+            system_graph += _parse_dataset(
+                system_graph_source, format="trig"
+            ).graph(SYSTEM_GRAPH_IRI)
         else:
             system_graph += load_graph(system_graph_source)
     elif isinstance(system_graph_source, Graph):
@@ -424,7 +465,7 @@ def get_system_graph(
         system_graph += system_graph_source
     elif isinstance(system_graph_source, Dataset):
         # we have a Dataset object, so load its system Graph
-        system_graph += system_graph_source.get_graph(str(SYSTEM_GRAPH_IRI))
+        system_graph += system_graph_source.graph(SYSTEM_GRAPH_IRI)
     elif system_graph_source and system_graph_source.startswith("http"):
         # we have a remote SPARQL Endpoint, so read the System Graph
         # this is simplified GSP get()
@@ -468,10 +509,10 @@ def put_system_graph(
     elif isinstance(system_graph_source, Path):
         if system_graph_source.suffix == ".trig":
             # TODO: deduplicate the Dataset parse in get_system_graph
-            d = Dataset().parse(system_graph_source, format="trig")
+            d = _parse_dataset(system_graph_source, format="trig")
             d.remove_graph(SYSTEM_GRAPH_IRI)
             d.add_graph(system_graph)
-            d.serialize(destination=system_graph_source, format="trig")
+            _serialize_dataset(d, destination=system_graph_source)
         else:
             system_graph.serialize(destination=system_graph_source, format="longturtle")
 

@@ -3,15 +3,13 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from rdflib.plugin import plugins
-from rdflib.serializer import Serializer
 
-from kurra.cli.commands.db.gsp import upload_command as gsp_upload_command
 from kurra.cli.commands.sparql import sparql_command as gsp_sparql_command
 from kurra.cli.console import console
 from kurra.file import (
     FailOnChangeError,
     export_quads,
+    hierarchy,
     make_dataset,
     merge,
     reformat,
@@ -75,6 +73,33 @@ def merge_command(
     merge(*files, destination=destination, output_format=output_format)
 
 
+@app.command(name="hierarchy", help="Print an RDF class, property or concept hierarchy")
+def hierarchy_command(
+    path_or_url: Annotated[
+        str,
+        typer.Argument(help="An RDF file path or HTTP URL"),
+    ],
+    graph_iri: Annotated[
+        str | None,
+        typer.Option(
+            "--graph-iri",
+            "-g",
+            help="The named graph to use from a remote, TriG or JSON-LD source.",
+        ),
+    ] = None,
+    use_names: Annotated[
+        bool,
+        typer.Option(
+            "--use-names",
+            "-u",
+            help="Display resource names instead of IRIs when available.",
+        ),
+    ] = False,
+) -> None:
+    source = path_or_url if path_or_url.startswith("http") else Path(path_or_url)
+    hierarchy(source, graph_iri=graph_iri, use_names=use_names)
+
+
 @app.command(
     name="quads",
     help="Exports (prints or saves) triples as quads with a given identifier",
@@ -124,6 +149,6 @@ def query_command(
     try:
         if Path(q).is_file():
             q = Path(q).read_text()
-    except:
+    except Exception:
         pass
     gsp_sparql_command(path_or_url, q, response_format, username, password, timeout)

@@ -1,0 +1,89 @@
+PREFIX ex: <http://example.com/fruits/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+ex:Fruits
+    a owl:Ontology ;
+    rdfs:label "Fruits" ;
+.
+
+ex:CitrusFruit
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Citrus fruit" ;
+.
+
+ex:Orange
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Orange" ;
+    rdfs:subClassOf ex:CitrusFruit ;
+.
+
+ex:BloodOrange
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Blood Orange" ;
+    rdfs:subClassOf ex:Orange ;
+.
+
+ex:SevilleOrange
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Seville Orange" ;
+    rdfs:subClassOf ex:Orange ;
+.
+
+ex:Lemon
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Lemon" ;
+    rdfs:subClassOf ex:CitrusFruit ;
+.
+
+ex:Lime
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Lime" ;
+    rdfs:subClassOf ex:CitrusFruit ;
+.
+
+ex:StoneFruit
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Stone fruit" ;
+.
+
+ex:Peach
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Peach" ;
+    rdfs:subClassOf ex:StoneFruit ;
+.
+
+ex:Plum
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Plum" ;
+    rdfs:subClassOf ex:StoneFruit ;
+.
+
+ex:Cherry
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Cherry" ;
+    rdfs:subClassOf ex:StoneFruit ;
+.
+
+ex:Berry
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Berry" ;
+.
+
+ex:Strawberry
+    a owl:Class ;
+    rdfs:isDefinedBy ex:Fruits ;
+    rdfs:label "Strawberry" ;
+    rdfs:subClassOf ex:Berry ;
+.

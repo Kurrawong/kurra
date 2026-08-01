@@ -2,10 +2,18 @@ import warnings
 from pathlib import Path
 from textwrap import dedent
 
+import pytest
 from rdflib import Dataset, Graph, URIRef
 
 import kurra.file
-from kurra.file import _format_file, export_quads, make_dataset, merge, reformat
+from kurra.file import (
+    _format_file,
+    export_quads,
+    hierarchy,
+    make_dataset,
+    merge,
+    reformat,
+)
 from kurra.utils import load_graph
 
 
@@ -117,6 +125,224 @@ def test_make_dataset():
         assert t[1] == URIRef("http://example.com/b")
         assert t[2] == URIRef("http://example.com/c")
         assert t[3] == URIRef("http://graph.com/a")
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "expected_output"),
+    [
+        (
+            "hierarchy-vocab.ttl",
+            dedent(
+                """\
+                ex:voc
+                ├── ex:1
+                │   ├── ex:11
+                │   ├── ex:12
+                │   └── ex:13
+                └── ex:2
+                """
+            ),
+        ),
+        (
+            "hierarchy-ont.ttl",
+            dedent(
+                """\
+                ex:Fruits
+                ├── ex:Berry
+                │   └── ex:Strawberry
+                ├── ex:CitrusFruit
+                │   ├── ex:Lemon
+                │   ├── ex:Lime
+                │   └── ex:Orange
+                │       ├── ex:BloodOrange
+                │       └── ex:SevilleOrange
+                └── ex:StoneFruit
+                    ├── ex:Cherry
+                    ├── ex:Peach
+                    └── ex:Plum
+                """
+            ),
+        ),
+    ],
+)
+def test_hierarchy_rendering_regression(fixture_name, expected_output, capsys):
+    hierarchy(Path(__file__).parent / fixture_name)
+
+    assert capsys.readouterr().out == expected_output
+
+
+def test_hierarchy_prints_classes_properties_and_concepts(capsys):
+    hierarchy(
+        """
+        @prefix ex: <http://example.com/> .
+        @prefix owl: <http://www.w3.org/2002/07/owl#> .
+        @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+        ex:Animal a owl:Class .
+        ex:Cat a owl:Class ; rdfs:subClassOf ex:Animal .
+        ex:Dog a rdfs:Class ; rdfs:subClassOf ex:Animal .
+
+        ex:relatedTo a rdf:Property .
+        ex:parentOf a owl:ObjectProperty ; rdfs:subPropertyOf ex:relatedTo .
+
+        ex:scheme a skos:ConceptScheme .
+        ex:thing a skos:Concept ; skos:inScheme ex:scheme ; skos:narrower ex:widget .
+        ex:widget a skos:Concept ; skos:inScheme ex:scheme ; skos:broader ex:thing .
+        """,
+    )
+
+    assert capsys.readouterr().out == dedent(
+        """\
+        ex:Animal
+        ├── ex:Cat
+        └── ex:Dog
+
+        ex:relatedTo
+        └── ex:parentOf
+
+        ex:scheme
+        └── ex:thing
+            └── ex:widget
+        """
+    )
+
+
+def test_hierarchy_uses_explicit_skos_top_concept_links(capsys):
+    hierarchy(
+        """
+        @prefix ex: <http://example.com/> .
+        @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+        ex:scheme a skos:ConceptScheme ; skos:hasTopConcept ex:top .
+        ex:top a skos:Concept ; skos:topConceptOf ex:scheme .
+        ex:child a skos:Concept ; skos:broader ex:top .
+        """
+    )
+
+    assert capsys.readouterr().out == (
+        "ex:scheme\n└── ex:top\n    └── ex:child\n"
+    )
+
+
+def test_hierarchy_uses_ontology_as_class_and_property_root(capsys):
+    hierarchy(
+        """
+        @prefix ex: <http://example.com/> .
+        @prefix owl: <http://www.w3.org/2002/07/owl#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+        ex:ontology a owl:Ontology .
+        ex:Animal a owl:Class .
+        ex:Cat a owl:Class ; rdfs:subClassOf ex:Animal .
+        ex:relatedTo a owl:ObjectProperty .
+        ex:parentOf a owl:ObjectProperty ; rdfs:subPropertyOf ex:relatedTo .
+        """
+    )
+
+    assert capsys.readouterr().out == dedent(
+        """\
+        ex:ontology
+        └── ex:Animal
+            └── ex:Cat
+
+        ex:ontology
+        └── ex:relatedTo
+            └── ex:parentOf
+        """
+    )
+
+
+def test_hierarchy_can_use_names_in_priority_order(capsys):
+    hierarchy(
+        """
+        @prefix dcterms: <http://purl.org/dc/terms/> .
+        @prefix ex: <http://example.com/> .
+        @prefix owl: <http://www.w3.org/2002/07/owl#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        @prefix schema: <https://schema.org/> .
+        @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+        ex:ontology a owl:Ontology ; dcterms:title "Fruit ontology" ;
+            rdfs:label "Ignored ontology label" .
+        ex:Fruit a owl:Class ; schema:name "Fruit name" ;
+            rdfs:label "Ignored fruit label" .
+        ex:Apple a owl:Class ; rdfs:subClassOf ex:Fruit ;
+            skos:prefLabel "Apple preferred" ; dcterms:title "Ignored title" ;
+            schema:name "Ignored name" ; rdfs:label "Ignored label" .
+        ex:GrannySmith a owl:Class ; rdfs:subClassOf ex:Apple ;
+            rdfs:label "Granny Smith" .
+        ex:Unnamed a owl:Class ; rdfs:subClassOf ex:Fruit .
+        """,
+        use_names=True,
+    )
+
+    assert capsys.readouterr().out == dedent(
+        """\
+        Fruit ontology
+        └── Fruit name
+            ├── Apple preferred
+            │   └── Granny Smith
+            └── ex:Unnamed
+        """
+    )
+
+
+def test_hierarchy_raises_on_cycles(capsys):
+    graph = Graph().parse(
+        data="""
+        @prefix ex: <http://example.com/> .
+        @prefix owl: <http://www.w3.org/2002/07/owl#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        ex:A a owl:Class ; rdfs:subClassOf ex:B .
+        ex:B a owl:Class ; rdfs:subClassOf ex:A .
+        ex:C a owl:Class .
+        ex:D a owl:Class ; rdfs:subClassOf ex:C .
+        """,
+        format="turtle",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"Cycle detected in hierarchy: ex:A -> ex:B -> ex:A",
+    ):
+        hierarchy(graph)
+
+    assert capsys.readouterr().out == ""
+
+
+def test_hierarchy_selects_named_graph(tmp_path, capsys):
+    trig_file = tmp_path / "hierarchies.trig"
+    trig_file.write_text(
+        """
+        @prefix ex: <http://example.com/> .
+        @prefix owl: <http://www.w3.org/2002/07/owl#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        ex:wanted {
+            ex:Animal a owl:Class .
+            ex:Cat a owl:Class ; rdfs:subClassOf ex:Animal .
+        }
+        ex:ignored {
+            ex:Vehicle a owl:Class .
+            ex:Car a owl:Class ; rdfs:subClassOf ex:Vehicle .
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    hierarchy(trig_file, "http://example.com/wanted")
+
+    assert capsys.readouterr().out == "ex:Animal\n└── ex:Cat\n"
+
+
+@pytest.mark.parametrize(
+    "source",
+    [Graph(), "@prefix owl: <http://www.w3.org/2002/07/owl#> ."],
+)
+def test_hierarchy_rejects_graph_iri_for_contextless_source(source):
+    with pytest.raises(ValueError, match="graph_iri is only allowed"):
+        hierarchy(source, "http://example.com/graph")
 
 
 def test_export_quads():

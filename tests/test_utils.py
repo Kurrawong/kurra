@@ -131,6 +131,25 @@ def test_load_graph_missing_path():
         load_graph(missing_path)
 
 
+def test_load_graph_jsonld_is_contextless_graph(tmp_path):
+    source = tmp_path / "graph.jsonld"
+    source.write_text(
+        """
+        {
+          "@context": {"ex": "http://example.com/"},
+          "@id": "ex:subject",
+          "ex:predicate": {"@id": "ex:object"}
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    graph = load_graph(source)
+
+    assert type(graph) is Graph
+    assert len(graph) == 1
+
+
 def test_load_graph_multiple_files(tmp_path):
     turtle_path = tmp_path / "first.ttl"
     turtle_path.write_text(

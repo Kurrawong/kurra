@@ -1,0 +1,39 @@
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+PREFIX ex: <http://example.com/>
+
+
+ex:voc
+    a skos:ConceptScheme ;
+    skos:hasTopConcept
+        ex:1 ,
+        ex:2 ;
+    skos:prefLabel "Vocab"@en ;
+.
+
+ex:1
+    a skos:Concept ;
+    skos:narrower ex:13 ;
+    skos:prefLabel "One"@en ;
+.
+
+ex:2
+    a skos:Concept ;
+    skos:prefLabel "Two"@en ;
+.
+
+ex:11
+    a skos:Concept ;
+    skos:broader ex:1 ;
+    skos:prefLabel "One One"@en ;
+.
+
+ex:12
+    a skos:Concept ;
+    skos:broader ex:1 ;
+    skos:prefLabel "One Two"@en ;
+.
+
+ex:13
+    a skos:Concept ;
+    skos:prefLabel "One Three"@en ;
+.

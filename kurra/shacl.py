@@ -14,6 +14,11 @@ from kurra.sparql import query
 from kurra.utils import load_graph
 
 
+def _load_pickle(path: Path):
+    with path.open("rb") as pickle_file:
+        return load(pickle_file)
+
+
 def validate(
     data: Path | Graph | list[Path] | list[Graph],
     shacl: Graph | Path | str | int,
@@ -42,8 +47,8 @@ def validate(
         local_validators = list_local_validators()
         for local_validator in local_validators.keys():
             if iri == local_validator:
-                cv = load(open(validators_cache, "rb"))
-                return cv.get_graph(URIRef(iri))
+                cv = _load_pickle(validators_cache)
+                return cv.graph(URIRef(iri))
 
     def _get_shapes_from_id(id):
         id = int(id)
@@ -53,8 +58,8 @@ def validate(
             raise ValueError(f"shacl graph id value out of range. Must be <= {max}")
         for k, x in local_validators.items():
             if int(x["id"]) == id:
-                cv = load(open(validators_cache, "rb"))
-                return cv.get_graph(URIRef(k))
+                cv = _load_pickle(validators_cache)
+                return cv.graph(URIRef(k))
 
     # Try and resolve a validator IRI or string ID to a graph
     if isinstance(shacl, str):
@@ -110,7 +115,7 @@ def list_local_validators() -> dict[str, dict[str, int]] | None:
 
     if Path.is_file(validators_cache):
         local_validators = {}
-        cv = load(open(validators_cache, "rb"))
+        cv = _load_pickle(validators_cache)
         cv: Dataset
         validator_iris = [
             x.identifier
@@ -118,11 +123,11 @@ def list_local_validators() -> dict[str, dict[str, int]] | None:
             if str(x.identifier) not in ["urn:x-rdflib:default"]
         ]
 
-        validator_ids = load(open(validator_ids_cache, "rb"))
+        validator_ids = _load_pickle(validator_ids_cache)
 
         for validator_iri in sorted(validator_iris):
             validator_id = validator_ids[validator_iri]
-            validator_name = load_graph(cv.get_graph(validator_iri)).value(
+            validator_name = load_graph(cv.graph(validator_iri)).value(
                 subject=validator_iri, predicate=SDO.name
             )
             local_validators[str(validator_iri)] = {
@@ -173,7 +178,7 @@ def sync_validators(http_client: httpx.Client | None = None):
 
         # get & add unknown remote validators to local
         if validators_cache.exists():
-            d = load(open(validators_cache, "rb"))
+            d = _load_pickle(validators_cache)
         else:
             d = Dataset()
 
@@ -218,7 +223,7 @@ def get_validator_graph(
         isinstance(graph_or_file_or_url_or_id, str)
         and graph_or_file_or_url_or_id.isdigit()
     ):
-        validator_ids = load(open(validator_ids_cache, "rb"))
+        validator_ids = _load_pickle(validator_ids_cache)
         validator_iris = [
             key
             for key, value in validator_ids.items()
@@ -229,7 +234,7 @@ def get_validator_graph(
                 f"Could not find validator for {graph_or_file_or_url_or_id}"
             )
 
-        cv = load(open(validators_cache, "rb"))
+        cv = _load_pickle(validators_cache)
         cv: Dataset
         return cv.graph(URIRef(validator_iris[0]))
 

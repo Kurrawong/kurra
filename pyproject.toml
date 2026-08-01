@@ -6,7 +6,7 @@ Changelog = "https://github.com/Kurrawong/kurra/releases"
 
 [project]
 name = "kurra"
-version = "3.0.2a"
+version = "3.0.2"
 description = "A Python package of RDF data manipulation functions that can be called from the command line or other software"
 authors = [
     { name = "Edmond Chuc", email = "edmond@kurrawong.ai" },
@@ -66,3 +66,11 @@ required-version = ">=0.7.9"
 
 [tool.ruff.lint]
 extend-select = ["I"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error:::kurra(\\..*)?",
+    "ignore:ConjunctiveGraph is deprecated, use Dataset instead\\.:DeprecationWarning",
+    "ignore:Dataset\\.contexts is deprecated, use Dataset\\.graphs instead\\.:DeprecationWarning",
+    "ignore:Dataset\\.default_context is deprecated, use Dataset\\.default_graph instead\\.:DeprecationWarning",
+]

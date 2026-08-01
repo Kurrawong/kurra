@@ -55,6 +55,57 @@ def test_merge_cli_writes_requested_format(tmp_path):
     assert len(Graph().parse(destination, format="nt")) == 2
 
 
+def test_hierarchy_cli_prints_hierarchy(tmp_path):
+    source = tmp_path / "hierarchy.ttl"
+    source.write_text(
+        """
+        @prefix ex: <http://example.com/> .
+        @prefix owl: <http://www.w3.org/2002/07/owl#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        ex:ontology a owl:Ontology ; rdfs:label "Fruits" .
+        ex:Fruit a owl:Class ; rdfs:label "Fruit" .
+        ex:Apple a owl:Class ; rdfs:label "Apple" ;
+            rdfs:subClassOf ex:Fruit .
+        """,
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["hierarchy", str(source), "--use-names"])
+
+    assert result.exit_code == 0
+    assert result.stdout == "Fruits\n└── Fruit\n    └── Apple\n"
+
+
+def test_hierarchy_cli_accepts_named_graph(tmp_path):
+    source = tmp_path / "hierarchy.trig"
+    source.write_text(
+        """
+        @prefix ex: <http://example.com/> .
+        @prefix owl: <http://www.w3.org/2002/07/owl#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        ex:wanted {
+            ex:Fruit a owl:Class .
+            ex:Apple a owl:Class ; rdfs:subClassOf ex:Fruit .
+        }
+        ex:ignored { ex:Vehicle a owl:Class . }
+        """,
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "hierarchy",
+            str(source),
+            "--graph-iri",
+            "http://example.com/wanted",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert result.stdout == "ex:Fruit\n└── ex:Apple\n"
+
+
 def test_reformat_cli():
     subprocess.check_output(
         [

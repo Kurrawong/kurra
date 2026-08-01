@@ -96,7 +96,7 @@ def test_list_local_validators():
 
     sync_validators()
 
-    assert len(list_local_validators().keys()) == 27
+    assert len(list_local_validators().keys()) == 47
 
 
 def test_validate_by_id():
