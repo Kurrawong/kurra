@@ -1,8 +1,10 @@
 import csv
+import datetime
 import io
-from json import loads
+import json
+from decimal import Decimal
 
-from rdflib import Graph
+from rdflib import Graph, Literal
 from rdflib.namespace import RDF, SH
 from rdflib.plugins.sparql.processor import SPARQLResult
 from rich.table import Table
@@ -39,9 +41,32 @@ def format_sparql_response_as_rich_table(response, query):
 
 def format_sparql_response_as_json(response):
     if isinstance(response, SPARQLResult):
-        response = loads(response.serialize(format="json").decode())
+        response = json.loads(response.serialize(format="json").decode())
 
-    return response
+    def rdf_literal_to_json(value):
+        if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
+            return value.isoformat()
+        if isinstance(value, Decimal):
+            return float(value)
+
+        # RDFLib uses additional Python types for literals such as xsd:duration.
+        # Converting them back to a Literal produces their canonical RDF lexical
+        # form, which is safe to represent as a JSON string.
+        try:
+            literal = Literal(value)
+            if literal.datatype is not None:
+                return str(literal)
+        except (TypeError, ValueError):
+            pass
+
+        raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+    return json.dumps(
+        response,
+        default=rdf_literal_to_json,
+        ensure_ascii=False,
+        indent=4,
+    )
 
 
 def format_sparql_response_as_csv(response, query):

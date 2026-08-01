@@ -70,4 +70,4 @@ def sparql_command(
         elif response_format == "csv":
             console.print(format_sparql_response_as_csv(r, q))
         else:
-            console.print(format_sparql_response_as_json(r))
+            print(format_sparql_response_as_json(r))

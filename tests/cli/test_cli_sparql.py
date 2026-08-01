@@ -1,3 +1,4 @@
+import json
 import re
 from pathlib import Path
 from textwrap import dedent
@@ -228,3 +229,69 @@ https://example.com/demo-vocabs/language-test/lang-and-no-lang
 https://example.com/demo-vocabs/language-test/no-lang
 https://example.com/demo-vocabs/language-test/three-lang"""
     )
+
+
+def test_return_json_serializes_rdf_literal_values(tmp_path):
+    source = tmp_path / "literal-values.ttl"
+    source.write_text(
+        """
+        @prefix ex: <http://example.com/> .
+        @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+        ex:subject
+            ex:boolean true ;
+            ex:date "2024-11-21"^^xsd:date ;
+            ex:dateTime "2024-11-21T14:30:20"^^xsd:dateTime ;
+            ex:decimal "12.30"^^xsd:decimal ;
+            ex:duration "P1Y2M"^^xsd:duration ;
+            ex:integer 42 ;
+            ex:time "14:30:20"^^xsd:time ;
+        .
+        """,
+        encoding="utf-8",
+    )
+    query = """
+        PREFIX ex: <http://example.com/>
+        SELECT ?boolean ?date ?dateTime ?decimal ?duration ?integer ?time
+        WHERE {
+            ex:subject
+                ex:boolean ?boolean ;
+                ex:date ?date ;
+                ex:dateTime ?dateTime ;
+                ex:decimal ?decimal ;
+                ex:duration ?duration ;
+                ex:integer ?integer ;
+                ex:time ?time .
+        }
+    """
+
+    result = runner.invoke(app, ["sparql", str(source), query, "-f", "json"])
+
+    assert result.exit_code == 0
+    binding = json.loads(result.output)["results"]["bindings"][0]
+    assert binding == {
+        "boolean": True,
+        "date": "2024-11-21",
+        "dateTime": "2024-11-21T14:30:20",
+        "decimal": 12.3,
+        "duration": "P1Y2M",
+        "integer": 42,
+        "time": "14:30:20",
+    }
+
+
+def test_return_json_serializes_language_test_date():
+    result = runner.invoke(
+        app,
+        [
+            "sparql",
+            str(LANG_TEST_VOC),
+            "SELECT * WHERE {?s <https://schema.org/dateCreated> ?o}",
+            "-f",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    binding = json.loads(result.output)["results"]["bindings"][0]
+    assert binding["o"] == "2024-11-21"
