@@ -411,6 +411,49 @@ def test_prefixes():
     output_file.unlink(missing_ok=True)
 
 
+def test_prefixes_issue_28(tmp_path):
+    input_file = Path(__file__).parent / "prefixes-test-issue-28.ttl"
+    output_file = tmp_path / "output.ttl"
+
+    expected_output = dedent(
+        """PREFIX : <http://base/#>
+PREFIX bibo: <http://purl.org/ontology/bibo/>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX ex: <http://example.org/>
+PREFIX fuseki: <http://jena.apache.org/fuseki#>
+PREFIX geosparql: <http://jena.apache.org/geosparql#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX schema: <https://schema.org/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX tdb2: <http://jena.apache.org/2016/tdb#>
+PREFIX text: <http://jena.apache.org/text#>
+
+:fake
+    a bibo:book ;
+    ex:title "Fake Book" ;
+    fuseki:fake ex:Fake ;
+    geosparql:hasGeometry
+        [
+            geosparql:asWKT "POINT (1, 0)" ;
+        ] ;
+    text:label "Fake Text" ;
+    dc:title "Fake Book" ;
+    dcterms:title "Fake Book" ;
+    rdfs:type ex:Book ;
+    skos:topConceptOf tdb2:FakeScheme ;
+    schema:name "Fake Book" ;
+.
+"""
+    )
+
+    reformat(input_file, check=False, output_format="longturtle", output_filename=output_file)
+
+    actual_out = output_file.read_text(encoding="utf-8")
+
+    assert actual_out == expected_output
+
+
 def test_directory():
     d = Path(__file__).parent
 

@@ -1,0 +1,26 @@
+@prefix :          <http://base/#> .
+@prefix bibo:      <http://purl.org/ontology/bibo/> .
+@prefix dc:        <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms:   <http://purl.org/dc/terms/> .
+@prefix ex:        <http://example.org/> .
+@prefix fuseki:    <http://jena.apache.org/fuseki#> .
+@prefix geosparql: <http://jena.apache.org/geosparql#> .
+@prefix rdf:       <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema:    <https://schema.org/> .
+@prefix skos:      <http://www.w3.org/2004/02/skos/core#> .
+@prefix tdb2:      <http://jena.apache.org/2016/tdb#> .
+@prefix text:      <http://jena.apache.org/text#> .
+
+
+:fake a bibo:book ;
+    schema:name "Fake Book" ;
+    dc:title "Fake Book" ;
+    dcterms:title "Fake Book" ;
+    ex:title "Fake Book" ;
+    fuseki:fake ex:Fake ;
+    geosparql:hasGeometry [geosparql:asWKT "POINT (1, 0)" ] ;
+    rdfs:type ex:Book ;
+    skos:topConceptOf tdb2:FakeScheme ;
+    text:label "Fake Text" ;
+.
