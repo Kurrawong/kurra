@@ -1,6 +1,6 @@
 ![](/docs/assets/kurra-logo.svg)
 
-# Kurra
+# kurra
 
 A Python package of RDF data manipulation and data management functions that can be called from the command line or
 other software.
