@@ -1,3 +1,5 @@
+"""Utilities used by the other modules."""
+
 import json
 import pickle
 import warnings
@@ -124,7 +126,7 @@ def load_graph(
     files, RDF files or directories, remote RDF URLs, or RDF data strings.
 
     Multiple inputs may be supplied as positional arguments or as a list or tuple.
-    Missing filesystem paths raise FileNotFoundError.
+    Missing filesystem paths raise ``FileNotFoundError``.
     """
     # Preserve the former ``load_graph(path, recursive)`` positional call form.
     if len(additional_graph_paths_or_str) == 1 and isinstance(
@@ -265,12 +267,13 @@ def render_sparql_result(
 def make_httpx_client(
     sparql_username: str = None,
     sparql_password: str = None,
+    timeout: int = 60,
 ):
     auth = None
     if sparql_username:
         if sparql_password:
             auth = httpx.BasicAuth(sparql_username, sparql_password)
-    return httpx.Client(auth=auth)
+    return httpx.Client(auth=auth, timeout=timeout)
 
 
 def convert_sparql_json_to_python(
@@ -423,18 +426,6 @@ def add_namespaces_to_query_or_data(q: str, namespaces: dict):
         preamble += f"PREFIX {k}: <{v}>\n"
     preamble += "\n"
     return preamble + q
-
-
-def make_httpx_client(
-    sparql_username: str = None,
-    sparql_password: str = None,
-    timeout: int = 60,
-):
-    auth = None
-    if sparql_username:
-        if sparql_password:
-            auth = httpx.BasicAuth(sparql_username, sparql_password)
-    return httpx.Client(auth=auth, timeout=timeout)
 
 
 def get_system_graph(

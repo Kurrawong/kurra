@@ -1,4 +1,9 @@
-# Graph Store Protocol
+"""SPARQL Graph Store Protocol functions.
+
+These are knonw to work well with Jena Fuseki and GraphDB but may need testing for other RDF Database implementations
+due to differences in repository/dataset endpoints some of them use. See
+[`utils.make_system_specific_sparql_endpoint()`][kurra.utils.make_system_specific_sparql_endpoint]
+for some endpoint difference handling."""
 
 from pathlib import Path
 from typing import Literal as LiteralType

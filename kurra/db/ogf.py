@@ -1,4 +1,6 @@
-# Olis Graph Functions
+"""Olis Graph Functions.
+
+See the [Olis Spec](https://olis.dev) for what Olis is and does"""
 
 from datetime import datetime
 from pathlib import Path

@@ -1,3 +1,5 @@
+"""SPARQL query function. This includes SPARQL Update."""
+
 import json
 from pathlib import Path
 from typing import Literal

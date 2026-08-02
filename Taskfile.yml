@@ -12,7 +12,7 @@ tasks:
       - uv sync --all-extras
 
   format:
-    desc: Format Python code.
+    desc: Format Python code
     cmds:
       - uv run ruff format $PYTHON_SRC
       - uv run ruff check --select I --fix $PYTHON_SRC
@@ -20,7 +20,7 @@ tasks:
       - uv run ruff check --select I --fix $TESTS_DIR
 
   code:
-    desc: Alias of format.
+    desc: Alias of format
     cmds:
       - task: format
 
@@ -29,3 +29,8 @@ tasks:
     cmds:
       - uv sync --extra dataframe
       - uv run pytest tests -rP
+
+  docs:
+    desc: Build documentation locally
+    cmds:
+      - zensical build --clean

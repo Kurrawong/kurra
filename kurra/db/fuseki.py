@@ -1,3 +1,5 @@
+"""Functions to work with the Jena Fuseki RDF Database' API"""
+
 from io import TextIOBase
 from pathlib import Path
 

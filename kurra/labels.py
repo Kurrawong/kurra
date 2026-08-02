@@ -1,3 +1,6 @@
+"""These functions are used to find RDF elements in a given scope that are missing labels and the to acquire them
+from either KurrawongAI's 'Semantic Background' dataset or other, provided, context."""
+
 from pathlib import Path
 from typing import Literal
 

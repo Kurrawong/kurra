@@ -7,20 +7,19 @@ repo_url = "https://github.com/kurrawong/kurra"
 repo_name = "kurrawong/kurra"
 nav = [
     { "Home" = "index.md" },
-    { "Getting started" = "getting-started.md" },
     { "API reference" = [
         { "Overview" = "api/index.md" },
-        { "Files" = "api/file.md" },
-        { "Labels" = "api/labels.md" },
-        { "SHACL" = "api/shacl.md" },
-        { "SPARQL" = "api/sparql.md" },
-        { "Utilities" = "api/utils.md" },
         { "Database" = [
             { "Fuseki" = "api/db/fuseki.md" },
             { "Graph Store Protocol" = "api/db/gsp.md" },
             { "Olis Graph Functions" = "api/db/ogf.md" },
             { "SPARQL endpoints" = "api/db/sparql.md" },
         ] },
+        { "Files" = "api/file.md" },
+        { "Labels" = "api/labels.md" },
+        { "SHACL" = "api/shacl.md" },
+        { "SPARQL" = "api/sparql.md" },
+        { "Utilities" = "api/utils.md" },
         { "CLI" = [
             { "Application" = "api/cli/app.md" },
             { "Console" = "api/cli/console.md" },
@@ -37,6 +36,8 @@ nav = [
 ]
 
 [project.theme]
+logo = "assets/kurra-logo.svg"
+favicon = "assets/kurra-favicon.svg"
 features = [
     "content.code.copy",
     "navigation.indexes",
@@ -56,4 +57,3 @@ merge_init_into_class = true
 show_root_heading = true
 show_signature_annotations = true
 show_source = true
-

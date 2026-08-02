@@ -1,3 +1,5 @@
+"""SPARQL functions for remote SPARQL endpoints (not local files)"""
+
 from pathlib import Path
 from typing import Literal as LiteralType
 

@@ -1,3 +1,5 @@
+"""RDF file manipulation functions"""
+
 import itertools
 from pathlib import Path
 from typing import Literal as TypingLiteral

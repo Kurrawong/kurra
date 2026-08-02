@@ -1,3 +1,5 @@
+"""SHACL functions. """
+
 from pathlib import Path
 from pickle import dump, load
 
@@ -143,7 +145,7 @@ def list_local_validators() -> dict[str, dict[str, int]] | None:
 def sync_validators(http_client: httpx.Client | None = None):
     """Checks the Semantic Background's read-only SPARQL Endpoint, currently https://fuseki.dev.kurrawong.ai/semback/sparql, for validators.
 
-    It then checks local storage, using list_local_calidators(), to see which, if any, of those validators are stored locally.
+    It then checks local storage, using ``list_local_calidators()``, to see which, if any, of those validators are stored locally.
 
     For any missing, it pulls down and stores a copy locally.
     """
@@ -249,7 +251,7 @@ def get_validator_graph(
         return None
 
 
-def check_validator_known(validator_iri: str) -> bool:
+def _check_validator_known(validator_iri: str) -> bool:
     """Checks first locally and then in the Semantic Background to if a validator, identified by IRI, is known"""
     local_validators = list_local_validators()
     for local_validator in local_validators.keys():
