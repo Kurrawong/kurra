@@ -6,7 +6,7 @@ from textwrap import dedent
 from typer.testing import CliRunner
 
 from kurra.cli import app
-from kurra.db.gsp import upload
+from kurra.db.gsp import upload, get
 
 
 def strip_ansi_and_non_ascii(text: str) -> str:
@@ -295,3 +295,29 @@ def test_return_json_serializes_language_test_date():
     assert result.exit_code == 0
     binding = json.loads(result.output)["results"]["bindings"][0]
     assert binding["o"] == "2024-11-21"
+
+
+def test_drop(fuseki_container, http_client):
+    SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
+    TESTING_GRAPH = "https://example.com/testing-graph"
+    TESTING_GRAPH2 = "https://example.com/testing-graph2"
+
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
+    )
+    upload(
+        SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH2, False, http_client=http_client
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "sparql",
+            SPARQL_ENDPOINT,
+            "DROP ALL",
+        ],
+    )
+    assert result.exit_code == 0
+    assert get(SPARQL_ENDPOINT, TESTING_GRAPH, http_client=http_client)[0] == 404
+    assert get(SPARQL_ENDPOINT, TESTING_GRAPH, http_client=http_client)[0] == 404
+    assert result.output.strip() == "Operation completed successfully"
