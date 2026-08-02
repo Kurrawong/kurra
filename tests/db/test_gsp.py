@@ -275,9 +275,7 @@ def test_upload(fuseki_container, http_client):
 
     r = query(
         sparql_endpoint,
-        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
-        + TESTING_GRAPH
-        + "> {?s ?p ?o}}",
+        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <%s> {?s ?p ?o}}" % TESTING_GRAPH,
         return_format="python",
         return_bindings_only=True,
         http_client=http_client,
@@ -288,9 +286,7 @@ def test_upload(fuseki_container, http_client):
 
     r = query(
         sparql_endpoint,
-        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
-        + TESTING_GRAPH
-        + "> {?s ?p ?o}}",
+        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <%s> {?s ?p ?o}}" % TESTING_GRAPH,
         return_format="python",
         return_bindings_only=True,
         http_client=http_client,
@@ -301,9 +297,7 @@ def test_upload(fuseki_container, http_client):
 
     r = query(
         sparql_endpoint,
-        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <"
-        + TESTING_GRAPH
-        + "> {?s ?p ?o}}",
+        "SELECT (COUNT(?s) AS ?count) WHERE { GRAPH <%s> {?s ?p ?o}}" % TESTING_GRAPH,
         return_format="python",
         return_bindings_only=True,
         http_client=http_client,
