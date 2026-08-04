@@ -251,7 +251,7 @@ def get_validator_graph(
         return None
 
 
-def _check_validator_known(validator_iri: str) -> bool:
+def check_validator_known(validator_iri: str) -> bool:
     """Checks first locally and then in the Semantic Background to if a validator, identified by IRI, is known"""
     local_validators = list_local_validators()
     for local_validator in local_validators.keys():

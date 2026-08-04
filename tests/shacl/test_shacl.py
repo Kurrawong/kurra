@@ -7,7 +7,7 @@ from rdflib import Dataset, URIRef
 from rdflib.namespace import RDF, SH
 
 from kurra.shacl import (
-    _check_validator_known,
+    check_validator_known,
     list_local_validators,
     sync_validators,
     validate,
@@ -113,5 +113,5 @@ def test_validate_by_id():
 
 
 def test_check_validator_known():
-    assert _check_validator_known("https://linked.data.gov.au/def/vocpub/validator")
-    assert not _check_validator_known("https://linked.data.gov.au/def/vocpub/validatorx")
+    assert check_validator_known("https://linked.data.gov.au/def/vocpub/validator")
+    assert not check_validator_known("https://linked.data.gov.au/def/vocpub/validatorx")
