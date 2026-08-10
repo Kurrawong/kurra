@@ -13,7 +13,7 @@ dataset_type_options = ["mem", "tdb", "tdb1", "tdb2"]
 
 
 @app.command(name="ping", help="Check if the server is alive")
-def describe_command(
+def ping_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
@@ -42,7 +42,7 @@ def describe_command(
 
 
 @app.command(name="server", help="Get basic server info")
-def describe_command(
+def server_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
@@ -56,6 +56,7 @@ def describe_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    """Get basic server info"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -71,7 +72,7 @@ def describe_command(
 
 
 @app.command(name="stats", help="Request statistics for all datasets")
-def describe_command(
+def stats_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
@@ -85,6 +86,7 @@ def describe_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    """Request statistics for all datasets"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -100,7 +102,7 @@ def describe_command(
 
 
 @app.command(name="backup", help="Ask the server to create a backup")
-def describe_command(
+def backup_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
@@ -114,6 +116,7 @@ def describe_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    """Ask the server to create a backup"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -129,7 +132,7 @@ def describe_command(
 
 
 @app.command(name="backups_list", help="List all existing backups")
-def describe_command(
+def backups_list_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
@@ -143,6 +146,7 @@ def describe_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    """List all existing backups"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -158,7 +162,7 @@ def describe_command(
 
 
 @app.command(name="sleep", help="Tell the server to sleep")
-def describe_command(
+def sleep_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
@@ -172,6 +176,7 @@ def describe_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    """Tell the server to sleep"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -187,7 +192,7 @@ def describe_command(
 
 
 @app.command(name="tasks", help="List running tasks")
-def describe_command(
+def tasks_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
@@ -201,6 +206,7 @@ def describe_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    """List running tasks"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -216,7 +222,7 @@ def describe_command(
 
 
 @app.command(name="metrics", help="Get server metrics")
-def describe_command(
+def metrics_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
@@ -230,6 +236,7 @@ def describe_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    """Get server metrics"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -259,6 +266,7 @@ def describe_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    """Get the list of datasets or describe one"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -273,10 +281,7 @@ def describe_command(
             raise err
 
 
-@app.command(
-    name="create",
-    help="Create a new dataset",
-)
+@app.command(name="create", help="Create a new dataset")
 def create_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
@@ -296,6 +301,7 @@ def create_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    """Create a new dataset"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -352,6 +358,7 @@ def delete_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
+    """Delete a dataset"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )

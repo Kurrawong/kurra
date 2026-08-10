@@ -87,11 +87,10 @@ def validate(
 
     Args:
         data: The path to an RDF data file, a graph, a list of Paths or a list of Graphs to validate. List items will be merged
-        shacl: The sHACL shapes to validate with
+        shacl: The SHACL shapes to validate with
 
     Returns:
-        Tuple[bool, Graph, str, Graph]: The validation status, results graph,
-        message and summary graph
+        Tuple[bool, Graph, str, Graph]: The validation status, results graph, message and summary graph
 
     Raises:
         ValueError: If the ID of the SHACL validator is invalid

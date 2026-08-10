@@ -15,7 +15,7 @@ app = typer.Typer(help="Graph Store Protocol commands")
 @app.command(name="exists", help="Checks to see if a graph exists within a database")
 def exists_command(
     sparql_endpoint_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+        ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
     ),
     graph_identifier: Annotated[
         str,
@@ -35,6 +35,7 @@ def exists_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
+    """Checks to see if a graph exists within a database"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -54,7 +55,7 @@ def exists_command(
 @app.command(name="get", help="Gets the content of a database graph")
 def get_command(
     sparql_endpoint_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+        ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
     ),
     graph_identifier: Annotated[
         str,
@@ -74,6 +75,7 @@ def get_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
+    """Gets the content of a database graph"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -103,7 +105,7 @@ def put_command(
         ..., help="The path of a file or directory of files to be uploaded."
     ),
     sparql_endpoint_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+        ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
     ),
     graph_identifier: Annotated[
         str,
@@ -123,6 +125,7 @@ def put_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
+    """Add content to a database graph. This will preserve all existing content. Use post() if you wish to remove existing content."""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -147,7 +150,7 @@ def post_command(
         ..., help="The path of a file or directory of files to be uploaded."
     ),
     sparql_endpoint_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+        ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
     ),
     graph_identifier: Annotated[
         str,
@@ -167,6 +170,7 @@ def post_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
+    """Add content to a database graph. This will remove all existing content. Use put() if you wish to preserve existing content."""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -188,7 +192,7 @@ def post_command(
 @app.command(name="delete", help="Deletes the content of a database graph")
 def delete_command(
     sparql_endpoint_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+        ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
     ),
     graph_identifier: Annotated[
         str,
@@ -208,6 +212,7 @@ def delete_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
+    """Deletes triples from a database graph"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -227,7 +232,7 @@ def delete_command(
 @app.command(name="clear", help="Clears a database graph")
 def clear_command(
     sparql_endpoint_url: str = typer.Argument(
-        ..., help="Fuseki base URL. E.g. http://localhost:3030"
+        ..., help="SPARQL Endpoint URL. E.g. http://localhost:3030/ds"
     ),
     graph_identifier: Annotated[
         str,
@@ -247,6 +252,7 @@ def clear_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
+    """Clears - removes all triples from - a database graph"""
     auth = (
         (username, password) if username is not None and password is not None else None
     )

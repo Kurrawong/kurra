@@ -57,3 +57,6 @@ merge_init_into_class = true
 show_root_heading = true
 show_signature_annotations = true
 show_source = true
+separate_signature = true
+line_length = 88
+unwrap_annotated = true

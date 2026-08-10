@@ -94,6 +94,7 @@ def validate_command(
     help="Lists all known SHACL validators",
 )
 def listv_command():
+    """Lists all known SHACL validators (known to the KurrawongAI Semantic Background)"""
     l = list_local_validators()
     if l is None:
         console.print("No local validators found")
@@ -112,6 +113,7 @@ def listv_command():
     help="Synchronizes SHACL validators",
 )
 def syncv_command():
+    """Synchronizes SHACL validators"""
     sync_validators()
 
     console.print("Synchronizing SHACL validators")
@@ -137,6 +139,7 @@ def infer_command(
         help="whether to include the data triples in output",
     ),
 ):
+    """Infer new triples from given data using SHACL Rules (SRL syntax only)"""
     data = Path(data)
     rules = Path(rules)
 

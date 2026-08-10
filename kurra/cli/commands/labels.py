@@ -21,6 +21,7 @@ def find_command(
         help="An RDF file or directory of RDF files containing labels",
     ),
 ) -> None:
+    """Find IRIs missing labels"""
     if Path(f).is_file() or Path(f).is_dir():
         if local_context is not None:
             if Path(local_context).is_file() or Path(local_context).is_dir():
@@ -66,6 +67,7 @@ def get_command(
         help="Return RDF in the longturtle format or a printed table of IRIs and labels. Either 'graph' or 'table'",
     ),
 ) -> None:
+    """Gets labels for IRIs missing them from a given context or the KurrawongAI Semantic Background"""
     iris = []
     if Path(f).is_file() or Path(f).is_dir():
         if local_context is not None:
