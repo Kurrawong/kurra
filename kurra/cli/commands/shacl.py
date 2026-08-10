@@ -53,7 +53,7 @@ def validate_command(
     ] = False,
 ) -> None:
     """Validate a given file or directory of files using a given SHACL file or directory of files"""
-    valid, g, txt = validate(data, shacl, hide_warnings=hide_warnings)
+    valid, g, txt, summary = validate(data, shacl, hide_warnings=hide_warnings)
 
     if valid:
         console.print("The data is valid")

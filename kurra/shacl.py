@@ -2,10 +2,11 @@
 
 from pathlib import Path
 from pickle import dump, load
+from random import choice
 
 import httpx
 from pyshacl import validate as v
-from rdflib import Dataset, Graph, URIRef
+from rdflib import BNode, Dataset, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, SDO, SH
 from srl.engine import RuleEngine
 from srl.parser import SRLParser
@@ -14,6 +15,62 @@ import kurra.sparql
 from kurra.db.gsp import get as gsp_get
 from kurra.sparql import query
 from kurra.utils import load_graph
+
+EX = Namespace("http://example.com/")
+
+
+def _summarize_validation_results(validation_report: Graph) -> Graph:
+    """Create a compact summary of a pySHACL validation results graph."""
+    sg = Graph()
+    sg.bind("ex", EX)
+    sg.bind("sh", SH)
+
+    results = set(
+        validation_report.subjects(predicate=RDF.type, object=SH.ValidationResult)
+    )
+    report_summary = BNode()
+    sg.add((report_summary, RDF.type, EX.ValidationReportSummary))
+
+    summary = BNode()
+    sg.add((summary, RDF.type, EX.ValidationCounts))
+    sg.add((report_summary, EX["counts"], summary))
+
+    for severity, predicate in (
+        (SH.Violation, EX.violationCount),
+        (SH.Warning, EX.warningCount),
+        (SH.Info, EX.infoCount),
+    ):
+        count = sum(
+            1
+            for result in results
+            if (result, SH.resultSeverity, severity) in validation_report
+        )
+        sg.add((summary, predicate, Literal(count)))
+
+    results_by_shape = {}
+    for result in results:
+        for shape in validation_report.objects(result, SH.sourceShape):
+            results_by_shape.setdefault(shape, []).append(result)
+
+    for shape, shape_results in results_by_shape.items():
+        s = BNode()
+        sg.add((s, RDF.type, EX.ValidationResultSummary))
+        sg.add((report_summary, EX["result"], s))
+        sg.add((s, EX["count"], Literal(len(shape_results))))
+        sg.add((s, SH.sourceShape, shape))
+
+        examples = [
+            (focus_node, message)
+            for result in shape_results
+            for focus_node in validation_report.objects(result, SH.focusNode)
+            for message in validation_report.objects(result, SH.resultMessage)
+        ]
+        if examples:
+            focus_node, message = choice(examples)
+            sg.add((s, EX.exampleNode, focus_node))
+            sg.add((s, SH.resultMessage, message))
+
+    return sg
 
 
 def _load_pickle(path: Path):
@@ -25,7 +82,7 @@ def validate(
     data: Path | Graph | list[Path] | list[Graph],
     shacl: Graph | Path | str | int,
     hide_warnings: bool = False,
-) -> tuple[bool, Graph, str]:
+) -> tuple[bool, Graph, str, Graph]:
     """Validates a data graph using a shapes graph.
 
     Args:
@@ -33,7 +90,8 @@ def validate(
         shacl: The sHACL shapes to validate with
 
     Returns:
-        Tuple[bool, Graph, str]: The validation status, results graph and message, all from pySHACL
+        Tuple[bool, Graph, str, Graph]: The validation status, results graph,
+        message and summary graph
 
     Raises:
         ValueError: If the ID of the SHACL validator is invalid
@@ -104,7 +162,7 @@ def validate(
             if not g.value(subject=s, predicate=SH.resultSeverity) == SH.Violation:
                 g = g - g.cbd(s)
 
-    return tf, g, msg
+    return tf, g, msg, _summarize_validation_results(g)
 
 
 def list_local_validators() -> dict[str, dict[str, int]] | None:
