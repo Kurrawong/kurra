@@ -4,12 +4,14 @@ import io
 import json
 from decimal import Decimal
 
-from rdflib import Graph, Literal
+from rdflib import Graph, Literal, Namespace
 from rdflib.namespace import RDF, SH
 from rdflib.plugins.sparql.processor import SPARQLResult
 from rich.table import Table
 
 from kurra.utils import is_construct_or_describe_query
+
+EX = Namespace("http://example.com/")
 
 
 def format_sparql_response_as_rich_table(response, query):
@@ -108,6 +110,44 @@ def format_shacl_graph_as_rich_table(g: Graph):
             str(errs),
             g.value(vr, SH.focusNode),
             g.value(vr, SH.resultMessage),
+        )
+
+    return t
+
+
+def format_shacl_summary_as_rich_table(g: Graph):
+    counts = g.value(
+        subject=g.value(predicate=RDF.type, object=EX.ValidationReportSummary),
+        predicate=EX["counts"],
+    )
+    violations = g.value(counts, EX.violationCount, default=Literal(0))
+    warnings = g.value(counts, EX.warningCount, default=Literal(0))
+    info = g.value(counts, EX.infoCount, default=Literal(0))
+
+    t = Table(
+        title=(
+            f"Validation summary — Violations: {violations}, "
+            f"Warnings: {warnings}, Info: {info}"
+        ),
+        padding=(1, 0),
+    )
+    t.add_column("No.")
+    t.add_column("Shape")
+    t.add_column("Count")
+    t.add_column("Message")
+    t.add_column("Example node")
+
+    summaries = sorted(
+        g.subjects(RDF.type, EX.ValidationResultSummary),
+        key=lambda result: str(g.value(result, SH.sourceShape)),
+    )
+    for number, result in enumerate(summaries, start=1):
+        t.add_row(
+            str(number),
+            g.value(result, SH.sourceShape),
+            g.value(result, EX["count"]),
+            g.value(result, SH.resultMessage),
+            g.value(result, EX.exampleNode),
         )
 
     return t

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 import typer
 from rich.table import Table
@@ -8,6 +8,7 @@ import kurra.shacl
 from kurra.cli.console import console
 from kurra.cli.utils import (
     format_shacl_graph_as_rich_table,
+    format_shacl_summary_as_rich_table,
 )
 from kurra.shacl import list_local_validators, sync_validators, validate
 
@@ -51,16 +52,43 @@ def validate_command(
             "--hide-warnings", "-hw", help="Hides Shapes results of Warning and Info"
         ),
     ] = False,
+    summary: Annotated[
+        bool,
+        typer.Option(
+            "--summary",
+            "-y",
+            help="Print a summary table instead of the full validation results",
+        ),
+    ] = False,
+    output_format: Annotated[
+        Literal["table", "rdf"],
+        typer.Option(
+            "--format",
+            "-f",
+            help="Output format: a Rich table or Long Turtle RDF",
+        ),
+    ] = "table",
 ) -> None:
     """Validate a given file or directory of files using a given SHACL file or directory of files"""
-    valid, g, txt, summary = validate(data, shacl, hide_warnings=hide_warnings)
+    valid, g, txt, summary_graph = validate(
+        data, shacl, hide_warnings=hide_warnings
+    )
 
-    if valid:
-        console.print("The data is valid")
+    output_graph = summary_graph if summary else g
+
+    if output_format == "rdf":
+        console.print(output_graph.serialize(format="longturtle"))
     else:
-        console.print("The data is NOT valid")
-        console.print("The errors are:")
-        console.print(format_shacl_graph_as_rich_table(g))
+        if valid:
+            console.print("The data is valid")
+        else:
+            console.print("The data is NOT valid")
+            console.print("The errors are:")
+
+            if summary:
+                console.print(format_shacl_summary_as_rich_table(summary_graph))
+            else:
+                console.print(format_shacl_graph_as_rich_table(g))
 
 
 @app.command(
