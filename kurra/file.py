@@ -264,7 +264,11 @@ def hierarchy(
     }
 
     def typed_resources(types: set[URIRef]) -> set:
-        return {subject for rdf_type in types for subject in graph.subjects(RDF.type, rdf_type)}
+        return {
+            subject
+            for rdf_type in types
+            for subject in graph.subjects(RDF.type, rdf_type)
+        }
 
     def display_name(resource) -> str:
         if use_names:
@@ -373,7 +377,8 @@ def hierarchy(
                 last = index == len(descendants) - 1
                 render(
                     child,
-                    prefix + ("    " if connector == "└── " else "│   " if connector else ""),
+                    prefix
+                    + ("    " if connector == "└── " else "│   " if connector else ""),
                     "└── " if last else "├── ",
                 )
 

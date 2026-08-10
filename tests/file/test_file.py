@@ -221,9 +221,7 @@ def test_hierarchy_uses_explicit_skos_top_concept_links(capsys):
         """
     )
 
-    assert capsys.readouterr().out == (
-        "ex:scheme\n└── ex:top\n    └── ex:child\n"
-    )
+    assert capsys.readouterr().out == ("ex:scheme\n└── ex:top\n    └── ex:child\n")
 
 
 def test_hierarchy_uses_ontology_as_class_and_property_root(capsys):
@@ -447,7 +445,9 @@ PREFIX text: <http://jena.apache.org/text#>
 """
     )
 
-    reformat(input_file, check=False, output_format="longturtle", output_filename=output_file)
+    reformat(
+        input_file, check=False, output_format="longturtle", output_filename=output_file
+    )
 
     actual_out = output_file.read_text(encoding="utf-8")
 

@@ -68,13 +68,9 @@ def test_validate_cli_summary(tmp_path, monkeypatch, summary_option):
     sg.add((report, EX["result"], result_summary))
     sg.add((result_summary, RDF.type, EX.ValidationResultSummary))
     sg.add((result_summary, EX["count"], Literal(3)))
-    sg.add(
-        (result_summary, SH.sourceShape, URIRef("http://example.com/TestShape"))
-    )
+    sg.add((result_summary, SH.sourceShape, URIRef("http://example.com/TestShape")))
     sg.add((result_summary, SH.resultMessage, Literal("Test message")))
-    sg.add(
-        (result_summary, EX.exampleNode, URIRef("http://example.com/example"))
-    )
+    sg.add((result_summary, EX.exampleNode, URIRef("http://example.com/example")))
 
     monkeypatch.setattr(
         shacl_commands,

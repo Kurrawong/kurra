@@ -6,7 +6,7 @@ import httpx
 import pytest
 from rdflib.namespace import SKOS
 
-from kurra.db.gsp import clear, upload, get
+from kurra.db.gsp import clear, get, upload
 from kurra.sparql import query
 from kurra.utils import RenderFormat, render_sparql_result
 
@@ -812,13 +812,13 @@ def test_query_file():
         ]
         == 7
     )
-    
-    
+
+
 def test_drop(fuseki_container, http_client):
     SPARQL_ENDPOINT = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 
     query(SPARQL_ENDPOINT, "DROP ALL", http_client=http_client)
-    
+
     upload(
         SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
     )

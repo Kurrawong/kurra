@@ -267,7 +267,6 @@ def test_clear(fuseki_container, http_client):
     assert len(r) == 0
 
 
-
 def test_upload(fuseki_container, http_client):
     sparql_endpoint = f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
 

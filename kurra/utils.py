@@ -446,9 +446,9 @@ def get_system_graph(
             )
 
         if system_graph_source.suffix == ".trig":
-            system_graph += _parse_dataset(
-                system_graph_source, format="trig"
-            ).graph(SYSTEM_GRAPH_IRI)
+            system_graph += _parse_dataset(system_graph_source, format="trig").graph(
+                SYSTEM_GRAPH_IRI
+            )
         else:
             system_graph += load_graph(system_graph_source)
     elif isinstance(system_graph_source, Graph):

@@ -6,7 +6,7 @@ from textwrap import dedent
 from typer.testing import CliRunner
 
 from kurra.cli import app
-from kurra.db.gsp import upload, get
+from kurra.db.gsp import get, upload
 
 
 def strip_ansi_and_non_ascii(text: str) -> str:

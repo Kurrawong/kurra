@@ -277,9 +277,19 @@ def clear(
             }
             ORDER BY ?g
             """
-        for r in query(sparql_endpoint, q, http_client=http_client, return_format="python", return_bindings_only=True):
-            deletion_results.append(delete(sparql_endpoint, r["g"], http_client=http_client))
-        deletion_results.append(delete(sparql_endpoint, None, http_client=http_client))  # default graph too
+        for r in query(
+            sparql_endpoint,
+            q,
+            http_client=http_client,
+            return_format="python",
+            return_bindings_only=True,
+        ):
+            deletion_results.append(
+                delete(sparql_endpoint, r["g"], http_client=http_client)
+            )
+        deletion_results.append(
+            delete(sparql_endpoint, None, http_client=http_client)
+        )  # default graph too
 
         # if even one graph is deleted correctly, return true
         for dr in deletion_results:

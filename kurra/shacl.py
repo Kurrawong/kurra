@@ -1,4 +1,4 @@
-"""SHACL functions. """
+"""SHACL functions."""
 
 from pathlib import Path
 from pickle import dump, load

@@ -61,7 +61,9 @@ def format_sparql_response_as_json(response):
         except (TypeError, ValueError):
             pass
 
-        raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+        raise TypeError(
+            f"Object of type {type(value).__name__} is not JSON serializable"
+        )
 
     return json.dumps(
         response,
