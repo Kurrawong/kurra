@@ -18,25 +18,78 @@ from sparqlib import (
     statement_type_from_string,
 )
 
-RDF_SUFFIX_MAP = {
-    ".nt": "application/n-triples",
-    ".nq": "application/n-quads",
-    ".owl": "application/rdf+xml",
-    ".ttl": "text/turtle",
-    ".trig": "application/trig",
-    ".json": "application/ld+json",
-    ".jsonld": "application/ld+json",
-    ".xml": "application/rdf+xml",
-}
-
+# Canonical RDFLib format codes are used as the keys in the following maps.  A
+# few serializers (pretty-xml and longturtle) have no distinct file syntax, so
+# they deliberately share a suffix and media type with their base format.
 RDF_FILE_SUFFIXES = {
+    "xml": ".rdf",
+    "pretty-xml": ".rdf",
+    "n3": ".n3",
     "turtle": ".ttl",
     "longturtle": ".ttl",
-    "xml": ".rdf",
-    "n-triples": ".nt",
+    "nt": ".nt",
     "json-ld": ".jsonld",
-    "owl": ".owl",
+    "nquads": ".nq",
+    "trix": ".trix",
+    "trig": ".trig",
+    "hext": ".hext",
+    "patch": ".patch",
 }
+
+RDF_FORMAT_LABELS = {
+    "xml": "RDF/XML",
+    "pretty-xml": "Pretty RDF/XML",
+    "n3": "Notation3",
+    "turtle": "Turtle",
+    "longturtle": "Long Turtle",
+    "nt": "N-Triples",
+    "json-ld": "JSON-LD",
+    "nquads": "N-Quads",
+    "trix": "TriX",
+    "trig": "TriG",
+    "hext": "Hextuples",
+    "patch": "RDF Patch",
+}
+
+RDF_MEDIA_TYPES = {
+    "xml": "application/rdf+xml",
+    "pretty-xml": "application/rdf+xml",
+    "n3": "text/n3",
+    "turtle": "text/turtle",
+    "longturtle": "text/turtle",
+    "nt": "application/n-triples",
+    "json-ld": "application/ld+json",
+    "nquads": "application/n-quads",
+    "trix": "application/trix",
+    "trig": "application/trig",
+    "hext": "application/x-ndjson",
+    "patch": "application/rdf-patch",
+}
+
+# Alternate suffixes accepted by RDFLib are included here even when they map to
+# the same syntax.  This map is also used by the graph-store client.
+RDF_SUFFIX_MAP = {
+    ".rdf": RDF_MEDIA_TYPES["xml"],
+    ".xml": RDF_MEDIA_TYPES["xml"],
+    ".owl": RDF_MEDIA_TYPES["xml"],
+    ".n3": RDF_MEDIA_TYPES["n3"],
+    ".ttl": RDF_MEDIA_TYPES["turtle"],
+    ".nt": RDF_MEDIA_TYPES["nt"],
+    ".json": RDF_MEDIA_TYPES["json-ld"],
+    ".jsonld": RDF_MEDIA_TYPES["json-ld"],
+    ".nq": RDF_MEDIA_TYPES["nquads"],
+    ".trix": RDF_MEDIA_TYPES["trix"],
+    ".trig": RDF_MEDIA_TYPES["trig"],
+    ".hext": RDF_MEDIA_TYPES["hext"],
+    ".patch": RDF_MEDIA_TYPES["patch"],
+}
+
+# Formats whose RDFLib parsers and serializers retain graph names/quads.
+RDF_GRAPH_AWARE_FORMATS = frozenset(
+    {"json-ld", "nquads", "trix", "trig", "hext", "patch"}
+)
+
+DEFAULT_GRAPH_IRI = URIRef("http://example.com/graph")
 
 SYSTEM_GRAPH_IRI = URIRef("https://olis.dev/SystemGraph")
 

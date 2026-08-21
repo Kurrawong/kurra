@@ -14,7 +14,7 @@ from kurra.file import (
     merge,
     reformat,
 )
-from kurra.utils import load_graph
+from kurra.utils import DEFAULT_GRAPH_IRI, load_graph
 
 
 def test_merge_prints_turtle(tmp_path, capsys):
@@ -52,6 +52,46 @@ def test_merge_writes_requested_format(tmp_path):
 
     merged = Graph().parse(destination, format="json-ld")
     assert len(merged) == 2
+
+
+def test_merge_promotes_triples_and_preserves_quad_graphs(tmp_path):
+    triples = tmp_path / "triples.nt"
+    triples.write_text(
+        "<http://example.com/t> <http://example.com/p> <http://example.com/o> .\n",
+        encoding="utf-8",
+    )
+    quads = tmp_path / "quads.nq"
+    quads.write_text(
+        "<http://example.com/q> <http://example.com/p> <http://example.com/o> "
+        "<http://example.com/original> .\n",
+        encoding="utf-8",
+    )
+    destination = tmp_path / "merged.trig"
+
+    merge(triples, quads, destination=destination, output_format="trig")
+
+    merged = Dataset().parse(destination, format="trig")
+    contexts = {str(context) for *_, context in merged.quads()}
+    assert contexts == {
+        str(DEFAULT_GRAPH_IRI),
+        "http://example.com/original",
+    }
+
+
+def test_merge_flattens_quads_for_triple_output(tmp_path):
+    quads = tmp_path / "quads.nq"
+    quads.write_text(
+        "<http://example.com/a> <http://example.com/p> <http://example.com/o> "
+        "<http://example.com/one> .\n"
+        "<http://example.com/b> <http://example.com/p> <http://example.com/o> "
+        "<http://example.com/two> .\n",
+        encoding="utf-8",
+    )
+    destination = tmp_path / "merged.ttl"
+
+    merge(quads, destination=destination, output_format="turtle")
+
+    assert len(Graph().parse(destination, format="turtle")) == 2
 
 
 def test_reformat_rdf_one():

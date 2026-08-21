@@ -7,6 +7,11 @@ from rdflib import Graph
 from rdflib.compare import isomorphic
 
 from kurra.utils import (
+    RDF_FILE_SUFFIXES,
+    RDF_FORMAT_LABELS,
+    RDF_GRAPH_AWARE_FORMATS,
+    RDF_MEDIA_TYPES,
+    RDF_SUFFIX_MAP,
     GspType,
     RenderFormat,
     guess_format_from_data,
@@ -24,6 +29,13 @@ from kurra.utils import (
     sparql_statement_return_type,
     statement_type_for_query,
 )
+
+
+def test_rdf_format_maps_are_harmonised():
+    assert RDF_FILE_SUFFIXES.keys() == RDF_FORMAT_LABELS.keys()
+    assert RDF_FILE_SUFFIXES.keys() == RDF_MEDIA_TYPES.keys()
+    assert RDF_GRAPH_AWARE_FORMATS <= RDF_FILE_SUFFIXES.keys()
+    assert set(RDF_FILE_SUFFIXES.values()) <= RDF_SUFFIX_MAP.keys()
 
 
 def test_guess_format_from_data():

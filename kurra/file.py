@@ -2,14 +2,16 @@
 
 import itertools
 from pathlib import Path
-from typing import Literal as TypingLiteral
 from typing import Optional, Tuple, Union
 
 from rdflib import Dataset, Graph, URIRef
 from rdflib.namespace import DCTERMS, OWL, RDF, RDFS, SKOS
 
 from kurra.utils import (
+    DEFAULT_GRAPH_IRI,
     RDF_FILE_SUFFIXES,
+    RDF_GRAPH_AWARE_FORMATS,
+    RDF_SUFFIX_MAP,
     _parse_dataset,
     _serialize_dataset,
     load_graph,
@@ -26,25 +28,47 @@ class FailOnChangeError(Exception):
 def merge(
     *files: Path,
     destination: Optional[Path] = None,
-    output_format: TypingLiteral[
-        "longturtle", "turtle", "xml", "json-ld", "nt"
-    ] = "longturtle",
+    output_format: str = "longturtle",
 ) -> None:
-    """Merge RDF files and serialize their triples in a single RDF document.
+    """Merge RDF files into one RDF graph or dataset document.
 
-    RDFLib infers each input format from its filename. The merged graph is printed
-    when ``destination`` is not supplied; otherwise it is written to that path.
+    Named graphs are preserved.  Triple-only inputs are placed in
+    ``DEFAULT_GRAPH_IRI`` when the output syntax supports datasets; named graphs
+    are flattened when the requested output syntax only supports triples.
     """
-    if output_format not in ["longturtle", "turtle", "xml", "json-ld", "nt"]:
+    if output_format not in RDF_FILE_SUFFIXES:
         raise ValueError(
-            "If you supply an output_format value, it must be one of 'turtle', 'xml', 'json-ld' or 'nt'"
+            "Unsupported output_format. It must be one of "
+            f"{', '.join(RDF_FILE_SUFFIXES)}"
         )
 
-    g = Graph()
-    for file in files:
-        g.parse(source=Path(file))
+    input_formats = [_format_for_suffix(Path(file).suffix) for file in files]
+    # JSON-LD can represent either a graph or a dataset. Keep triple-only
+    # JSON-LD graph-shaped, but use its dataset form when named graphs occur.
+    output_is_dataset = output_format in RDF_GRAPH_AWARE_FORMATS and (
+        output_format != "json-ld"
+        or any(code in RDF_GRAPH_AWARE_FORMATS for code in input_formats)
+    )
+    merged = Dataset() if output_is_dataset else Graph()
+    for file, input_format in zip(files, input_formats):
+        path = Path(file)
+        if input_format in RDF_GRAPH_AWARE_FORMATS:
+            parsed = _parse_dataset(path, format=input_format)
+            if output_is_dataset:
+                for quad in parsed.quads():
+                    merged.add(quad)
+            else:
+                for subject, predicate, obj, _ in parsed.quads():
+                    merged.add((subject, predicate, obj))
+        else:
+            parsed = Graph().parse(source=path, format=input_format)
+            if output_is_dataset:
+                for triple in parsed:
+                    merged.add((*triple, DEFAULT_GRAPH_IRI))
+            else:
+                merged += parsed
 
-    serialized = g.serialize(format=output_format)
+    serialized = merged.serialize(format=output_format)
 
     if destination is None:
         print(serialized, end="" if serialized.endswith("\n") else "\n")
@@ -52,9 +76,37 @@ def merge(
         Path(destination).write_text(serialized, encoding="utf-8")
 
 
+def _format_for_suffix(suffix: str) -> str:
+    """Return the canonical RDFLib format code for a supported suffix."""
+    suffix = suffix.lower()
+    matches = [
+        format_code
+        for format_code, file_suffix in RDF_FILE_SUFFIXES.items()
+        if file_suffix == suffix
+    ]
+    if suffix in {".xml", ".owl"}:
+        return "xml"
+    if suffix == ".json":
+        return "json-ld"
+    if not matches:
+        raise ValueError(f"Unsupported RDF file suffix: {suffix}")
+    # Prefer the normal parser over presentation-only serializer aliases.
+    return next(
+        (code for code in matches if code not in {"pretty-xml", "longturtle"}),
+        matches[0],
+    )
+
+
 def do_format(
-    content: str, output_format: RDF_FILE_SUFFIXES.keys() = "longturtle"
+    content: str,
+    output_format: RDF_FILE_SUFFIXES.keys() = "longturtle",
+    input_format: str | None = None,
 ) -> Tuple[str, bool]:
+    if output_format not in RDF_FILE_SUFFIXES:
+        raise ValueError(
+            "Unsupported output_format. It must be one of "
+            f"{', '.join(RDF_FILE_SUFFIXES)}"
+        )
     if output_format in ["turtle", "longturtle", "ttl", "nt", "n3"]:
         lines = content.split("\n")
         comments = []
@@ -65,7 +117,11 @@ def do_format(
                 break
 
         content_no_comments = "\n".join(lines[len(comments) :])
-        graph = load_graph(content_no_comments)
+        graph = (
+            load_graph(content_no_comments)
+            if input_format is None
+            else Graph().parse(data=content_no_comments, format=input_format)
+        )
         if comments != []:
             header = "\n".join(comments) + "\n"
         else:
@@ -77,7 +133,25 @@ def do_format(
             if not line.startswith("#") and line != "":
                 clean_content += line + "\n"
 
-        graph = load_graph(clean_content)
+        source_format = input_format or output_format
+        if source_format in RDF_GRAPH_AWARE_FORMATS:
+            graph = _parse_dataset(data=clean_content, format=source_format)
+        else:
+            graph = Graph().parse(data=clean_content, format=source_format)
+
+        output_is_dataset = output_format in RDF_GRAPH_AWARE_FORMATS and (
+            output_format != "json-ld" or source_format in RDF_GRAPH_AWARE_FORMATS
+        )
+        if output_is_dataset and not isinstance(graph, Dataset):
+            dataset = Dataset()
+            for triple in graph:
+                dataset.add((*triple, DEFAULT_GRAPH_IRI))
+            graph = dataset
+        elif not output_is_dataset and isinstance(graph, Dataset):
+            flattened = Graph()
+            for subject, predicate, obj, _ in graph.quads():
+                flattened.add((subject, predicate, obj))
+            graph = flattened
         new_content = graph.serialize(format=output_format, canon=True)
 
     changed = content != new_content
@@ -91,10 +165,15 @@ def _format_file(
     output_filename: Path = None,
 ) -> bool:
     """Inner format function - not to be used directly"""
+    if output_format not in RDF_FILE_SUFFIXES:
+        raise ValueError(
+            "Unsupported output_format. It must be one of "
+            f"{', '.join(RDF_FILE_SUFFIXES)}"
+        )
     if not file.is_file():
         raise ValueError(f"{file} is not a file.")
 
-    if file.suffix not in RDF_FILE_SUFFIXES.values():
+    if file.suffix.lower() not in RDF_SUFFIX_MAP:
         raise ValueError(
             f"File {file} is not a RDF file. Must have one of the following suffixes: {RDF_FILE_SUFFIXES.values()}"
         )
@@ -111,7 +190,9 @@ def _format_file(
     with open(path, "r", encoding="utf-8") as fread:
         content = fread.read()
 
-        content, changed = do_format(content, output_format)
+        content, changed = do_format(
+            content, output_format, input_format=_format_for_suffix(path.suffix)
+        )
         if check:
             raise FailOnChangeError(
                 f"The file {path} contains changes that can be formatted."
@@ -139,7 +220,7 @@ def reformat(
                 "You cannot specify an output filename if converting multiple files"
             )
 
-        types = [f"**/*{ft}" for ft in RDF_FILE_SUFFIXES.values()]
+        types = [f"**/*{ft}" for ft in RDF_SUFFIX_MAP]
         files = list(
             itertools.chain.from_iterable(path.glob(pattern) for pattern in types)
         )
