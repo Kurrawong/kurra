@@ -137,12 +137,10 @@ def validate(
     else:
         shapes_graph = get_validator_graph(shacl)
 
-    # If the shapes graph is not yet loaded, try updating validators from the Semantic Background and try again
-    if shapes_graph is None:
-        # Try and resolve a validator IRI to a graph
-        if isinstance(shacl, str):
-            if shacl.startswith("http"):
-                shapes_graph = _get_shapes_from_iri(shacl)
+    # If the shapes graph is not loaded and is online iri, try updating validators from the Semantic Background and try again
+    if shapes_graph is None and isinstance(shacl, str) and shacl.startswith("http"):
+        sync_validators()
+        shapes_graph = _get_shapes_from_iri(shacl)
 
     if shapes_graph is None:
         raise RuntimeError(f"Not able to load shapes graph: {shacl}")
