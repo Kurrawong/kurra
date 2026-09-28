@@ -32,8 +32,7 @@ def find_missing_labels(
             if g.value(subject=s, predicate=node):
                 break
         else:
-            if not isinstance(s, BNode):
-                missing_labels.add(s)
+            missing_labels.add(s)
 
     if local_context is not None:
         tx = set()
