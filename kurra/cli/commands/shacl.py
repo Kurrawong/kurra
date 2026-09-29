@@ -52,6 +52,14 @@ def validate_command(
             "--hide-warnings", "-hw", help="Hides Shapes results of Warning and Info"
         ),
     ] = False,
+    advanced: Annotated[
+        bool,
+        typer.Option(
+            "--advanced",
+            "-a",
+            help="Enable SHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions)",
+        ),
+    ] = False,
     summary: Annotated[
         bool,
         typer.Option(
@@ -70,7 +78,9 @@ def validate_command(
     ] = "table",
 ) -> None:
     """Validate a given file or directory of files using a given SHACL file or directory of files"""
-    valid, g, txt, summary_graph = validate(data, shacl, hide_warnings=hide_warnings)
+    valid, g, txt, summary_graph = validate(
+        data, shacl, hide_warnings=hide_warnings, advanced=advanced
+    )
 
     output_graph = summary_graph if summary else g
 
