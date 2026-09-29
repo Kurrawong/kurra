@@ -7,7 +7,7 @@ from random import choice
 import httpx
 from pyshacl import validate as v
 from rdflib import BNode, Dataset, Graph, Literal, Namespace, URIRef
-from rdflib.namespace import RDF, SDO, SH
+from rdflib.namespace import RDF, SDO, SH, OWL
 from srl.engine import RuleEngine
 from srl.parser import SRLParser
 
@@ -137,12 +137,10 @@ def validate(
     else:
         shapes_graph = get_validator_graph(shacl)
 
-    # If the shapes graph is not yet loaded, try updating validators from the Semantic Background and try again
-    if shapes_graph is None:
-        # Try and resolve a validator IRI to a graph
-        if isinstance(shacl, str):
-            if shacl.startswith("http"):
-                shapes_graph = _get_shapes_from_iri(shacl)
+    # If the shapes graph is not loaded and is online iri, try updating validators from the Semantic Background and try again
+    if shapes_graph is None and isinstance(shacl, str) and shacl.startswith("http"):
+        sync_validators()
+        shapes_graph = _get_shapes_from_iri(shacl)
 
     if shapes_graph is None:
         raise RuntimeError(f"Not able to load shapes graph: {shacl}")
@@ -164,8 +162,8 @@ def validate(
     return tf, g, msg, _summarize_validation_results(g)
 
 
-def list_local_validators() -> dict[str, dict[str, int]]:
-    """Lists SHACL validators - IRI & name - stored in the local system's calidator cache.
+def list_local_validators() -> dict[str, dict[str, int]] | None:
+    """Lists SHACL validators - IRI, name, and imports - stored in the local system's calidator cache.
 
     This function does not connect over the Internet."""
     kurra_cache = Path().home() / ".kurra"
@@ -189,9 +187,16 @@ def list_local_validators() -> dict[str, dict[str, int]]:
             validator_name = load_graph(cv.graph(validator_iri)).value(
                 subject=validator_iri, predicate=SDO.name
             )
+            validator_imports = [
+                str(obj)
+                for obj in load_graph(cv.graph(validator_iri)).objects(
+                    subject=validator_iri, predicate=OWL.imports
+                )
+            ]
             local_validators[str(validator_iri)] = {
                 "name": str(validator_name),
                 "id": str(validator_id),
+                "imports": validator_imports
             }
 
         return local_validators
