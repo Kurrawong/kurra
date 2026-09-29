@@ -97,21 +97,29 @@ def get_labels(
             d[r["iri"]] = r["label"]
         return d
 
+SPLIT_REGEX = re.compile(
+    # Split on any non-alphanumeric character
+    r"[^a-zA-Z0-9]|"
+    # Split on the boundary between a lowercase and uppercase letter, ie camelCase and PascalCase
+    r"(?<=[a-z])(?=[A-Z])"
+)
+
 def jsonld_context(
     graph: Graph,
-    vocabulary: Graph
+    vocabulary: Graph | None = None
 ) -> dict[str, str]:
     """Creates a JSON-LD context for a given graph and vocabulary"""
     result = {}
     all_iris = list(iter_iris(graph))
+    if vocabulary is None:
+        vocabulary = Graph()
+
     label_dict = cast(dict[str, str], get_labels(all_iris, vocabulary, return_type="dict"))
     for iri, label in label_dict.items():
         is_type = is_class(graph, URIRef(iri)) or is_class(vocabulary, URIRef(iri))
 
         # Create a label that is camelCase if it's a property and PascalCase if it's a class
-        label_parts = [part.capitalize() for part in re.split(r"[^a-zA-Z0-9]", label)]
-        if not is_type:
-            label_parts[0] = label_parts[0].lower()
+        label_parts = [part.capitalize() if (i > 0 or is_type) else part for i, part in enumerate(SPLIT_REGEX.split(label))]
 
         result["".join(label_parts)] = str(iri)
 

@@ -1,8 +1,24 @@
 from pathlib import Path
 
+import pytest
 from rdflib import Graph
 
-from kurra.labels import find_missing_labels, get_labels, jsonld_context
+from kurra.labels import SPLIT_REGEX, find_missing_labels, get_labels, jsonld_context
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("has lithology", ["has", "lithology"]),
+        ("has-lithology_type", ["has", "lithology", "type"]),
+        ("geological unit/type", ["geological", "unit", "type"]),
+        ("hasLithology", ["has", "Lithology"]),
+        ("GeologicalUnit", ["Geological", "Unit"]),
+        ("has_LithologyType example", ["has", "Lithology", "Type", "example"]),
+    ],
+)
+def test_split_regex(text: str, expected: list[str]):
+    assert SPLIT_REGEX.split(text) == expected
 
 
 def test_find_missing_labels():
