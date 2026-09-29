@@ -1,0 +1,17 @@
+@prefix ex: <http://example.com/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:status ;
+        sh:minCount 1 ;
+        sh:message "ex:status is required" ;
+    ] ;
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject sh:this ;
+        sh:predicate ex:status ;
+        sh:object ex:Active ;
+    ] .

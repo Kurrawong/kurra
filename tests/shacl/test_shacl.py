@@ -148,6 +148,17 @@ def test_validate_by_id():
     assert len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 3
 
 
+def test_validate_advanced():
+    shacl_graph = load_graph(SHACL_TEST_DIR / "advanced-validator.ttl")
+    data_file = SHACL_TEST_DIR / "advanced-data.ttl"
+
+    valid, g, txt, summary = validate(data_file, shacl_graph)
+    assert not valid
+
+    valid, g, txt, summary = validate(data_file, shacl_graph, advanced=True)
+    assert valid
+
+
 def test_check_validator_known():
     assert check_validator_known("https://linked.data.gov.au/def/vocpub/validator")
     assert not check_validator_known("https://linked.data.gov.au/def/vocpub/validatorx")
