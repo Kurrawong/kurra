@@ -1,3 +1,5 @@
+"""Formatting helpers that convert SPARQL and SHACL results into CLI-friendly output."""
+
 import csv
 import datetime
 import io
@@ -14,7 +16,20 @@ from kurra.utils import is_construct_or_describe_query
 EX = Namespace("http://example.com/")
 
 
-def format_sparql_response_as_rich_table(response, query):
+def format_sparql_response_as_rich_table(
+    response: SPARQLResult | Graph | dict, query: str
+) -> Table | str:
+    """Format a SPARQL query result for terminal display using print.
+
+    CONSTRUCT/DESCRIBE results and RDF graphs are serialized as longturtle, SELECT and ASK results are rendered as a Rich table.
+
+    Args:
+        response: The parsed SPARQL response - an rdflib `SPARQLResult`, an rdflib `Graph`, or a dict of raw JSON results.
+        query: The original SPARQL query string, used for determining query type.
+
+    Returns:
+        A Rich `Table` for SELECT/ASK results, or a longturtle-serialized string for CONSTRUCT/DESCRIBE/graph results.
+    """
     if is_construct_or_describe_query(query):
         return response.serialize(format="longturtle")
 
@@ -41,7 +56,18 @@ def format_sparql_response_as_rich_table(response, query):
     return t
 
 
-def format_sparql_response_as_json(response):
+def format_sparql_response_as_json(response: SPARQLResult | dict) -> str:
+    """Serialize a SPARQL query result to a JSON string.
+
+    Args:
+        response: The parsed SPARQL response - either an rdflib `SPARQLResult` or an already-decoded JSON-compatible dict.
+
+    Raises:
+        TypeError: If a value in the response cannot be converted to a JSON-serializable or RDF literal form.
+
+    Returns:
+        A JSON-formatted string of the response.
+    """
     if isinstance(response, SPARQLResult):
         response = json.loads(response.serialize(format="json").decode())
 
@@ -73,7 +99,20 @@ def format_sparql_response_as_json(response):
     )
 
 
-def format_sparql_response_as_csv(response, query):
+def format_sparql_response_as_csv(
+    response: SPARQLResult | Graph | dict, query: str
+) -> str:
+    """Format a SPARQL query result as CSV.
+
+    CONSTRUCT/DESCRIBE results and RDF graphs are serialized as longturtle instead of CSV, since they aren't tabular.
+
+    Args:
+        response: The parsed SPARQL response - an rdflib `SPARQLResult`, an rdflib `Graph`, or a dict of raw JSON results.
+        query: The original SPARQL query string, used for determining query type.
+
+    Returns:
+        A CSV-formatted string for SELECT/ASK results, or a longturtle-serialized string for CONSTRUCT/DESCRIBE/graph results.
+    """
     if is_construct_or_describe_query(query):
         return response.serialize(format="longturtle")
 
@@ -100,7 +139,15 @@ def format_sparql_response_as_csv(response, query):
     return s.getvalue()
 
 
-def format_shacl_graph_as_rich_table(g: Graph):
+def format_shacl_graph_as_rich_table(g: Graph) -> Table:
+    """Build a Rich table of SHACL validation results.
+
+    Args:
+        g: An RDF graph containing SHACL `sh:ValidationResult` nodes.
+
+    Returns:
+        A Rich `Table` listing each validation error's focus node and message.
+    """
     t = Table(padding=(1, 0))
     t.add_column("No.")
     t.add_column("Error")
@@ -117,7 +164,15 @@ def format_shacl_graph_as_rich_table(g: Graph):
     return t
 
 
-def format_shacl_summary_as_rich_table(g: Graph):
+def format_shacl_summary_as_rich_table(g: Graph) -> Table:
+    """Build a Rich table summarizing SHACL validation results by shape.
+
+    Args:
+        g: An RDF graph containing a SHACL validation summary report (`ValidationReportSummary` and `ValidationResultSummary` nodes).
+
+    Returns:
+        A Rich `Table`, titled with the total violation/warning/info counts, with one row per shape summary.
+    """
     counts = g.value(
         subject=g.value(predicate=RDF.type, object=EX.ValidationReportSummary),
         predicate=EX["counts"],

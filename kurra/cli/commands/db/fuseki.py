@@ -1,3 +1,5 @@
+"""CLI commands for administering a Fuseki database."""
+
 from pathlib import Path
 from typing import Annotated
 
@@ -27,6 +29,17 @@ def ping_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
+    """Check if the Fuseki server is alive.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the Fuseki server fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -56,7 +69,17 @@ def server_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """Get basic server info"""
+    """Get basic Fuseki server info.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the Fuseki server fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -86,7 +109,17 @@ def stats_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """Request statistics for all datasets"""
+    """Request statistics for all datasets on the Fuseki server.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the Fuseki server fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -116,7 +149,17 @@ def backup_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """Ask the server to create a backup"""
+    """Ask the Fuseki server to create a backup of a dataset.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the Fuseki server fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -146,7 +189,17 @@ def backups_list_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """List all existing backups"""
+    """List all existing backups on the Fuseki server.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the Fuseki server fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -176,7 +229,17 @@ def sleep_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """Tell the server to sleep"""
+    """Tell the Fuseki server to sleep.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the Fuseki server fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -206,7 +269,17 @@ def tasks_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """List running tasks"""
+    """List tasks currently running on the Fuseki server.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the Fuseki server fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -236,7 +309,17 @@ def metrics_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """Get server metrics"""
+    """Get metrics for the Fuseki server.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the Fuseki server fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -266,7 +349,17 @@ def describe_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """Get the list of datasets or describe one"""
+    """Get the list of datasets on the Fuseki server, or describe one.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the Fuseki server fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -301,7 +394,23 @@ def create_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """Create a new dataset"""
+    """Create a new dataset on the Fuseki server.
+
+    Either `dataset_name` or `config` must be given, not both.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        dataset_name: The name of the dataset to create, using `dataset_type`.
+        dataset_type: The dataset type to create, when `dataset_name` is given. Options: `mem`, `tdb`, `tdb1`, `tdb2`.
+        config: An assembler file describing the dataset to create, as an alternative to `dataset_name`.
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        typer.BadParameter: If both `dataset_name` and `config` are given, if neither is given, or if `dataset_type` is not a valid option.
+        Exception: If the request to the Fuseki server fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -358,7 +467,18 @@ def delete_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
-    """Delete a dataset"""
+    """Delete a dataset from the Fuseki server.
+
+    Args:
+        fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        dataset_name: The name of the dataset to delete.
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        FusekiError: If the dataset fails to delete.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
