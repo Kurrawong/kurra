@@ -7,7 +7,7 @@ from random import choice
 import httpx
 from pyshacl import validate as v
 from rdflib import BNode, Dataset, Graph, Literal, Namespace, URIRef
-from rdflib.namespace import RDF, SDO, SH
+from rdflib.namespace import RDF, SDO, SH, OWL
 from srl.engine import RuleEngine
 from srl.parser import SRLParser
 
@@ -165,7 +165,7 @@ def validate(
 
 
 def list_local_validators() -> dict[str, dict[str, int]] | None:
-    """Lists SHACL validators - IRI & name - stored in the local system's calidator cache.
+    """Lists SHACL validators - IRI, name, and imports - stored in the local system's calidator cache.
 
     This function does not connect over the Internet."""
     kurra_cache = Path().home() / ".kurra"
@@ -189,9 +189,16 @@ def list_local_validators() -> dict[str, dict[str, int]] | None:
             validator_name = load_graph(cv.graph(validator_iri)).value(
                 subject=validator_iri, predicate=SDO.name
             )
+            validator_imports = [
+                str(obj)
+                for obj in load_graph(cv.graph(validator_iri)).objects(
+                    subject=validator_iri, predicate=OWL.imports
+                )
+            ]
             local_validators[str(validator_iri)] = {
                 "name": str(validator_name),
                 "id": str(validator_id),
+                "imports": validator_imports
             }
 
         return local_validators

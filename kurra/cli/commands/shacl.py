@@ -98,14 +98,29 @@ def listv_command():
     l = list_local_validators()
     if l is None:
         console.print("No local validators found")
-    else:
-        t = Table()
-        t.add_column("ID")
-        t.add_column("IRI")
-        t.add_column("Name")
-        for k, v in list_local_validators().items():
-            t.add_row(v["id"], k, v["name"])
-        console.print(t)
+        return
+
+    t = Table()
+    t.add_column("ID")
+    t.add_column("Name")
+    t.add_column("IRI")
+
+    def add_rows_with_deps(iri: str, prefix: str = "", connector: str = ""):
+        t.add_row(l[iri]["id"], f"{prefix}{connector}{l[iri]['name']}", iri)
+
+        children = [child for child in l[iri]["imports"] if child in l] # skips non-validator imports, but could skip unregistered validators or validators skipped by incomplete syncs
+        for i, child in enumerate(children):
+            last = i == len(children) - 1
+            add_rows_with_deps(
+                child,
+                prefix + ("    " if connector == "└── " else "│   " if connector else ""),
+                "└── " if last else "├── ",
+            )
+
+    for iri in l:
+        add_rows_with_deps(iri)
+
+    console.print(t)
 
 
 @app.command(
