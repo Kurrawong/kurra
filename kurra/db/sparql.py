@@ -1,9 +1,11 @@
 """SPARQL functions for remote SPARQL endpoints (not local files)"""
 
 from pathlib import Path
-from typing import Literal as LiteralType, overload, TYPE_CHECKING
-from rdflib import Graph
+from typing import TYPE_CHECKING, overload
+from typing import Literal as LiteralType
+
 import httpx
+from rdflib import Graph
 
 from kurra import __version__
 from kurra.utils import (
@@ -35,8 +37,7 @@ def query(
     return_format: LiteralType["original"] = "original",
     return_bindings_only: bool = False,
     user_agent: str = USER_AGENT_STRING,
-) -> str:
-    ...
+) -> str: ...
 @overload
 def query(
     sparql_endpoint: str,
@@ -46,8 +47,7 @@ def query(
     return_format: LiteralType["python"],
     return_bindings_only: bool = False,
     user_agent: str = USER_AGENT_STRING,
-) -> Graph:
-    ...
+) -> Graph: ...
 @overload
 def query(
     sparql_endpoint: str,
@@ -57,8 +57,7 @@ def query(
     return_format: LiteralType["dataframe"],
     return_bindings_only: bool = False,
     user_agent: str = USER_AGENT_STRING,
-) -> "DataFrame":
-    ...
+) -> "DataFrame": ...
 def query(
     sparql_endpoint: str,
     q: str | Path,

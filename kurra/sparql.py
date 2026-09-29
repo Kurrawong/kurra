@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Literal, overload, TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, overload
 
 import httpx
 from rdflib import Dataset, Graph
@@ -33,8 +33,7 @@ def query(
     http_client: httpx.Client | None,
     return_format: Literal["original"] = "original",
     return_bindings_only: bool = False,
-) -> str:
-    ...
+) -> str: ...
 @overload
 def query(
     p: Path | str | Graph | Dataset,
@@ -44,8 +43,8 @@ def query(
     http_client: httpx.Client | None = None,
     return_format: Literal["python"],
     return_bindings_only: bool = False,
-) -> Graph:
-    ...
+) -> Graph: ...
+
 
 @overload
 def query(
@@ -56,8 +55,7 @@ def query(
     http_client: httpx.Client | None = None,
     return_format: Literal["dataframe"],
     return_bindings_only: bool = False,
-) -> "DataFrame":
-    ...
+) -> "DataFrame": ...
 def query(
     p: Path | str | Graph | Dataset,
     q: str | Path,

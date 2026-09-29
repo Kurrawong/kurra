@@ -7,7 +7,7 @@ from random import choice
 import httpx
 from pyshacl import validate as v
 from rdflib import BNode, Dataset, Graph, Literal, Namespace, URIRef
-from rdflib.namespace import RDF, SDO, SH, OWL
+from rdflib.namespace import OWL, RDF, SDO, SH
 from srl.engine import RuleEngine
 from srl.parser import SRLParser
 
@@ -109,7 +109,7 @@ def validate(
                 cv = _load_pickle(validators_cache)
                 return cv.graph(URIRef(iri))
 
-    def _get_shapes_from_id(id: str| int):
+    def _get_shapes_from_id(id: str | int):
         id = int(id)
         local_validators = list_local_validators()
         max = len(local_validators.keys())
@@ -196,7 +196,7 @@ def list_local_validators() -> dict[str, dict[str, int]] | None:
             local_validators[str(validator_iri)] = {
                 "name": str(validator_name),
                 "id": str(validator_id),
-                "imports": validator_imports
+                "imports": validator_imports,
             }
 
         return local_validators
@@ -225,7 +225,13 @@ def sync_validators(http_client: httpx.Client | None = None):
           <https://data.kurrawong.ai/sb/validators> schema:hasPart ?p
         }
         """
-    r = query(semback_sparql_endpoint, q, http_client=http_client, return_format="python", return_bindings_only=True)
+    r = query(
+        semback_sparql_endpoint,
+        q,
+        http_client=http_client,
+        return_format="python",
+        return_bindings_only=True,
+    )
 
     remote_validators = [row["p"] for row in r]
 

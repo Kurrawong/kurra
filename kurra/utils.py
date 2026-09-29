@@ -341,7 +341,7 @@ def make_httpx_client(
 
 
 def convert_sparql_json_to_python(
-    j: Union[str, bytes, httpx.Response], return_bindings_only: bool=False
+    j: Union[str, bytes, httpx.Response], return_bindings_only: bool = False
 ) -> dict:
     if isinstance(j, str):
         r = json.loads(j)

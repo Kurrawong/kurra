@@ -108,12 +108,15 @@ def listv_command():
     def add_rows_with_deps(iri: str, prefix: str = "", connector: str = ""):
         t.add_row(l[iri]["id"], f"{prefix}{connector}{l[iri]['name']}", iri)
 
-        children = [child for child in l[iri]["imports"] if child in l] # skips non-validator imports, but could skip unregistered validators or validators skipped by incomplete syncs
+        children = [
+            child for child in l[iri]["imports"] if child in l
+        ]  # skips non-validator imports, but could skip unregistered validators or validators skipped by incomplete syncs
         for i, child in enumerate(children):
             last = i == len(children) - 1
             add_rows_with_deps(
                 child,
-                prefix + ("    " if connector == "└── " else "│   " if connector else ""),
+                prefix
+                + ("    " if connector == "└── " else "│   " if connector else ""),
                 "└── " if last else "├── ",
             )
 

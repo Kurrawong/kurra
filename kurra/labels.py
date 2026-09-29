@@ -3,7 +3,7 @@ from either KurrawongAI's 'Semantic Background' dataset or other, provided, cont
 
 import re
 from pathlib import Path
-from typing import Iterable, Literal, overload, cast
+from typing import Iterable, Literal, cast, overload
 
 import httpx
 from rdflib import DCTERMS, RDFS, SDO, SKOS, Graph, URIRef
@@ -35,7 +35,7 @@ def find_missing_labels(
             missing_labels.add(s)
 
     if local_context is not None:
-        tx : set[URIRef] = set()
+        tx: set[URIRef] = set()
 
         c = load_graph(local_context)
         for t in missing_labels:
@@ -55,8 +55,8 @@ def get_missing_labels(
     context: Graph | str | Path = "https://fuseki.dev.kurrawong.ai/semback/sparql",
     return_type: Literal["graph"] = "graph",
     http_client: httpx.Client | None = None,
-) -> Graph:
-    ...
+) -> Graph: ...
+
 
 @overload
 def get_missing_labels(
@@ -64,8 +64,8 @@ def get_missing_labels(
     context: Graph | str | Path,
     return_type: Literal["dict"],
     http_client: httpx.Client | None = None,
-) -> dict[URIRef, str]:
-    ...
+) -> dict[URIRef, str]: ...
+
 
 def get_missing_labels(
     iris: list[URIRef],

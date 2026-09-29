@@ -219,6 +219,7 @@ def test_summary(monkeypatch):
 
     assert isomorphic(summary, expected)
 
+
 def test_validate_iri_cold_cache(monkeypatch, tmp_path):
     """Validating by IRI with an empty validator cache syncs validators and succeeds"""
     monkeypatch.setenv("HOME", str(tmp_path))  # empty ~/.kurra, real cache untouched
@@ -228,4 +229,3 @@ def test_validate_iri_cold_cache(monkeypatch, tmp_path):
         "https://linked.data.gov.au/def/vocpub/validator",
     )
     assert valid
-    
