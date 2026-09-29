@@ -1,6 +1,7 @@
 """These functions are used to find RDF elements in a given scope that are missing labels and the to acquire them
 from either KurrawongAI's 'Semantic Background' dataset or other, provided, context."""
 
+import re
 from pathlib import Path
 from typing import Literal, cast
 
@@ -8,8 +9,7 @@ import httpx
 from rdflib import DCTERMS, RDFS, SDO, SKOS, BNode, Graph, URIRef
 
 from kurra.sparql import query
-from kurra.utils import build_values_clause, load_graph, iter_iris, is_class
-import re
+from kurra.utils import build_values_clause, is_class, iter_iris, load_graph
 
 # Common label predicates
 LABEL_PREDICATES = [RDFS.label, SDO.name, SKOS.prefLabel, DCTERMS.title]
@@ -24,7 +24,7 @@ def find_missing_labels(
 
     # find all the things missing labels
     missing_labels = set()
-    
+
     g = load_graph(p)
 
     for s in iter_iris(g):
@@ -57,9 +57,7 @@ def get_labels(
 ) -> Graph | dict[str, str]:
     """Gets labels for given IRIs from a given context"""
     iri_values_clause = build_values_clause({"iri": iris})
-    predicate_values_clause = build_values_clause(
-        {"pred": LABEL_PREDICATES}
-    )
+    predicate_values_clause = build_values_clause({"pred": LABEL_PREDICATES})
 
     where_clause = f"""
         WHERE {{
@@ -97,6 +95,7 @@ def get_labels(
             d[r["iri"]] = r["label"]
         return d
 
+
 SPLIT_REGEX = re.compile(
     # Split on any non-alphanumeric character
     r"[^a-zA-Z0-9]|"
@@ -104,22 +103,25 @@ SPLIT_REGEX = re.compile(
     r"(?<=[a-z])(?=[A-Z])"
 )
 
-def jsonld_context(
-    graph: Graph,
-    vocabulary: Graph | None = None
-) -> dict[str, str]:
+
+def jsonld_context(graph: Graph, vocabulary: Graph | None = None) -> dict[str, str]:
     """Creates a JSON-LD context for a given graph and vocabulary"""
     result = {}
     all_iris = list(iter_iris(graph))
     if vocabulary is None:
         vocabulary = Graph()
 
-    label_dict = cast(dict[str, str], get_labels(all_iris, vocabulary, return_type="dict"))
+    label_dict = cast(
+        dict[str, str], get_labels(all_iris, vocabulary, return_type="dict")
+    )
     for iri, label in label_dict.items():
         is_type = is_class(graph, URIRef(iri)) or is_class(vocabulary, URIRef(iri))
 
         # Create a label that is camelCase if it's a property and PascalCase if it's a class
-        label_parts = [part.capitalize() if (i > 0 or is_type) else part for i, part in enumerate(SPLIT_REGEX.split(label))]
+        label_parts = [
+            part.capitalize() if (i > 0 or is_type) else part
+            for i, part in enumerate(SPLIT_REGEX.split(label))
+        ]
 
         result["".join(label_parts)] = str(iri)
 

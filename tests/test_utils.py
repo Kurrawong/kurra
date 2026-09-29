@@ -702,11 +702,14 @@ def test_build_values_clause_single_variable():
         {"iri": [URIRef("http://example.com/a"), URIRef("http://example.com/b")]}
     )
 
-    assert clause == dedent("""
+    assert (
+        clause
+        == dedent("""
         VALUES (?iri) {
           (<http://example.com/a>)
           (<http://example.com/b>)
         }""").strip()
+    )
 
 
 def test_build_values_clause_multiple_variables():
@@ -717,9 +720,12 @@ def test_build_values_clause_multiple_variables():
         }
     )
 
-    assert clause == dedent("""
+    assert (
+        clause
+        == dedent("""
         VALUES (?iri ?label) {
           (<http://example.com/a> "Label A")
           (<http://example.com/b> "Label B")
         }
       """).strip()
+    )
