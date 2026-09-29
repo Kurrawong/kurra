@@ -33,7 +33,7 @@ def test_validate_cli_shacl_types(tmp_path, monkeypatch, shacl_value, expected_t
 
     received = {}
 
-    def fake_validate(data, shacl, hide_warnings=False):
+    def fake_validate(data, shacl, hide_warnings=False, advanced=False):
         received["data"] = data
         received["shacl"] = shacl
         return True, Graph(), "", Graph()
@@ -168,6 +168,21 @@ def shacl_invalid():
         ],
     )
     assert "The errors are:" in result.stdout
+
+
+@pytest.mark.parametrize("advanced_option", ["--advanced", "-a"])
+def test_validate_cli_advanced(advanced_option):
+    SHACL_TEST_DIR = Path(__file__).parent.parent.resolve() / "shacl"
+    data = f"{SHACL_TEST_DIR / 'advanced-data.ttl'}"
+    shapes = f"{SHACL_TEST_DIR / 'advanced-validator.ttl'}"
+
+    result = runner.invoke(app, ["shacl", "validate", data, "--shacl", shapes])
+    assert "The errors are:" in result.stdout
+
+    result = runner.invoke(
+        app, ["shacl", "validate", data, "--shacl", shapes, advanced_option]
+    )
+    assert result.output.strip() == "The data is valid"
 
 
 @pytest.mark.xfail
