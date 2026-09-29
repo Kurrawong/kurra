@@ -329,8 +329,8 @@ def render_sparql_result(
 
 
 def make_httpx_client(
-    sparql_username: str = None,
-    sparql_password: str = None,
+    sparql_username: str | None = None,
+    sparql_password: str | None = None,
     timeout: int = 60,
 ):
     auth = None
@@ -341,13 +341,13 @@ def make_httpx_client(
 
 
 def convert_sparql_json_to_python(
-    j: Union[str, bytes, httpx.Response], return_bindings_only=False
-) -> {}:
-    if type(j) == str:
+    j: Union[str, bytes, httpx.Response], return_bindings_only: bool=False
+) -> dict:
+    if isinstance(j, str):
         r = json.loads(j)
-    elif type(j) == bytes:
+    elif isinstance(j, bytes):
         r = json.loads(j.decode())
-    elif type(j) == httpx.Response:
+    elif isinstance(j, httpx.Response):
         r = j.json()
 
     if r.get("results") is not None:  # SELECT
@@ -556,7 +556,7 @@ def get_system_graph(
 
 def put_system_graph(
     system_graph: Graph,
-    system_graph_source: str | Path | Dataset | Graph = None,
+    system_graph_source: str | Path | Dataset | Graph | None = None,
     http_client: httpx.Client | None = None,
 ):
     if system_graph_source is None:
@@ -608,9 +608,9 @@ def put_system_graph(
 
 def make_system_specific_sparql_endpoint(
     sparql_endpoint: str,
-    q: str = None,
-    statement: SparqlStatementType = None,
-    gsp_query_type: GspType = None,
+    q: str | None = None,
+    statement: SparqlStatementType | None = None,
+    gsp_query_type: GspType | None = None,
 ) -> str:
     """Alters a given SPARQL Endpoint to meet specific system requirements.
 

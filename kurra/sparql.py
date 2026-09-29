@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Literal
+from typing import Literal, overload, TYPE_CHECKING
 
 import httpx
 from rdflib import Dataset, Graph
@@ -20,12 +20,49 @@ from kurra.utils import (
     statement_type_for_query,
 )
 
+if TYPE_CHECKING:
+    from pandas import DataFrame
 
+
+@overload
+def query(
+    p: Path | str | Graph | Dataset,
+    q: str | Path,
+    *,
+    namespaces: dict[str, str] | None,
+    http_client: httpx.Client | None,
+    return_format: Literal["original"] = "original",
+    return_bindings_only: bool = False,
+) -> str:
+    ...
+@overload
+def query(
+    p: Path | str | Graph | Dataset,
+    q: str | Path,
+    *,
+    namespaces: dict[str, str] | None = None,
+    http_client: httpx.Client | None = None,
+    return_format: Literal["python"],
+    return_bindings_only: bool = False,
+) -> Graph:
+    ...
+
+@overload
+def query(
+    p: Path | str | Graph | Dataset,
+    q: str | Path,
+    *,
+    namespaces: dict[str, str] | None = None,
+    http_client: httpx.Client | None = None,
+    return_format: Literal["dataframe"],
+    return_bindings_only: bool = False,
+) -> "DataFrame":
+    ...
 def query(
     p: Path | str | Graph | Dataset,
     q: str | Path,
     namespaces: dict[str, str] | None = None,
-    http_client: httpx.Client = None,
+    http_client: httpx.Client | None = None,
     return_format: Literal["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
 ):
@@ -73,11 +110,11 @@ def query(
         s = None
         f = None
         if str(p).startswith("http"):
-            r = db_query(p, q, namespaces, http_client, "original", False)
+            r = db_query(str(p), str(q), namespaces, http_client, "original", False)
             s = load_graph(r)
 
         else:  # (isinstance(p, str) and not p.startswith("http")) or isinstance(p, Path):
-            f = load_graph(p).query(q)
+            f = load_graph(p).query(str(q))
 
         if return_format == "dataframe":
             raise ValueError(
@@ -99,7 +136,7 @@ def query(
                 http_client = httpx.Client()
                 close_http_client = True
 
-            r = db_query(p, q, namespaces, http_client, return_format, False)
+            r = db_query(str(p), q, namespaces, http_client, return_format, False)
 
             if close_http_client:
                 http_client.close()
@@ -129,7 +166,7 @@ def query(
                 close_http_client = True
 
             r = db_query(
-                p, q, namespaces, http_client, return_format, return_bindings_only
+                str(p), q, namespaces, http_client, return_format, return_bindings_only
             )
 
             if close_http_client:
@@ -138,7 +175,7 @@ def query(
         if r is not None:  # we have a result from the DB query to return
             return r
         else:  # querying a file or string RDF data
-            r = load_graph(p).query(q).serialize(format="json")
+            r = load_graph(p).query(str(q)).serialize(format="json")
 
             if return_format == "dataframe":
                 return make_sparql_dataframe(json.loads(r))

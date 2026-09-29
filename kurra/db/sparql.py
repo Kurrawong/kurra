@@ -1,8 +1,8 @@
 """SPARQL functions for remote SPARQL endpoints (not local files)"""
 
 from pathlib import Path
-from typing import Literal as LiteralType
-
+from typing import Literal as LiteralType, overload, TYPE_CHECKING
+from rdflib import Graph
 import httpx
 
 from kurra import __version__
@@ -18,16 +18,52 @@ from kurra.utils import (
     statement_type_for_query,
 )
 
+if TYPE_CHECKING:
+    from pandas import DataFrame
+
 USER_AGENT_STRING = (
     f"kurra/{__version__} (https://pypi.org/project/kurra/; info@kurrawong.ai)"
 )
 
 
+@overload
 def query(
     sparql_endpoint: str,
     q: str | Path,
     namespaces: dict[str, str] | None = None,
-    http_client: httpx.Client = None,
+    http_client: httpx.Client | None = None,
+    return_format: LiteralType["original"] = "original",
+    return_bindings_only: bool = False,
+    user_agent: str = USER_AGENT_STRING,
+) -> str:
+    ...
+@overload
+def query(
+    sparql_endpoint: str,
+    q: str | Path,
+    namespaces: dict[str, str] | None,
+    http_client: httpx.Client | None,
+    return_format: LiteralType["python"],
+    return_bindings_only: bool = False,
+    user_agent: str = USER_AGENT_STRING,
+) -> Graph:
+    ...
+@overload
+def query(
+    sparql_endpoint: str,
+    q: str | Path,
+    namespaces: dict[str, str] | None,
+    http_client: httpx.Client | None,
+    return_format: LiteralType["dataframe"],
+    return_bindings_only: bool = False,
+    user_agent: str = USER_AGENT_STRING,
+) -> "DataFrame":
+    ...
+def query(
+    sparql_endpoint: str,
+    q: str | Path,
+    namespaces: dict[str, str] | None = None,
+    http_client: httpx.Client | None = None,
     return_format: LiteralType["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
     user_agent: str = USER_AGENT_STRING,
@@ -86,7 +122,7 @@ def query(
     r = http_client.post(
         ssse,
         headers=headers,
-        content=q,
+        content=str(q),
         follow_redirects=True,
         timeout=25,
     )
@@ -98,7 +134,7 @@ def query(
         r = http_client.get(
             sparql_endpoint,
             headers=headers,
-            params={"query": q},
+            params={"query": str(q)},
             follow_redirects=True,
             timeout=25,
         )

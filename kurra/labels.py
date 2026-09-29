@@ -3,10 +3,10 @@ from either KurrawongAI's 'Semantic Background' dataset or other, provided, cont
 
 import re
 from pathlib import Path
-from typing import Literal, cast
+from typing import Iterable, Literal, overload, cast
 
 import httpx
-from rdflib import DCTERMS, RDFS, SDO, SKOS, BNode, Graph, URIRef
+from rdflib import DCTERMS, RDFS, SDO, SKOS, Graph, URIRef
 
 from kurra.sparql import query
 from kurra.utils import build_values_clause, is_class, iter_iris, load_graph
@@ -16,8 +16,8 @@ LABEL_PREDICATES = [RDFS.label, SDO.name, SKOS.prefLabel, DCTERMS.title]
 
 
 def find_missing_labels(
-    p: Path | str | Graph, local_context: Path | Graph = None
-) -> set[URIRef]:
+    p: Path | str | Graph, local_context: Path | Graph | None = None
+) -> Iterable[URIRef]:
     """Finds all the IRIs in a graph missing labels.
 
     If local_context is supplied - and it must be a Path to an RDF file or directory of RDF files or a Graph - then labels from that context will be used too."""
@@ -35,7 +35,7 @@ def find_missing_labels(
             missing_labels.add(s)
 
     if local_context is not None:
-        tx = set()
+        tx : set[URIRef] = set()
 
         c = load_graph(local_context)
         for t in missing_labels:
@@ -49,12 +49,30 @@ def find_missing_labels(
         return sorted(missing_labels)
 
 
-def get_labels(
+@overload
+def get_missing_labels(
+    iris: list[URIRef],
+    context: Graph | str | Path = "https://fuseki.dev.kurrawong.ai/semback/sparql",
+    return_type: Literal["graph"] = "graph",
+    http_client: httpx.Client | None = None,
+) -> Graph:
+    ...
+
+@overload
+def get_missing_labels(
+    iris: list[URIRef],
+    context: Graph | str | Path,
+    return_type: Literal["dict"],
+    http_client: httpx.Client | None = None,
+) -> dict[URIRef, str]:
+    ...
+
+def get_missing_labels(
     iris: list[URIRef],
     context: Graph | str | Path = "https://fuseki.dev.kurrawong.ai/semback/sparql",
     return_type: Literal["graph", "dict"] = "graph",
-    http_client: httpx.Client = None,
-) -> Graph | dict[str, str]:
+    http_client: httpx.Client | None = None,
+) -> Graph | dict[URIRef, str]:
     """Gets labels for given IRIs from a given context"""
     iri_values_clause = build_values_clause({"iri": iris})
     predicate_values_clause = build_values_clause({"pred": LABEL_PREDICATES})
@@ -68,6 +86,8 @@ def get_labels(
         """
 
     if return_type == "graph":
+        if http_client is None:
+            raise ValueError("http_client must be provided when return_type is 'graph'")
         q = f"""
             PREFIX schema: <https://schema.org/>
             
