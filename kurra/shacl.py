@@ -153,7 +153,9 @@ def validate(
         for x in data:
             data_graph += load_graph(x)
 
-    tf, g, msg = v(data_graph, shacl_graph=shapes_graph, allow_warnings=True, advanced=advanced)
+    tf, g, msg = v(
+        data_graph, shacl_graph=shapes_graph, allow_warnings=True, advanced=advanced
+    )
 
     if hide_warnings:
         for s in g.subjects(predicate=RDF.type, object=SH.ValidationResult):
