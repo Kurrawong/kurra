@@ -50,7 +50,7 @@ def find_missing_labels(
 
 
 @overload
-def get_missing_labels(
+def get_labels(
     iris: list[URIRef],
     context: Graph | str | Path = "https://fuseki.dev.kurrawong.ai/semback/sparql",
     return_type: Literal["graph"] = "graph",
@@ -59,7 +59,7 @@ def get_missing_labels(
 
 
 @overload
-def get_missing_labels(
+def get_labels(
     iris: list[URIRef],
     context: Graph | str | Path,
     return_type: Literal["dict"],
@@ -67,7 +67,7 @@ def get_missing_labels(
 ) -> dict[URIRef, str]: ...
 
 
-def get_missing_labels(
+def get_labels(
     iris: list[URIRef],
     context: Graph | str | Path = "https://fuseki.dev.kurrawong.ai/semback/sparql",
     return_type: Literal["graph", "dict"] = "graph",
@@ -86,8 +86,6 @@ def get_missing_labels(
         """
 
     if return_type == "graph":
-        if http_client is None:
-            raise ValueError("http_client must be provided when return_type is 'graph'")
         q = f"""
             PREFIX schema: <https://schema.org/>
             
