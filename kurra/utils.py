@@ -6,10 +6,10 @@ import warnings
 from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
-from typing import Union
+from typing import Iterable, Union
 
 import httpx
-from rdflib import BNode, Dataset, Graph, Literal, Namespace, URIRef
+from rdflib import BNode, Dataset, Graph, Literal, Namespace, Node, URIRef, RDF, OWL, RDFS
 from sparqlib import (
     QuerySubType,
     SparqlStatementType,
@@ -621,3 +621,42 @@ def make_system_specific_sparql_endpoint(
             return sparql_endpoint + "/rdf-graphs/service"
 
     return sparql_endpoint
+
+def iter_iris(graph: Graph) -> Iterable[URIRef]:
+    """Iterates over all IRIs in a given graph"""
+    for triple in graph:
+        for node in triple:
+            if isinstance(node, URIRef):
+                yield node
+
+def build_values_clause(values: dict[str, Iterable[Node]]) -> str:
+    """
+    Builds a SPARQL VALUES clause for the given values.
+
+    Args:
+        values: A dictionary where keys are variable names and values are iterables of RDF nodes.
+
+    Returns:
+        A string containing the SPARQL VALUES clause.
+    """
+    var_names = ' '.join([f"?{k}" for k in values.keys()])
+    lines = [ f"VALUES ({var_names}) {{", ]
+    for row in zip(*values.values()):
+        row_values = ' '.join([f"<{v}>" if isinstance(v, URIRef) else f'"{v}"' for v in row])
+        lines.append(f"  ({row_values})")
+    lines.append("}")
+    return "\n".join(lines)
+    
+def is_class(graph: Graph, iri: URIRef) -> bool:
+    """
+    Checks if the given IRI is a class in the provided RDF graph.
+
+    Args:
+        graph: An RDFLib Graph object.
+        iri: The IRI to check.
+
+    Returns:
+        True if the IRI is a class, False otherwise.
+    """
+    # Could later improve this using SPARQL to check for subclasses of rdfs:class
+    return (iri, RDF.type, OWL.Class) in graph or (iri, RDF.type, RDFS.Class) in graph

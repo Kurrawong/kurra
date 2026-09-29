@@ -1,9 +1,10 @@
 import json
 import pickle
 from pathlib import Path
+from textwrap import dedent
 
 import pytest
-from rdflib import Graph
+from rdflib import Graph, Literal, URIRef
 from rdflib.compare import isomorphic
 
 from kurra.utils import (
@@ -14,6 +15,7 @@ from kurra.utils import (
     RDF_SUFFIX_MAP,
     GspType,
     RenderFormat,
+    build_values_clause,
     guess_format_from_data,
     is_ask_query,
     is_construct_or_describe_query,
@@ -693,3 +695,31 @@ def test_make_system_specific_sparql_endpoint():
     se = "http://localhost:7200/repositories/test"
     ssse = make_system_specific_sparql_endpoint(se, gsp_query_type=GspType.delete)
     assert ssse == "http://localhost:7200/repositories/test/rdf-graphs/service"
+
+
+def test_build_values_clause_single_variable():
+    clause = build_values_clause(
+        {"iri": [URIRef("http://example.com/a"), URIRef("http://example.com/b")]}
+    )
+
+    assert clause == dedent("""
+        VALUES (?iri) {
+          (<http://example.com/a>)
+          (<http://example.com/b>)
+        }""").strip()
+
+
+def test_build_values_clause_multiple_variables():
+    clause = build_values_clause(
+        {
+            "iri": [URIRef("http://example.com/a"), URIRef("http://example.com/b")],
+            "label": [Literal("Label A"), Literal("Label B")],
+        }
+    )
+
+    assert clause == dedent("""
+        VALUES (?iri ?label) {
+          (<http://example.com/a> "Label A")
+          (<http://example.com/b> "Label B")
+        }
+      """).strip()
