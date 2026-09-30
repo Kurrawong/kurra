@@ -82,6 +82,7 @@ def validate(
     data: Path | Graph | list[Path] | list[Graph],
     shacl: Graph | Path | str | int,
     hide_warnings: bool = False,
+    advanced: bool = False,
 ) -> tuple[bool, Graph, str, Graph]:
     """Validates a data graph using a shapes graph.
 
@@ -152,7 +153,9 @@ def validate(
         for x in data:
             data_graph += load_graph(x)
 
-    tf, g, msg = v(data_graph, shacl_graph=shapes_graph, allow_warnings=True)
+    tf, g, msg = v(
+        data_graph, shacl_graph=shapes_graph, allow_warnings=True, advanced=advanced
+    )
 
     if hide_warnings:
         for s in g.subjects(predicate=RDF.type, object=SH.ValidationResult):

@@ -54,6 +54,14 @@ def validate_command(
             "--hide-warnings", "-hw", help="Hides Shapes results of Warning and Info"
         ),
     ] = False,
+    advanced: Annotated[
+        bool,
+        typer.Option(
+            "--advanced",
+            "-a",
+            help="Enable SHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions)",
+        ),
+    ] = False,
     summary: Annotated[
         bool,
         typer.Option(
@@ -77,10 +85,13 @@ def validate_command(
         data: The file, files, or directory of RDF files to be validated.
         shacl: The file, directory of files, IRI of, or kurra ID for the SHACL graph to validate with.
         hide_warnings: If True, hide SHACL results of severity Warning and Info.
+        advanced: If True, nable SHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions).
         summary: If True, print a summary table instead of the full validation results.
         output_format: `table` (default) to print Rich table, or `rdf` for longturtle.
     """
-    valid, g, txt, summary_graph = validate(data, shacl, hide_warnings=hide_warnings)
+    valid, g, txt, summary_graph = validate(
+        data, shacl, hide_warnings=hide_warnings, advanced=advanced
+    )
 
     output_graph = summary_graph if summary else g
 
