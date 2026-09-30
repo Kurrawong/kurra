@@ -63,7 +63,7 @@ def query(
     http_client: httpx.Client | None = None,
     return_format: Literal["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
-) -> str | Graph | dict | "DataFrame":
+) -> "str | Graph | dict | DataFrame":
     """Run a SPARQL query or update against a file, RDF Graph/Dataset, or SPARQL endpoint.
 
     Args:

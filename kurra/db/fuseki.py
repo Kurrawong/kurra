@@ -1,4 +1,4 @@
-"""Functions to work with the Jena Fuseki RDF Database' API"""
+"""Functions to work with the Jena Fuseki RDF Database's API."""
 
 from io import TextIOBase
 from pathlib import Path
@@ -18,7 +18,19 @@ class FusekiError(Exception):
 def ping(
     server_url: str,
     http_client: httpx.Client | None = None,
-):
+) -> str:
+    """Check if the Fuseki server is alive.
+
+    Args:
+        server_url: The base URL of the Fuseki server. E.g. http://localhost:3030
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        The server's ping response text.
+
+    Raises:
+        FusekiError: If the server does not respond with success.
+    """
     close_http_client = False
     if http_client is None:
         http_client = httpx.Client()
@@ -40,7 +52,19 @@ def ping(
 def server(
     server_url: str,
     http_client: httpx.Client | None = None,
-):
+) -> str:
+    """Get basic Fuseki server info.
+
+    Args:
+        server_url: The base URL of the Fuseki server. E.g., http://localhost:3030
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        The server info response text.
+
+    Raises:
+        FusekiError: If the server does not respond with success.
+    """
     close_http_client = False
     if http_client is None:
         http_client = httpx.Client()
@@ -64,7 +88,8 @@ def server(
 def status(
     server_url: str,
     http_client: httpx.Client | None = None,
-):
+) -> str:
+    """Alias for `server()`."""
     return server(server_url, http_client=http_client)
 
 
@@ -72,7 +97,20 @@ def stats(
     server_url: str,
     name: str = None,
     http_client: httpx.Client | None = None,
-):
+) -> str:
+    """Request statistics for all datasets, or one named dataset, on the Fuseki server.
+
+    Args:
+        server_url: The base URL of the Fuseki server. E.g. http://localhost:3030
+        name: The dataset to get statistics for. If None (default), statistics for all datasets are returned.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        The statistics response text.
+
+    Raises:
+        FusekiError: If the server does not respond with success.
+    """
     close_http_client = False
     if http_client is None:
         http_client = httpx.Client()
@@ -97,6 +135,16 @@ def backup(
     name: str,
     http_client: httpx.Client | None = None,
 ):
+    """Ask the Fuseki server to create a backup of a dataset -- Not yet implemented.
+
+    Args:
+        server_url: The base URL of the Fuseki server. E.g. http://localhost:3030
+        name: The dataset to backup.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Raises:
+        NotImplementedError: Not yet implemented.
+    """
     raise NotImplementedError("backup/backups is not implemented yet")
 
 
@@ -105,13 +153,26 @@ def backups(
     name: str,
     http_client: httpx.Client | None = None,
 ):
+    """Alias for `backup()`."""
     return backup(server_url, name, http_client)
 
 
 def backups_list(
     server_url: str,
     http_client: httpx.Client | None = None,
-):
+) -> str:
+    """List all existing backups on the Fuseki server.
+
+    Args:
+        server_url: The base URL of the Fuseki server. E.g. http://localhost:3030
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        The backups list response text.
+
+    Raises:
+        FusekiError: If the server does not respond with success.
+    """
     close_http_client = False
     if http_client is None:
         http_client = httpx.Client()
@@ -134,6 +195,15 @@ def sleep(
     server_url: str,
     http_client: httpx.Client | None = None,
 ):
+    """Tell the Fuseki server to sleep -- Not yet implemented.
+
+    Args:
+        server_url: The base URL of the Fuseki server. E.g. http://localhost:3030
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Raises:
+        NotImplementedError: Not yet implemented.
+    """
     raise NotImplementedError("sleep is not implemented yet")
 
 
@@ -141,7 +211,20 @@ def tasks(
     server_url: str,
     name: str = None,
     http_client: httpx.Client | None = None,
-):
+) -> str:
+    """List tasks currently running on the Fuseki server, or get one named task.
+
+    Args:
+        server_url: The base URL of the Fuseki server. E.g. http://localhost:3030
+        name: The task to get. If None (default), all running tasks are listed.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        The tasks response text.
+
+    Raises:
+        FusekiError: If the server does not respond with success.
+    """
     close_http_client = False
     if http_client is None:
         http_client = httpx.Client()
@@ -164,7 +247,19 @@ def tasks(
 def metrics(
     server_url: str,
     http_client: httpx.Client | None = None,
-):
+) -> str:
+    """Get metrics for the Fuseki server.
+
+    Args:
+        server_url: The base URL of the Fuseki server. E.g. http://localhost:3030
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        The metrics response text.
+
+    Raises:
+        FusekiError: If the server does not respond with success.
+    """
     close_http_client = False
     if http_client is None:
         http_client = httpx.Client()
@@ -188,14 +283,18 @@ def describe(
     dataset_name: str = None,
     http_client: httpx.Client | None = None,
 ) -> dict:
-    """
-    Describe the datasetss or a single dataset in a Fuseki server instances.
+    """Describe the datasets on the Fuseki server, or a single named dataset.
 
-    :param base_url: The base URL of the Fuseki server. E.g., http://localhost:3030
-    :param dataset_name: The dataset to be described. If None (default), then all datasets will be listed
-    :param http_client: The synchronous httpx client to be used. If this is not provided, a temporary one will be created.
-    :raises FusekiError: If the datasets fail to list or the server responds with an invalid data structure.
-    :returns: The Fuseki listing of datasets as a dictionary.
+    Args:
+        base_url: The base URL of the Fuseki server. E.g. http://localhost:3030
+        dataset_name: The dataset to be described. If None (default), then all datasets will be listed.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        The Fuseki listing of datasets as a dictionary.
+
+    Raises:
+        FusekiError: If the datasets fail to list or the server responds with an invalid data structure.
     """
     close_http_client = False
     if http_client is None:
@@ -238,6 +337,20 @@ def create(
     dataset_type: str = "tdb2",
     http_client: httpx.Client | None = None,
 ) -> str:
+    """Create a new Fuseki dataset, from a name and type or an assembler config file.
+
+    Args:
+        sparql_endpoint: The base URL of the Fuseki server. E.g. http://localhost:3030
+        dataset_name_or_config_file: The name of the dataset to create (using `dataset_type`), or an assembler config file - a path, or an open file/string of its Turtle content.
+        dataset_type: The dataset type to create, when `dataset_name_or_config_file` is a name. E.g. `tdb2`.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        A message confirming the dataset was created.
+
+    Raises:
+        FusekiError: If the dataset fails to create.
+    """
     close_http_client = False
     if http_client is None:
         http_client = httpx.Client()
@@ -292,14 +405,18 @@ def create(
 def delete(
     base_url: str, dataset_name: str, http_client: httpx.Client | None = None
 ) -> str:
-    """
-    Delete a Fuseki dataset.
+    """Delete a Fuseki dataset.
 
-    :param base_url: The base URL of the Fuseki server. E.g., http://localhost:3030
-    :param dataset_name: The dataset to be deleted
-    :param http_client: The synchronous httpx client to be used. If this is not provided, a temporary one will be created.
-    :raises FusekiError: If the dataset fails to delete.
-    :returns: A message indicating the successful deletion of the dataset.
+    Args:
+        base_url: The base URL of the Fuseki server. E.g. http://localhost:3030
+        dataset_name: The dataset to be deleted.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        A message indicating the successful deletion of the dataset.
+
+    Raises:
+        FusekiError: If the dataset fails to delete.
     """
     if not dataset_name:
         raise ValueError("You must supply a dataset name")
