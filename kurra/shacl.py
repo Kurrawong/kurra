@@ -84,18 +84,20 @@ def validate(
     hide_warnings: bool = False,
     advanced: bool = False,
 ) -> tuple[bool, Graph, str, Graph]:
-    """Validates a data graph using a shapes graph.
+    """Validate a data graph using a shapes graph.
 
     Args:
-        data: The path to an RDF data file, a graph, a list of Paths or a list of Graphs to validate. List items will be merged
-        shacl: The SHACL shapes to validate with
+        data: An RDF data file, Graph, or a list of files/Graphs to validate. List items are merged before validation.
+        shacl: The SHACL shapes to validate with as a Graph, a file or directory path, a validator IRI, or a local validator ID.
+        hide_warnings: If True, hide SHACL results of severity Warning and Info.
+        advanced: If True, enable SHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions).
 
     Returns:
-        Tuple[bool, Graph, str, Graph]: The validation status, results graph, message and summary graph
+        The validation status, results graph, message, and summary graph.
 
     Raises:
-        ValueError: If the ID of the SHACL validator is invalid
-        RuntimeError: If the IRI of the SHACL validator cannot be resolved locally or against the Semantic Background's validators
+        ValueError: If a given local validator ID is out of range.
+        RuntimeError: If the shapes graph cannot be resolved, locally or from the Semantic Background.
     """
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
@@ -166,9 +168,11 @@ def validate(
 
 
 def list_local_validators() -> dict[str, dict[str, int]] | None:
-    """Lists SHACL validators - IRI, name, and imports - stored in the local system's calidator cache.
+    """List the SHACL validators cached locally, without contacting the Semantic Background.
 
-    This function does not connect over the Internet."""
+    Returns:
+        A dict keyed by validator IRI, each value holding `id`, `name`, and `imports` (a list of imported validator IRIs). Empty if nothing is cached yet.
+    """
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
     validator_ids_cache = kurra_cache / "validator_ids.pkl"
@@ -207,12 +211,20 @@ def list_local_validators() -> dict[str, dict[str, int]] | None:
         return {}
 
 
-def sync_validators(http_client: httpx.Client | None = None):
-    """Checks the Semantic Background's read-only SPARQL Endpoint, currently https://fuseki.dev.kurrawong.ai/semback/sparql, for validators.
+def sync_validators(
+    http_client: httpx.Client | None = None,
+) -> dict[str, dict[str, str | list[str]]]:
+    """Refresh the local SHACL validator cache from the Semantic Background, downloading any validators not already cached locally.
 
-    It then checks local storage, using ``list_local_calidators()``, to see which, if any, of those validators are stored locally.
+    Args:
+        http_client: An optional HTTPX client to contain credentials if needed to access a SPARQL endpoint as context. A new one is created if not given.
 
-    For any missing, it pulls down and stores a copy locally.
+    Returns:
+        The refreshed local validator listing, in the same form as `list_local_validators`.
+
+    Raises:
+        NotImplementedError: If the Semantic Background's validator set is not yet available.
+        RuntimeError: If a validator's graph could not be fetched from the SPARQL endpoint.
     """
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
@@ -222,9 +234,9 @@ def sync_validators(http_client: httpx.Client | None = None):
     # get list of remote validators
     q = """
         PREFIX schema: <https://schema.org/>
-        
-        SELECT * 
-        WHERE { 
+
+        SELECT *
+        WHERE {
           <https://data.kurrawong.ai/sb/validators> schema:hasPart ?p
         }
         """
@@ -287,6 +299,14 @@ def sync_validators(http_client: httpx.Client | None = None):
 def get_validator_graph(
     graph_or_file_or_url_or_id: Graph | Path | str | int,
 ) -> Graph | None:
+    """Resolve a validator reference to its shapes graph.
+
+    Args:
+        graph_or_file_or_url_or_id: A Graph, RDF file path, local validator ID, or path/URL string.
+
+    Returns:
+        The resolved shapes Graph, or None if it could not be resolved.
+    """
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
     validator_ids_cache = kurra_cache / "validator_ids.pkl"
@@ -323,7 +343,14 @@ def get_validator_graph(
 
 
 def check_validator_known(validator_iri: str) -> bool:
-    """Checks first locally and then in the Semantic Background to if a validator, identified by IRI, is known"""
+    """Check whether a validator identified by IRI is known either locally or via the Semantic Background. If not found locally the cache is synced to the Semantic Background for a recheck.
+
+    Args:
+        validator_iri: The IRI of the validator to check.
+
+    Returns:
+        True if the validator is known, either locally or after syncing from the Semantic Background.
+    """
     local_validators = list_local_validators()
     for local_validator in local_validators.keys():
         if validator_iri == local_validator:
@@ -344,14 +371,21 @@ def infer(
     rules: Graph | Path | str,
     include_base: bool = False,
 ) -> Graph:
-    """Applies rules to the data graph and returns a graph of calculated results
+    """Apply SHACL Rules (SRL) to a data graph and return the inferred triples.
+
+    If `rules` contains a SPARQL `DELETE` statement, it is run directly as a SPARQL update instead of being parsed as SRL.
 
     Args:
-        data: the data to apply the rules to
-        rules: the rules to apply, in SHACL Rules SPARQL syntax
-        include_base: whether to include the data triples in output
+        data: The data graph to apply the rules to.
+        rules: The SRL rules to apply, as a string or a path to a `.srl` file, or a raw SPARQL update if it contains `DELETE`.
+        include_base: If True, include the original data triples in the result.
 
     Returns:
+        The inferred triples, or (if `include_base`) the inferred triples plus the original data.
+
+    Raises:
+        NotImplementedError: If `rules` is a Graph (not yet supported).
+        ValueError: If `rules` is a Path without a `.srl` suffix.
     """
     data_graph = load_graph(data)
 

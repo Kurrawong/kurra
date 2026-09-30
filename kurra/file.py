@@ -1,4 +1,4 @@
-"""RDF file manipulation functions"""
+"""RDF file manipulation functions."""
 
 import itertools
 from pathlib import Path
@@ -19,10 +19,7 @@ from kurra.utils import (
 
 
 class FailOnChangeError(Exception):
-    """
-    This exception is raised when running format and the
-    check bool is set to true and the file has resulted in a change.
-    """
+    """Raised when running format, if `check` is set and the file would change as a result of the operation."""
 
 
 def merge(
@@ -32,9 +29,15 @@ def merge(
 ) -> None:
     """Merge RDF files into one RDF graph or dataset document.
 
-    Named graphs are preserved.  Triple-only inputs are placed in
-    ``DEFAULT_GRAPH_IRI`` when the output syntax supports datasets; named graphs
-    are flattened when the requested output syntax only supports triples.
+    Named graphs are preserved. Triple-only inputs are placed in `DEFAULT_GRAPH_IRI` when the output format supports datasets, and named graphs are flattened when it only supports triples.
+
+    Args:
+        files: The RDF files to merge.
+        destination: The output file path. If omitted, the merged RDF is printed.
+        output_format: The RDFLib serialization format for the merged RDF.
+
+    Raises:
+        ValueError: If `output_format` is not a supported RDF format.
     """
     if output_format not in RDF_FILE_SUFFIXES:
         raise ValueError(
@@ -102,6 +105,16 @@ def do_format(
     output_format: RDF_FILE_SUFFIXES.keys() = "longturtle",
     input_format: str | None = None,
 ) -> Tuple[str, bool]:
+    """Reformat RDF content to a given serialization format.
+
+    Args:
+        content: The RDF content to reformat, as a string.
+        output_format: The RDFLib serialization format to write.
+        input_format: The RDFLib format of `content`. Detected automatically if not given.
+
+    Returns:
+        A tuple of the reformatted content and whether it changed from the input.
+    """
     if output_format not in RDF_FILE_SUFFIXES:
         raise ValueError(
             "Unsupported output_format. It must be one of "
@@ -211,7 +224,18 @@ def reformat(
     output_format: RDF_FILE_SUFFIXES.keys() = "longturtle",
     output_filename: Path = None,
 ) -> None:
-    """Reformats a file or all files in a given path according to the output format"""
+    """Reformat one RDF file or every RDF file in a directory to a given format.
+
+    Args:
+        path: The file or directory of RDF files to be formatted.
+        check: If True, check whether files will be changed by this command without applying the effect.
+        output_format: The RDFLib serialization format to write.
+        output_filename: The name of the file to write the reformatted content to. Only valid when `path` is a single file.
+
+    Raises:
+        ValueError: If `output_filename` is given while reformatting a directory.
+        FailOnChangeError: If `check` is True and reformatting a directory would change any file.
+    """
     path = Path(path).resolve()
 
     if path.is_dir():
@@ -269,7 +293,15 @@ def reformat(
 def make_dataset(
     path_str_or_graph: Union[Path, str, Graph], graph_iri: Union[str, URIRef]
 ) -> Dataset:
-    """Returns a given Graph, or string or file of triples, as a Dataset, with the supplied graph IRI"""
+    """Wrap a graph, or an RDF file or string of triples, as a Dataset under a given graph IRI.
+
+    Args:
+        path_str_or_graph: The RDF source to wrap as a Graph, file path, or string of triples.
+        graph_iri: The IRI to assign every triple's named graph.
+
+    Returns:
+        A Dataset containing the source's triples under `graph_iri`.
+    """
 
     # TODO: make a Dataset from a Graph or Datatset
     # - override option to replace existing graph
@@ -292,16 +324,17 @@ def hierarchy(
     graph_iri: Optional[Union[str, URIRef]] = None,
     use_names: bool = False,
 ) -> None:
-    """Print the class, property and concept hierarchies in an RDF graph.
+    """Print the class, property, or concept hierarchy found in an RDF source.
 
-    ``path_str_or_graph`` may be an RDF file, serialized RDF, or an RDFLib
-    graph. ``graph_iri`` selects one named graph and is only valid for a remote
-    URL or a ``.trig``/``.jsonld`` file. Without it, the source is parsed as a
-    context-less graph. Resources are displayed as namespace-qualified names
-    when possible. If ``use_names`` is true, names are selected in order from
-    ``skos:prefLabel``, ``dcterms:title``, ``schema:name`` and ``rdfs:label``,
-    with IRIs used as a fallback. Separate hierarchy roots (and separate
-    hierarchy kinds) are divided by a blank line.
+    Resources are displayed as namespace-qualified names where possible, or by their preferred label if `use_names` is set. Separate hierarchy roots, and separate hierarchy kinds, are divided by a blank line.
+
+    Args:
+        path_str_or_graph: An RDF file, serialized RDF string, or RDFLib Graph.
+        graph_iri: The named graph to use. Only valid for a remote URL or a `.trig`/`.jsonld` file; without it, the source is parsed as a context-less graph.
+        use_names: If True, select each resource's name from (in order): `skos:prefLabel`, `dcterms:title`, `schema:name`, or `rdfs:label`, falling back to the IRI if none is found.
+
+    Raises:
+        ValueError: If `graph_iri` is given for a source other than a remote URL or `.trig`/`.jsonld` file, or if a cycle is detected in the hierarchy.
     """
     is_remote = isinstance(path_str_or_graph, str) and path_str_or_graph.startswith(
         "http"
@@ -515,8 +548,15 @@ def hierarchy(
 def export_quads(
     path_str_or_dataset: Union[Path, str, Dataset], destination: Optional[Path] = None
 ) -> bool | str:
-    """Exports a given Dataset, or quads in trig format or a quads file specified by a path, either as
-    quads to a string, if no destination is given, or a file, if one is"""
+    """Export triples from a given Dataset, quads string in trig format, or a quads file specified by Path. 
+
+    Args:
+        path_str_or_dataset: A Dataset, a trig file path, or a string of trig data.
+        destination: The file to write the quads to. If given and the file already exists, its quads are merged in.
+
+    Returns:
+        True if written to `destination`, otherwise the serialized quads as a string.
+    """
     if isinstance(path_str_or_dataset, Path):
         d = _parse_dataset(path_str_or_dataset)
     elif isinstance(path_str_or_dataset, str):

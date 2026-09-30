@@ -85,7 +85,7 @@ def validate_command(
         data: The file, files, or directory of RDF files to be validated.
         shacl: The file, directory of files, IRI of, or kurra ID for the SHACL graph to validate with.
         hide_warnings: If True, hide SHACL results of severity Warning and Info.
-        advanced: If True, nable SHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions).
+        advanced: If True, enable SHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions).
         summary: If True, print a summary table instead of the full validation results.
         output_format: `table` (default) to print Rich table, or `rdf` for longturtle.
     """

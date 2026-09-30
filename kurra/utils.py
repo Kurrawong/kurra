@@ -6,7 +6,7 @@ import warnings
 from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
-from typing import Iterable, Union
+from typing import TYPE_CHECKING, Iterable, Union
 
 import httpx
 from rdflib import (
@@ -28,6 +28,9 @@ from sparqlib import (
     UpdateSubType,
     statement_type_from_string,
 )
+
+if TYPE_CHECKING:
+    from pandas import DataFrame
 
 # Canonical RDFLib format codes are used as the keys in the following maps.  A
 # few serializers (pretty-xml and longturtle) have no distinct file syntax, so
@@ -108,6 +111,8 @@ OLIS = Namespace("https://olis.dev/")
 
 
 class GspType(str, Enum):
+    """Graph Store Protocol operation types: get, put, post, or delete."""
+
     get = "get"
     put = "put"
     post = "post"
@@ -115,12 +120,22 @@ class GspType(str, Enum):
 
 
 class RenderFormat(str, Enum):
+    """Output formats for `render_sparql_result`: original, json or markdown."""
+
     original = "original"
     json = "json"
     markdown = "markdown"
 
 
 def guess_format_from_data(rdf: str) -> str | None:
+    """Guess an RDF media type from a string of RDF data.
+
+    Args:
+        rdf: The RDF data to inspect.
+
+    Returns:
+        The guessed media type, or None if `rdf` is None.
+    """
     if rdf is not None:
         rdf = rdf.strip()
         if rdf.startswith("PREFIX") or rdf.startswith("@prefix"):
@@ -185,12 +200,18 @@ def load_graph(
     *additional_graph_paths_or_str: GraphInput,
     recursive: bool = False,
 ) -> Graph:
-    """
-    Presents an RDFLib Graph from one or more existing Graphs, pickle-cached RDF
-    files, RDF files or directories, remote RDF URLs, or RDF data strings.
+    """Return an RDFLib Graph from one or more existing Graphs, pickle-cached RDF files, RDF files or directories, remote RDF URLs, or RDF data strings.
 
-    Multiple inputs may be supplied as positional arguments or as a list or tuple.
-    Missing filesystem paths raise ``FileNotFoundError``.
+    Args:
+        source: A single input, or a list/tuple of inputs, to combine into one graph.
+        *additional_graph_paths_or_str: Further inputs, combined with `source` into one graph.
+        recursive: If True, recurse into subdirectories when `source` is a directory.
+
+    Returns:
+        The combined Graph.
+
+    Raises:
+        FileNotFoundError: If a given filesystem path does not exist.
     """
     # Preserve the former ``load_graph(path, recursive)`` positional call form.
     if len(additional_graph_paths_or_str) == 1 and isinstance(
@@ -256,7 +277,15 @@ def load_graph(
 def render_sparql_result(
     r: dict | str | Graph, rf: RenderFormat = RenderFormat.markdown
 ) -> str:
-    """Renders a SPARQL result in a given render format"""
+    """Render a SPARQL result as plain JSON, Markdown, or its original form.
+
+    Args:
+        r: The SPARQL result to render as a dict, a JSON string, or a Graph (for CONSTRUCT/DESCRIBE).
+        rf: The format to render as.
+
+    Returns:
+        The rendered result.
+    """
     if rf == RenderFormat.original:
         return r
 
@@ -332,7 +361,17 @@ def make_httpx_client(
     sparql_username: str | None = None,
     sparql_password: str | None = None,
     timeout: int = 60,
-):
+) -> httpx.Client:
+    """Create an HTTPX client, with Basic Auth if a username and password are given.
+
+    Args:
+        sparql_username: The username for Basic Auth.
+        sparql_password: The password for Basic Auth.
+        timeout: The client's request timeout, in seconds.
+
+    Returns:
+        A configured HTTPX Client.
+    """
     auth = None
     if sparql_username:
         if sparql_password:
@@ -343,6 +382,15 @@ def make_httpx_client(
 def convert_sparql_json_to_python(
     j: Union[str, bytes, httpx.Response], return_bindings_only: bool = False
 ) -> dict:
+    """Convert a SPARQL JSON results response into native Python types.
+
+    Args:
+        j: The SPARQL JSON results, as a string, bytes, or an HTTPX Response.
+        return_bindings_only: If True, return just the result bindings (for SELECT) or a bool (for ASK), rather than the full SPARQL results structure.
+
+    Returns:
+        The converted result.
+    """
     if isinstance(j, str):
         r = json.loads(j)
     elif isinstance(j, bytes):
@@ -375,6 +423,15 @@ def convert_sparql_json_to_python(
 def sparql_statement_return_type(
     query: str, statement: SparqlStatementType | None = None
 ) -> str:
+    """Get the media type a SPARQL endpoint should return for a query.
+
+    Args:
+        query: The SPARQL query.
+        statement: The query's parsed statement type, if already known.
+
+    Returns:
+        `"text/turtle"` for CONSTRUCT/DESCRIBE, otherwise `"application/sparql-results+json"`.
+    """
     statement = _ensure_statement_type(query, statement)
     if is_construct_or_describe_query(query, statement):
         return "text/turtle"
@@ -382,6 +439,14 @@ def sparql_statement_return_type(
 
 
 def statement_type_for_query(query: str) -> SparqlStatementType:
+    """Get the statement type of a SPARQL query/update string.
+
+    Args:
+        query: The SPARQL query or update.
+
+    Returns:
+        The statement type.
+    """
     return statement_type_from_string(query)
 
 
@@ -394,6 +459,15 @@ def _ensure_statement_type(
 def is_construct_query(
     query: str, statement: SparqlStatementType | None = None
 ) -> bool:
+    """Check whether a given query is a SPARQL CONSTRUCT query.
+
+    Args:
+        query: The SPARQL query.
+        statement: The query's parsed statement type, if already known.
+
+    Returns:
+        True if `query` is a CONSTRUCT query, False otherwise.
+    """
     statement = _ensure_statement_type(query, statement)
     return (
         statement.type == SparqlType.QUERY
@@ -402,6 +476,15 @@ def is_construct_query(
 
 
 def is_describe_query(query: str, statement: SparqlStatementType | None = None) -> bool:
+    """Check whether a given query is a SPARQL DESCRIBE query.
+
+    Args:
+        query: The SPARQL query.
+        statement: The query's parsed statement type, if already known.
+
+    Returns:
+        True if `query` is a DESCRIBE query, False otherwise.
+    """
     statement = _ensure_statement_type(query, statement)
     return (
         statement.type == SparqlType.QUERY
@@ -410,6 +493,15 @@ def is_describe_query(query: str, statement: SparqlStatementType | None = None) 
 
 
 def is_select_query(query: str, statement: SparqlStatementType | None = None) -> bool:
+    """Check whether a given query is a SPARQL SELECT query.
+
+    Args:
+        query: The SPARQL query.
+        statement: The query's parsed statement type, if already known.
+
+    Returns:
+        True if `query` is a SELECT query, False otherwise.
+    """
     statement = _ensure_statement_type(query, statement)
     return (
         statement.type == SparqlType.QUERY and statement.subtype == QuerySubType.SELECT
@@ -417,6 +509,15 @@ def is_select_query(query: str, statement: SparqlStatementType | None = None) ->
 
 
 def is_ask_query(query: str, statement: SparqlStatementType | None = None) -> bool:
+    """Check whether a given query is a SPARQL ASK query.
+
+    Args:
+        query: The SPARQL query.
+        statement: The query's parsed statement type, if already known.
+
+    Returns:
+        True if `query` is an ASK query, False otherwise.
+    """
     statement = _ensure_statement_type(query, statement)
     return statement.type == SparqlType.QUERY and statement.subtype == QuerySubType.ASK
 
@@ -424,6 +525,15 @@ def is_ask_query(query: str, statement: SparqlStatementType | None = None) -> bo
 def is_construct_or_describe_query(
     query: str, statement: SparqlStatementType | None = None
 ) -> bool:
+    """Check whether a given query is a SPARQL CONSTRUCT or DESCRIBE query.
+
+    Args:
+        query: The SPARQL query.
+        statement: The query's parsed statement type, if already known.
+
+    Returns:
+        True if `query` is a CONSTRUCT or DESCRIBE query, False otherwise.
+    """
     statement = _ensure_statement_type(query, statement)
     return statement.type == SparqlType.QUERY and statement.subtype in {
         QuerySubType.CONSTRUCT,
@@ -434,6 +544,15 @@ def is_construct_or_describe_query(
 def is_select_or_ask_query(
     query: str, statement: SparqlStatementType | None = None
 ) -> bool:
+    """Check whether a given query is a SPARQL SELECT or ASK query.
+
+    Args:
+        query: The SPARQL query.
+        statement: The query's parsed statement type, if already known.
+
+    Returns:
+        True if `query` is a SELECT or ASK query, False otherwise.
+    """
     statement = _ensure_statement_type(query, statement)
     return statement.type == SparqlType.QUERY and statement.subtype in {
         QuerySubType.SELECT,
@@ -442,18 +561,47 @@ def is_select_or_ask_query(
 
 
 def is_update_query(query: str, statement: SparqlStatementType | None = None) -> bool:
+    """Check whether a given query is a SPARQL update.
+
+    Args:
+        query: The SPARQL query.
+        statement: The query's parsed statement type, if already known.
+
+    Returns:
+        True if `query` is an update, False otherwise.
+    """
     statement = _ensure_statement_type(query, statement)
     return statement.type == SparqlType.UPDATE
 
 
 def is_drop_update(query: str, statement: SparqlStatementType | None = None) -> bool:
+    """Check whether a given query is a SPARQL DROP update.
+
+    Args:
+        query: The SPARQL query.
+        statement: The query's parsed statement type, if already known.
+
+    Returns:
+        True if `query` is a DROP update, False otherwise.
+    """
     statement = _ensure_statement_type(query, statement)
     return (
         statement.type == SparqlType.UPDATE and statement.subtype == UpdateSubType.DROP
     )
 
 
-def make_sparql_dataframe(sparql_result: dict):
+def make_sparql_dataframe(sparql_result: dict) -> "DataFrame":
+    """Convert a parsed SPARQL SELECT or ASK result into a pandas DataFrame.
+
+    Args:
+        sparql_result: The parsed SPARQL JSON result.
+
+    Returns:
+        A DataFrame of the result's bindings (SELECT) or its boolean value (ASK).
+
+    Raises:
+        ValueError: If pandas is not installed.
+    """
     try:
         from pandas import DataFrame
     except ImportError:
@@ -484,7 +632,16 @@ def make_sparql_dataframe(sparql_result: dict):
     return df
 
 
-def add_namespaces_to_query_or_data(q: str, namespaces: dict):
+def add_namespaces_to_query_or_data(q: str, namespaces: dict) -> str:
+    """Prepend PREFIX declarations to a SPARQL query or RDF data string.
+
+    Args:
+        q: The SPARQL query or RDF data to prepend to.
+        namespaces: Namespace prefixes to declare, keyed by prefix.
+
+    Returns:
+        `q`, with the PREFIX declarations prepended.
+    """
     preamble = ""
     for k, v in namespaces.items():
         preamble += f"PREFIX {k}: <{v}>\n"
@@ -495,8 +652,19 @@ def add_namespaces_to_query_or_data(q: str, namespaces: dict):
 def get_system_graph(
     system_graph_source: str | Path | Dataset | Graph = None,
     http_client: httpx.Client | None = None,
-):
-    """Returns a System Graph, graph and can accept many source options"""
+) -> Graph | int:
+    """Load Olis's System Graph from a file, Graph, Dataset, or SPARQL endpoint.
+
+    Args:
+        system_graph_source: The source to load from as an RDF file path, Graph, Dataset, SPARQL endpoint URL, or None for an empty System Graph.
+        http_client: An optional HTTPX client to contain credentials if needed to access a SPARQL endpoint. A new one is created if not given.
+
+    Returns:
+        The System Graph, or the HTTP status code if fetching from a remote endpoint failed.
+
+    Raises:
+        ValueError: If `system_graph_source` is a Path that does not exist, or is of an unsupported type.
+    """
     system_graph = Graph(identifier=SYSTEM_GRAPH_IRI)
     system_graph.bind("olis", OLIS)
     if system_graph_source is None:
@@ -558,7 +726,17 @@ def put_system_graph(
     system_graph: Graph,
     system_graph_source: str | Path | Dataset | Graph | None = None,
     http_client: httpx.Client | None = None,
-):
+) -> Graph | int | None:
+    """Write a System Graph back to its file, Dataset, or SPARQL endpoint source.
+
+    Args:
+        system_graph: The System Graph to write.
+        system_graph_source: An RDF file path, a Dataset, a SPARQL endpoint URL, or None to return `system_graph` unwritten.
+        http_client: An optional HTTPX client to contain credentials if needed to access a SPARQL endpoint. A new one is created if not given.
+
+    Returns:
+        The HTTP status code if writing to a remote endpoint failed, `system_graph` if `system_graph_source` was None or a local (non-HTTP) string, otherwise None.
+    """
     if system_graph_source is None:
         return system_graph
     elif isinstance(system_graph_source, Path):
@@ -612,9 +790,19 @@ def make_system_specific_sparql_endpoint(
     statement: SparqlStatementType | None = None,
     gsp_query_type: GspType | None = None,
 ) -> str:
-    """Alters a given SPARQL Endpoint to meet specific system requirements.
+    """Adjust a SPARQL endpoint URL to match a specific triplestore's conventions.
 
-    e.g. GraphDB using /statements at the end of the base SPARQL Endpoint for updates"""
+    For example, GraphDB requires `/statements` appended to its base SPARQL endpoint for updates.
+
+    Args:
+        sparql_endpoint: The base SPARQL endpoint URL.
+        q: The SPARQL query or update, used to detect GraphDB update endpoints.
+        statement: The query's parsed statement type, if already known.
+        gsp_query_type: The Graph Store Protocol operation type, if this is a GSP request.
+
+    Returns:
+        The adjusted endpoint URL, or `sparql_endpoint` unchanged if no adjustment applies.
+    """
 
     # GraphDB SPARQL
     if q is not None and statement is not None:
@@ -635,7 +823,14 @@ def make_system_specific_sparql_endpoint(
 
 
 def iter_iris(graph: Graph) -> Iterable[URIRef]:
-    """Iterates over all IRIs in a given graph"""
+    """Iterate over every IRI referenced in a graph's triples.
+
+    Args:
+        graph: The graph to scan.
+
+    Returns:
+        Each IRI found.
+    """
     for triple in graph:
         for node in triple:
             if isinstance(node, URIRef):
@@ -643,8 +838,7 @@ def iter_iris(graph: Graph) -> Iterable[URIRef]:
 
 
 def build_values_clause(values: dict[str, Iterable[Node]]) -> str:
-    """
-    Builds a SPARQL VALUES clause for the given values.
+    """Build a SPARQL VALUES clause for the given values.
 
     Args:
         values: A dictionary where keys are variable names and values are iterables of RDF nodes.
@@ -666,8 +860,7 @@ def build_values_clause(values: dict[str, Iterable[Node]]) -> str:
 
 
 def is_class(graph: Graph, iri: URIRef) -> bool:
-    """
-    Checks if the given IRI is a class in the provided RDF graph.
+    """Check whether the given IRI is a class in the provided RDF graph.
 
     Args:
         graph: An RDFLib Graph object.

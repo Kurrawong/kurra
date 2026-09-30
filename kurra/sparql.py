@@ -1,4 +1,4 @@
-"""SPARQL query function. This includes SPARQL Update."""
+"""SPARQL query functions."""
 
 import json
 from pathlib import Path
@@ -63,8 +63,24 @@ def query(
     http_client: httpx.Client | None = None,
     return_format: Literal["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
-):
-    """Pose a SPARQL query to a file, and RDF Graph or a SPARQL Endpoint"""
+) -> str | Graph | dict | "DataFrame":
+    """Run a SPARQL query or update against a file, RDF Graph/Dataset, or SPARQL endpoint.
+
+    Args:
+        p: A local file path, SPARQL endpoint URL, RDF string, Graph, or Dataset.
+        q: The SPARQL query or update, as a string or a path to a file containing one.
+        namespaces: Namespace prefixes to add to `q` before running it.
+        http_client: An optional HTTPX client to contain credentials if needed to access a SPARQL endpoint when `p` is a URL. A new one is created if not given.
+        return_format: `"original"` for the endpoint's raw response, `"python"` for parsed Python objects, or `"dataframe"` for a pandas DataFrame (SELECT/ASK only).
+        return_bindings_only: If True, return just the result bindings rather than the full SPARQL results structure.
+
+    Returns:
+        The query result, in the requested `return_format`. CONSTRUCT/DESCRIBE queries always return a Graph (or its serialization), updates against a Graph, file, or RDF string return the updated Graph.
+
+    Raises:
+        ValueError: If `p` or `q` is not given, `return_format` is invalid, `return_format` is `"dataframe"` for a non-SELECT/ASK query, or pandas is not installed for `"dataframe"`.
+        NotImplementedError: If a DROP update targets anything other than a Dataset, or an update targets a Dataset directly.
+    """
     if p is None:
         raise ValueError(
             "You must supply a Path, string (of data or a URL), Graph or a Dataset to query for variable p"
