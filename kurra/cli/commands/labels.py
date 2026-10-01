@@ -1,3 +1,5 @@
+"""CLI commands for managing RDF labels."""
+
 import json
 from pathlib import Path
 from sys import stdout
@@ -25,7 +27,12 @@ def find_command(
         help="An RDF file or directory of RDF files containing labels",
     ),
 ) -> None:
-    """Find IRIs missing labels"""
+    """Print every IRI in an RDF file or directory that is missing an `rdfs:label`.
+
+    Args:
+        f: The RDF file or directory of RDF files to scan for IRIs missing labels.
+        local_context: An RDF file or directory of files containing labels to check against, in addition to `f` itself.
+    """
     if Path(f).is_file() or Path(f).is_dir():
         if local_context is not None:
             if Path(local_context).is_file() or Path(local_context).is_dir():
@@ -71,7 +78,14 @@ def get_command(
         help="Return RDF in the longturtle format or a printed table of IRIs and labels. Either 'graph' or 'table'",
     ),
 ) -> None:
-    """Gets labels for IRIs missing them from a given context or the KurrawongAI Semantic Background"""
+    """Fetch and print labels for IRIs that are missing them from a given context (`local_context`) or additional context (`additional_context`), by default the KurrawongAI Semantic Background.
+
+    Args:
+        f: The RDF file or directory of RDF files to scan for IRIs missing labels.
+        local_context: An RDF file or directory of files containing labels to check against, in addition to `f` itself.
+        additional_context: A further RDF source (file, directory, or SPARQL endpoint) to fetch missing labels from.
+        return_type: `graph` to output longturtle RDF, `table` for a printed table of IRIs and labels.
+    """
     iris = []
     if Path(f).is_file() or Path(f).is_dir():
         if local_context is not None:
@@ -123,8 +137,11 @@ def context_command(
         ),
     ] = None,
 ) -> None:
-    """
-    Generate a JSON-LD context based on the labels in a given RDF file. If local_context is supplied then labels from that context will be used too.
+    """Generate a JSON-LD context from the labels in a given RDF file.
+
+    Args:
+        rdf: The RDF file to generate a JSON-LD context from.
+        local_context: An RDF file or directory of files containing labels to source from, in addition to `rdf` itself.
     """
     if local_context is not None:
         ctx = jsonld_context(load_graph(rdf), load_graph(local_context))

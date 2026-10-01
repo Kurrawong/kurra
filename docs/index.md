@@ -1,13 +1,13 @@
 # kurra
 
-kurra is a Python package and command-line application for working with [RDF](https://www.w3.org/RDF/) data. It provides file conversion and 
-hierarchy tools, label handling, SPARQL access, SHACL validation, Graph Store Protocol operations, and database helpers.
+kurra is a Python package and command-line application for working with [RDF](https://www.w3.org/RDF/) data. It provides file conversion and hierarchy tools, label handling, SPARQL access, SHACL validation, Graph Store Protocol operations, and database helpers.
 
-It is built on top of [RDFLib](https://pypi.org/project/rdflib/) and, over time, some of its functionality is likely to 
-be absorbed into RDFLib.
+It is built on top of [RDFLib](https://pypi.org/project/rdflib/) and, over time, some of its functionality is likely to be absorbed into RDFLib.
 
 !!! note
     kurra is mainly maintained by [kurrawong.ai](https://kurrawong.ai) but is Open Source, so feel free to [contribute](#contributing)!
+
+
 
 ## Install
 
@@ -31,7 +31,7 @@ Or from the command line:
 kurra file hierarchy vocabulary.ttl -u
 ```
 
-Running `-h` at any level of the Command Line will print out help, e.g., for the top-level
+Running `-h` at any level of the Command Line will print out help. For example, for the top-level
 
 ```bash
 kurra -h
@@ -40,10 +40,10 @@ kurra -h
 which will print something like:
 
 ```bash
- Usage: kurra [OPTIONS] COMMAND [ARGS]...                                              
-                                                                                       
- Main callback for the CLI app                                                         
-                                                                                       
+ Usage: kurra [OPTIONS] COMMAND [ARGS]...
+
+ Main callback for the CLI app
+
 ╭─ Options ───────────────────────────────────────────────────────────────────────────╮
 │ --version  -v                                                                       │
 │ --help     -h        Show this message and exit.                                    │
@@ -65,11 +65,11 @@ kurra sparql -h
 
 which will print something like:
 
-```bash                                                                                                 
-Usage: kurra sparql [OPTIONS] PATH_OR_URL Q                                         
-                                                                                     
- SPARQL queries to local RDF files or a database                                     
-                                                                                     
+```bash
+Usage: kurra sparql [OPTIONS] PATH_OR_URL Q
+
+SPARQL queries to local RDF files or a database
+
 ╭─ Arguments ───────────────────────────────────────────────────────────────────────╮
 │ *    path_or_url      PATH  [required]                                            │
 │ *    q                TEXT  [required]                                            │
@@ -105,8 +105,4 @@ kurra is maintained by:
 
 Please contact them for all use & support issues.
 
-You can also log issues at the kurra issue tracker:
-
-* <https://github.com/Kurrawong/kurra/issues>
-
-
+You can also log issues at the [kurra issue tracker](https://github.com/Kurrawong/kurra/issues).

@@ -1,9 +1,7 @@
 """SPARQL Graph Store Protocol functions.
 
-These are knonw to work well with Jena Fuseki and GraphDB but may need testing for other RDF Database implementations
-due to differences in repository/dataset endpoints some of them use. See
-[`utils.make_system_specific_sparql_endpoint()`][kurra.utils.make_system_specific_sparql_endpoint]
-for some endpoint difference handling."""
+These are known to work well with Jena Fuseki and GraphDB but may need testing for other RDF Database implementations due to differences in repository/dataset endpoints some of them use. See [`utils.make_system_specific_sparql_endpoint()`][kurra.utils.make_system_specific_sparql_endpoint] for some endpoint difference handling.
+"""
 
 from pathlib import Path
 from typing import Literal as LiteralType
@@ -24,7 +22,19 @@ from kurra.utils import (
 def exists(
     sparql_endpoint: str, graph_iri: str, http_client: httpx.Client | None = None
 ) -> bool:
-    """Returns True if a graph with the given graph_iri exists at the SPARQL Endpoint or else False"""
+    """Check whether a graph exists at a SPARQL endpoint.
+
+    Args:
+        sparql_endpoint: The SPARQL Endpoint URL to use.
+        graph_iri: The IRI of the graph to check. If None, the default graph is checked.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        True if the graph exists, False otherwise.
+
+    Raises:
+        ValueError: If `sparql_endpoint` does not start with "http".
+    """
     if not sparql_endpoint.startswith("http"):
         raise ValueError("SPARQL Endpoint given does not start with 'http'")
 
@@ -58,20 +68,23 @@ def get(
     return_format: LiteralType["original", "python"] = "python",
     http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
-    """Graph Store Protocol's HTTP GET: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-get
+    """Graph Store Protocol's [HTTP GET](https://www.w3.org/TR/sparql12-graph-store-protocol/#http-get).
 
-    Returns the content of the graph identified by graph_id in the target SPARQL Endpoint.
+    Returns the content of the graph identified by `graph_iri` in the target SPARQL Endpoint.
 
     Args:
-        sparql_endpoint: The SPARQL Endpoint URL to use
-        graph_iri: The IRI of the graph to retrieve
-        accept_type: The RDF format to request from the server and to return if return_format is set to 'original'
-        return_format: The return format to use, 'python' - RDFLib's Graph - or 'original' - an RDF string value in the format of accept_type
-        http_client: An HTTP client to use. Created internally if not supplied
+        sparql_endpoint: The SPARQL Endpoint URL to use.
+        graph_iri: The IRI of the graph to retrieve.
+        accept_type: The RDF format to request from the server and to return if return_format is set to "original".
+        return_format: `"python"` for RDFLib's Graph, `"original"` for an RDF string value in the format of `accept_type`.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
 
     Returns:
           An RDF result as either an RDFLib Graph object or a string object containing RDF in the accept_type
           format. If a graph, the graph identifier will be the graph_iri or a Blank Node if None/default
+
+    Raises:
+        ValueError: If `sparql_endpoint` does not start with "http", `accept_type` is not a supported RDF media type, or `return_format` is invalid.
     """
     if not sparql_endpoint.startswith("http"):
         raise ValueError("SPARQL Endpoint given does not start with 'http'")
@@ -125,14 +138,26 @@ def put(
     sparql_endpoint: str,
     file_or_str_or_graph: Union[Path, str, Graph],
     graph_iri: str = None,
-    content_type="text/turtle",
+    content_type: str = "text/turtle",
     http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
-    """Graph Store Protocol's HTTP PUT: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-put
+    """Graph Store Protocol's [HTTP PUT](https://www.w3.org/TR/sparql12-graph-store-protocol/#http-put).
 
-    Inserts the RDF content supplied into a graph identified by graph_id or the default graph.
+    Inserts the RDF content supplied into a graph identified by `graph_iri` or the default graph, replacing existing content.
 
-    Will replace existing content."""
+    Args:
+        sparql_endpoint: The SPARQL Endpoint URL to use.
+        file_or_str_or_graph: The RDF content to insert as a file path, an RDF string, or a Graph.
+        graph_iri: The IRI of the graph to insert into. If None, the default graph is targeted.
+        content_type: The RDF media type to serialize the content as.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        A tuple of `(True, None)` on success, or `(status_code, response_text)` on failure.
+
+    Raises:
+        ValueError: If `sparql_endpoint` does not start with "http", or `content_type` is not a supported RDF media type.
+    """
     if not sparql_endpoint.startswith("http"):
         raise ValueError("SPARQL Endpoint given does not start with 'http'")
 
@@ -173,14 +198,26 @@ def post(
     sparql_endpoint: str,
     file_or_str_or_graph: Union[Path, str, Graph],
     graph_iri: str = None,
-    content_type="text/turtle",
+    content_type: str = "text/turtle",
     http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
-    """Graph Store Protocol's HTTP POST: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-post
+    """Graph Store Protocol's [HTTP POST](https://www.w3.org/TR/sparql12-graph-store-protocol/#http-post).
 
-    Inserts the RDF content supplied into a graph identified by graph_id or the default graph.
+    Inserts the RDF content supplied into a graph identified by `graph_iri` or the default graph, adding to existing content.
 
-    Will add to existing content."""
+    Args:
+        sparql_endpoint: The SPARQL Endpoint URL to use.
+        file_or_str_or_graph: The RDF content to insert as a file path, an RDF string, or a Graph.
+        graph_iri: The IRI of the graph to insert into. If None, the default graph is targeted.
+        content_type: The RDF media type to serialize the content as.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        A tuple of `(True, None)` on success, or `(status_code, response_text)` on failure.
+
+    Raises:
+        ValueError: If `sparql_endpoint` does not start with "http", or `content_type` is not a supported RDF media type.
+    """
     if not sparql_endpoint.startswith("http"):
         raise ValueError("SPARQL Endpoint given does not start with 'http'")
 
@@ -224,9 +261,21 @@ def delete(
     graph_iri: str = None,
     http_client: httpx.Client | None = None,
 ) -> Union[Graph, int]:
-    """Graph Store Protocol's HTTP DELETE: https://www.w3.org/TR/sparql12-graph-store-protocol/#http-delete
+    """Graph Store Protocol's [HTTP DELETE](https://www.w3.org/TR/sparql12-graph-store-protocol/#http-delete).
 
-    Deletes the graph identified by graph_id or the default graph."""
+    Deletes the graph identified by `graph_iri`, or the default graph if not given.
+
+    Args:
+        sparql_endpoint: The SPARQL Endpoint URL to use.
+        graph_iri: The IRI of the graph to delete. If None, the default graph is targeted.
+        http_client: An HTTP client to use. Created internally if not supplied.
+
+    Returns:
+        A tuple of `(True, None)` on success, or `(status_code, response_text)` on failure.
+
+    Raises:
+        ValueError: If `sparql_endpoint` does not start with "http".
+    """
     if not sparql_endpoint.startswith("http"):
         raise ValueError("SPARQL Endpoint given does not start with 'http'")
 
@@ -258,10 +307,18 @@ def delete(
 
 def clear(
     sparql_endpoint: str, graph_iri: str, http_client: httpx.Client | None = None
-):
-    """Clears - remove all triples from - a graph identified by graph_iri. Special values for graph_iri are 'default' - clears the default graph - and 'all' which clears all graphs.
+) -> Union[Graph, int]:
+    """Clear/Remove all triples from a graph identified by `graph_iri`.
 
-    This function operates much like SPARQL Update's Clear function - https://www.w3.org/TR/sparql12-update/#clear - but uses GSP Delete under the hood and handles the 'default' and 'all' special cases.
+    Special values for graph_iri are "default" (clears the default graph) and "all" (clears every graph). Operates much like SPARQL Update's [Clear function](https://www.w3.org/TR/sparql12-update/#clear), but uses GSP DELETE under the hood.
+
+    Args:
+        sparql_endpoint: The SPARQL Endpoint URL to use.
+        graph_iri: The IRI of the graph to clear, or "default"/"all".
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        A tuple of `(True, None)` if at least one graph was cleared successfully (for "all"), or the result of the underlying `delete` call otherwise.
     """
     if graph_iri == "default":
         return delete(sparql_endpoint, None, http_client=http_client)
@@ -308,15 +365,21 @@ def upload(
     content_type: str = "text/turtle",
     http_client: httpx.Client | None = None,
 ) -> Union[bool, int]:
-    """This function uploads a file to a SPARQL Endpoint using the Graph Store Protocol.
+    """Upload a file, string, or Graph to a SPARQL endpoint using the Graph Store Protocol.
 
-    It will upload it into a graph identified by graph_id (an IRI or Blank Node). If no graph_id is given, it will be
-    uploaded into the default graph.
+    Uploads into the graph identified by graph_id (an IRI), or the default graph if not given. By default, replaces all content in the target graph; if `append` is True, adds to existing content instead. This is an alias for `put` (`append=False`) and `post` (`append=True`).
 
-    By default, it will replace all content in the Named Graph or default graph. If append is set to True, it will
-    add it to existing content in the graph_id Named Graph.
+    Args:
+        sparql_endpoint: The SPARQL Endpoint URL to use.
+        file_or_str_or_graph: The RDF content to upload as a file path, an RDF string, or a Graph.
+        graph_id: The IRI of the graph to upload into. If None, the default graph is targeted.
+        append: If True, add to existing content (via `post`) instead of replacing it (via `put`).
+        content_type: The RDF media type to serialize the content as.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
 
-    This function is an alias of put() (append=False) and post() (append=True)."""
+    Returns:
+        A tuple of `(True, None)` on success, or `(status_code, response_text)` on failure.
+    """
 
     if append:
         return post(

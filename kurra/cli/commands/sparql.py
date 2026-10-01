@@ -1,3 +1,5 @@
+"""CLI commands for running SPARQL queries."""
+
 from pathlib import Path
 from typing import Annotated
 
@@ -37,7 +39,19 @@ def sparql_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """SPARQL queries a local file or SPARQL Endpoint"""
+    """Run a SPARQL query against a local RDF file or a SPARQL endpoint, and print the result.
+
+    Args:
+        path_or_url: A local RDF file path or a SPARQL endpoint URL to query.
+        q: A SPARQL query string, or the path to a file containing one.
+        response_format: The response format of the SPARQL query. Either `table` (default), `json`, or `csv`.
+        username: Fuseki username, if the endpoint requires authentication.
+        password: Fuseki password, if the endpoint requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        typer.BadParameter: If `response_format` is not one of `table`, `json`, or `csv`.
+    """
     if str(path_or_url).startswith("http"):
         path_or_url = str(path_or_url).replace(":/", "://")
 

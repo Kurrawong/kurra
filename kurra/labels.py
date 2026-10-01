@@ -1,5 +1,4 @@
-"""These functions are used to find RDF elements in a given scope that are missing labels and the to acquire them
-from either KurrawongAI's 'Semantic Background' dataset or other, provided, context."""
+"""Functions to find RDF elements missing labels, and to acquire them from KurrawongAI's Semantic Background or another provided context."""
 
 import re
 from pathlib import Path
@@ -18,9 +17,15 @@ LABEL_PREDICATES = [RDFS.label, SDO.name, SKOS.prefLabel, DCTERMS.title]
 def find_missing_labels(
     p: Path | str | Graph, local_context: Path | Graph | None = None
 ) -> Iterable[URIRef]:
-    """Finds all the IRIs in a graph missing labels.
+    """Find all the IRIs in a graph missing labels.
 
-    If local_context is supplied - and it must be a Path to an RDF file or directory of RDF files or a Graph - then labels from that context will be used too."""
+    Args:
+        p: The RDF source to scan for IRIs missing labels as a file path, directory, RDF string, or Graph.
+        local_context: An RDF file, directory, or Graph containing labels to check against, in addition to `p` itself.
+
+    Returns:
+        The IRIs missing a label.
+    """
 
     # find all the things missing labels
     missing_labels = set()
@@ -73,7 +78,17 @@ def get_labels(
     return_type: Literal["graph", "dict"] = "graph",
     http_client: httpx.Client | None = None,
 ) -> Graph | dict[URIRef, str]:
-    """Gets labels for given IRIs from a given context"""
+    """Get labels for the given IRIs from a given context, by default the KurrawongAI Semantic Background.
+
+    Args:
+        iris: The IRIs to fetch labels for.
+        context: An RDF Graph, file, directory, or SPARQL endpoint containing labels to check against. Defaults to the KurrawongAI Semantic Background.
+        return_type: `"graph"` to return an RDF Graph of `schema:name` labels, or `"dict"` for a dict keyed by IRI.
+        http_client: An optional HTTPX client to contain credentials if needed to access a SPARQL endpoint as context. A new one is created if not given.
+
+    Returns:
+        A Graph if `return_type` is `"graph"`, or a dict of IRI to label if `"dict"`.
+    """
     iri_values_clause = build_values_clause({"iri": iris})
     predicate_values_clause = build_values_clause({"pred": LABEL_PREDICATES})
 
@@ -82,23 +97,23 @@ def get_labels(
             ?iri ?pred ?label .
             {predicate_values_clause}
             {iri_values_clause}
-        }} 
+        }}
         """
 
     if return_type == "graph":
         q = f"""
             PREFIX schema: <https://schema.org/>
-            
+
             CONSTRUCT {{
                 ?iri schema:name ?label
             }}
-            {where_clause} 
+            {where_clause}
             """
         return query(context, q, http_client=http_client, return_format="python")
     else:
         q = f"""
             PREFIX schema: <https://schema.org/>
-            
+
             SELECT ?iri ?label
             {where_clause}
             """
@@ -123,7 +138,15 @@ SPLIT_REGEX = re.compile(
 
 
 def jsonld_context(graph: Graph, vocabulary: Graph | None = None) -> dict[str, str]:
-    """Creates a JSON-LD context for a given graph and vocabulary"""
+    """Create a JSON-LD context mapping resource labels to their IRIs.
+
+    Args:
+        graph: The graph to generate a context for.
+        vocabulary: An additional graph to source labels and class/property types from.
+
+    Returns:
+        A dict mapping each generated JSON-LD term to its IRI.
+    """
     result = {}
     all_iris = list(iter_iris(graph))
     if vocabulary is None:
