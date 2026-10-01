@@ -33,7 +33,7 @@ def test_validate_cli_shacl_types(tmp_path, monkeypatch, shacl_value, expected_t
 
     received = {}
 
-    def fake_validate(data, shacl, hide_warnings=False, advanced=False):
+    def fake_validate(data, shacl, hide_warnings=False, advanced=False, return_type="basic"):
         received["data"] = data
         received["shacl"] = shacl
         return True, Graph(), "", Graph()
@@ -50,8 +50,8 @@ def test_validate_cli_shacl_types(tmp_path, monkeypatch, shacl_value, expected_t
     assert isinstance(received["shacl"], expected_type)
 
 
-@pytest.mark.parametrize("summary_option", ["--summary", "-y"])
-def test_validate_cli_summary(tmp_path, monkeypatch, summary_option):
+@pytest.mark.parametrize("return_type_option", ["--return", "-r"])
+def test_validate_cli_summary(tmp_path, monkeypatch, return_type_option):
     data_path = tmp_path / "data.ttl"
     data_path.touch()
 
@@ -86,7 +86,8 @@ def test_validate_cli_summary(tmp_path, monkeypatch, summary_option):
             str(data_path),
             "--shacl",
             "validator.ttl",
-            summary_option,
+            return_type_option,
+            "summary",
         ],
     )
 
@@ -97,27 +98,58 @@ def test_validate_cli_summary(tmp_path, monkeypatch, summary_option):
     assert "Test message" in result.output
 
 
+@pytest.mark.parametrize("return_type_option", ["--return", "-r"])
+def test_validate_cli_provenance(tmp_path, monkeypatch, return_type_option):
+    data_path = tmp_path / "data.ttl"
+    data_path.touch()
+
+    provenance_graph = Graph()
+    provenance_graph.add((EX.activity, EX.value, Literal("provenance result")))
+    monkeypatch.setattr(
+        shacl_commands,
+        "validate",
+        lambda *args, **kwargs: (False, Graph(), "", provenance_graph),
+    )
+
+    # no --format passed (defaults to table) - provenance is still shown as Turtle
+    result = runner.invoke(
+        app,
+        [
+            "shacl",
+            "validate",
+            str(data_path),
+            "--shacl",
+            "validator.ttl",
+            return_type_option,
+            "provenance",
+        ],
+    )
+    assert result.exit_code == 0
+    assert "provenance result" in result.output
+
+
 @pytest.mark.parametrize(
-    ("summary_args", "expected_value", "unexpected_value"),
+    ("return_type_args", "expected_value", "unexpected_value"),
     [
-        ([], "full result", "summary result"),
-        (["--summary"], "summary result", "full result"),
+        ([], "full result", "extra result"),
+        (["--return", "summary"], "extra result", "full result"),
+        (["--return", "provenance"], "extra result", "full result"),
     ],
 )
 def test_validate_cli_rdf_output(
-    tmp_path, monkeypatch, summary_args, expected_value, unexpected_value
+    tmp_path, monkeypatch, return_type_args, expected_value, unexpected_value
 ):
     data_path = tmp_path / "data.ttl"
     data_path.touch()
 
     results_graph = Graph()
     results_graph.add((EX.report, EX.value, Literal("full result")))
-    summary_graph = Graph()
-    summary_graph.add((EX.summary, EX.value, Literal("summary result")))
+    extra_graph = Graph()
+    extra_graph.add((EX.extra, EX.value, Literal("extra result")))
     monkeypatch.setattr(
         shacl_commands,
         "validate",
-        lambda *args, **kwargs: (False, results_graph, "", summary_graph),
+        lambda *args, **kwargs: (False, results_graph, "", extra_graph),
     )
 
     result = runner.invoke(
@@ -130,7 +162,7 @@ def test_validate_cli_rdf_output(
             "validator.ttl",
             "--format",
             "rdf",
-            *summary_args,
+            *return_type_args,
         ],
     )
 
