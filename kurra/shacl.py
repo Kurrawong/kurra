@@ -1,13 +1,16 @@
 """SHACL functions."""
 
+from datetime import datetime
+from importlib.metadata import version
 from pathlib import Path
 from pickle import dump, load
 from random import choice
+from typing import Literal, overload
 
 import httpx
 from pyshacl import validate as v
-from rdflib import BNode, Dataset, Graph, Literal, Namespace, URIRef
-from rdflib.namespace import OWL, RDF, SDO, SH
+from rdflib import BNode, Dataset, Graph, Literal as RDFLiteral, Namespace, URIRef
+from rdflib.namespace import OWL, PROV, RDF, SDO, SH, XSD, DefinedNamespace
 from srl.engine import RuleEngine
 from srl.parser import SRLParser
 
@@ -17,6 +20,20 @@ from kurra.sparql import query
 from kurra.utils import load_graph
 
 EX = Namespace("http://example.com/")
+
+
+class SH12(DefinedNamespace):
+    """SHACL 1.2 Profiling vocabulary terms not yet in rdflib's DefinedNamespace SH."""
+
+    _NS = Namespace(str(SH))
+    _fail = True
+
+    DataGraph: URIRef
+    ShapesGraph: URIRef
+    ValidationAgent: URIRef
+    ValidationActivity: URIRef
+    usedDataGraph: URIRef
+    usedShapesGraph: URIRef
 
 
 def _summarize_validation_results(validation_report: Graph) -> Graph:
@@ -45,7 +62,7 @@ def _summarize_validation_results(validation_report: Graph) -> Graph:
             for result in results
             if (result, SH.resultSeverity, severity) in validation_report
         )
-        sg.add((summary, predicate, Literal(count)))
+        sg.add((summary, predicate, RDFLiteral(count)))
 
     results_by_shape = {}
     for result in results:
@@ -56,7 +73,7 @@ def _summarize_validation_results(validation_report: Graph) -> Graph:
         s = BNode()
         sg.add((s, RDF.type, EX.ValidationResultSummary))
         sg.add((report_summary, EX["result"], s))
-        sg.add((s, EX["count"], Literal(len(shape_results))))
+        sg.add((s, EX["count"], RDFLiteral(len(shape_results))))
         sg.add((s, SH.sourceShape, shape))
 
         examples = [
@@ -78,20 +95,138 @@ def _load_pickle(path: Path):
         return load(pickle_file)
 
 
+def _extract_data_graph_nodes(
+    data: Path | Graph | list[Path] | list[Graph],
+) -> list[URIRef | BNode]:
+    """Identifies the Data Graph(s) supplied to validate(), by file location if known."""
+    items = data if isinstance(data, list) else [data]
+    return [
+        URIRef(item.resolve().as_uri()) if isinstance(item, Path) else BNode()
+        for item in items
+    ]
+
+
+def _extract_shapes_graph_node(shacl: Graph | Path | str | int) -> URIRef | BNode:
+    """Identifies the Shapes Graph supplied to validate(): its Semantic Background IRI if
+    resolved via one, its file location if given as a path, otherwise a blank node."""
+    if isinstance(shacl, str) and shacl.startswith("http"):
+        return URIRef(shacl)
+
+    if isinstance(shacl, int) or (isinstance(shacl, str) and shacl.isnumeric()):
+        local_validators = list_local_validators()
+        for iri, info in local_validators.items():
+            if int(info["id"]) == int(shacl):
+                return URIRef(iri)
+
+    if isinstance(shacl, Path):
+        return URIRef(shacl.resolve().as_uri())
+
+    if isinstance(shacl, str) and Path(shacl).exists():
+        return URIRef(Path(shacl).resolve().as_uri())
+
+    return BNode()
+
+
+def _build_provenance_graph(
+    report_graph: Graph,
+    data_graph_nodes: list[URIRef | BNode],
+    shapes_graph_node: URIRef | BNode,
+    started_at: datetime,
+    ended_at: datetime,
+) -> Graph:
+    """Builds a PROV-O provenance graph for a validation run, following the activity-centric
+    pattern in the SHACL 1.2 Profiling vocabulary's persisting validation results guidance."""
+    pg = Graph()
+    pg += report_graph
+    pg.bind("prov", PROV)
+    pg.bind("sh", SH12)
+
+    report_node = pg.value(predicate=RDF.type, object=SH.ValidationReport)
+
+    agent_node = URIRef(f"https://pypi.org/project/pyshacl/{version('pyshacl')}/")
+    pg.add((agent_node, RDF.type, SH12.ValidationAgent))
+
+    for data_graph_node in data_graph_nodes:
+        pg.add((data_graph_node, RDF.type, SH12.DataGraph))
+
+    pg.add((shapes_graph_node, RDF.type, SH12.ShapesGraph))
+
+    activity_node = BNode()
+    pg.add((activity_node, RDF.type, SH12.ValidationActivity))
+    pg.add((activity_node, PROV.wasAssociatedWith, agent_node))
+    for data_graph_node in data_graph_nodes:
+        pg.add((activity_node, SH12.usedDataGraph, data_graph_node))
+    pg.add((activity_node, SH12.usedShapesGraph, shapes_graph_node))
+    if report_node is not None:
+        pg.add((activity_node, PROV.generated, report_node))
+    pg.add(
+        (
+            activity_node,
+            PROV.startedAtTime,
+            RDFLiteral(started_at.isoformat()[:19], datatype=XSD.dateTime),
+        )
+    )
+    pg.add(
+        (
+            activity_node,
+            PROV.endedAtTime,
+            RDFLiteral(ended_at.isoformat()[:19], datatype=XSD.dateTime),
+        )
+    )
+
+    return pg
+
+
+@overload
 def validate(
     data: Path | Graph | list[Path] | list[Graph],
     shacl: Graph | Path | str | int,
     hide_warnings: bool = False,
     advanced: bool = False,
-) -> tuple[bool, Graph, str, Graph]:
+    return_type: Literal["basic"] = "basic",
+) -> tuple[bool, Graph, str]: ...
+
+
+@overload
+def validate(
+    data: Path | Graph | list[Path] | list[Graph],
+    shacl: Graph | Path | str | int,
+    hide_warnings: bool,
+    advanced: bool,
+    return_type: Literal["summary"],
+) -> tuple[bool, Graph, str, Graph]: ...
+
+
+@overload
+def validate(
+    data: Path | Graph | list[Path] | list[Graph],
+    shacl: Graph | Path | str | int,
+    hide_warnings: bool,
+    advanced: bool,
+    return_type: Literal["provenance"],
+) -> tuple[bool, Graph, str, Graph]: ...
+
+
+def validate(
+    data: Path | Graph | list[Path] | list[Graph],
+    shacl: Graph | Path | str | int,
+    hide_warnings: bool = False,
+    advanced: bool = False,
+    return_type: Literal["basic", "summary", "provenance"] = "basic",
+):
     """Validates a data graph using a shapes graph.
 
     Args:
         data: The path to an RDF data file, a graph, a list of Paths or a list of Graphs to validate. List items will be merged
         shacl: The SHACL shapes to validate with
+        return_type: What to return alongside the validation status, results graph and message.
+            "basic" (the default) returns just those three. "summary" adds a compact summary graph.
+            "provenance" adds a PROV-O provenance graph, per the SHACL 1.2 Profiling vocabulary's
+            persisting validation results guidance.
 
     Returns:
-        Tuple[bool, Graph, str, Graph]: The validation status, results graph, message and summary graph
+        The validation status, results graph and message, plus a summary graph or a provenance
+        graph if requested via return_type.
 
     Raises:
         ValueError: If the ID of the SHACL validator is invalid
@@ -153,16 +288,29 @@ def validate(
         for x in data:
             data_graph += load_graph(x)
 
+    started_at = datetime.now()
     tf, g, msg = v(
         data_graph, shacl_graph=shapes_graph, allow_warnings=True, advanced=advanced
     )
+    ended_at = datetime.now()
 
     if hide_warnings:
         for s in g.subjects(predicate=RDF.type, object=SH.ValidationResult):
             if not g.value(subject=s, predicate=SH.resultSeverity) == SH.Violation:
                 g = g - g.cbd(s)
 
-    return tf, g, msg, _summarize_validation_results(g)
+    result = [tf, g, msg]
+    if return_type == "summary":
+        result.append(_summarize_validation_results(g))
+    elif return_type == "provenance":
+        result.append(_build_provenance_graph(
+            g,
+            _extract_data_graph_nodes(data),
+            _extract_shapes_graph_node(shacl),
+            started_at,
+            ended_at,
+        ))
+    return tuple(result)
 
 
 def list_local_validators() -> dict[str, dict[str, int]] | None:
@@ -222,9 +370,9 @@ def sync_validators(http_client: httpx.Client | None = None):
     # get list of remote validators
     q = """
         PREFIX schema: <https://schema.org/>
-        
-        SELECT * 
-        WHERE { 
+
+        SELECT *
+        WHERE {
           <https://data.kurrawong.ai/sb/validators> schema:hasPart ?p
         }
         """

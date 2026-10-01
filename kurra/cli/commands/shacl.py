@@ -68,22 +68,38 @@ def validate_command(
             help="Print a summary table instead of the full validation results",
         ),
     ] = False,
+    provenance: Annotated[
+        bool,
+        typer.Option(
+            "--provenance",
+            "-p",
+            help="Output a PROV-O provenance graph of the validation, as Turtle, instead of the full validation results. Ignores --format, which has no effect when this is set",
+        ),
+    ] = False,
     output_format: Annotated[
         Literal["table", "rdf"],
         typer.Option(
             "--format",
             "-f",
-            help="Output format: a Rich table or Long Turtle RDF",
+            help="Output format: a Rich table or Long Turtle RDF. Has no effect if --provenance is set, which is always output as Turtle",
         ),
     ] = "table",
 ) -> None:
-    """Validate a given file or directory of files using a given SHACL file or directory of files"""
-    valid, g, txt, summary_graph = validate(
-        data, shacl, hide_warnings=hide_warnings, advanced=advanced
+    """Validate a given file or directory of files using a given SHACL file or directory of files."""
+    valid, g, txt, *extra_graph = validate(
+        data,
+        shacl,
+        hide_warnings=hide_warnings,
+        advanced=advanced,
+        return_type="provenance" if provenance else "summary" if summary else "basic",
     )
+    extra_graph = extra_graph[0] if extra_graph else None
 
-    output_graph = summary_graph if summary else g
+    if provenance:
+        console.print(extra_graph.serialize(format="longturtle"))
+        return
 
+    output_graph = extra_graph if summary else g
     if output_format == "rdf":
         console.print(output_graph.serialize(format="longturtle"))
     else:
@@ -94,7 +110,7 @@ def validate_command(
             console.print("The errors are:")
 
             if summary:
-                console.print(format_shacl_summary_as_rich_table(summary_graph))
+                console.print(format_shacl_summary_as_rich_table(extra_graph))
             else:
                 console.print(format_shacl_graph_as_rich_table(g))
 
