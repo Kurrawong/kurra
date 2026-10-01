@@ -7,7 +7,20 @@ import httpx
 import typer
 
 from kurra.cli.console import console
-from kurra.db.fuseki import FusekiError, create, delete, describe
+from kurra.db.fuseki import (
+    FusekiError,
+    backup,
+    backups_list,
+    create,
+    delete,
+    describe,
+    metrics,
+    ping,
+    server,
+    sleep,
+    stats,
+    tasks,
+)
 
 app = typer.Typer(help="Fuseki database commands")
 
@@ -20,10 +33,10 @@ def ping_command(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -46,10 +59,10 @@ def ping_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
         try:
-            console.print(describe(fuseki_url, http_client=http_client))
+            console.print(ping(fuseki_url, http_client=http_client))
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to describe datasets at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to ping server at {fuseki_url}."
             )
             raise err
 
@@ -60,10 +73,10 @@ def server_command(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -86,33 +99,38 @@ def server_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
         try:
-            console.print(describe(fuseki_url, http_client=http_client))
+            console.print(server(fuseki_url, http_client=http_client))
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to describe datasets at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to get server info at {fuseki_url}."
             )
             raise err
 
 
-@app.command(name="stats", help="Request statistics for all datasets")
+@app.command(name="stats", help="Request statistics for all datasets or for one")
 def stats_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
+    dataset_name: Annotated[
+        str,
+        typer.Option("--dataset-name", "-d", help="The dataset to get statistics for"),
+    ] = None,
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """Request statistics for all datasets on the Fuseki server.
+    """Request statistics for all datasets, or one named dataset, on the Fuseki server.
 
     Args:
         fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        dataset_name: The dataset to get statistics for. If not given, statistics for all datasets are returned.
         username: Fuseki username, if the server requires authentication.
         password: Fuseki password, if the server requires authentication.
         timeout: Timeout per request, in seconds.
@@ -126,24 +144,26 @@ def stats_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
         try:
-            console.print(describe(fuseki_url, http_client=http_client))
+            console.print(stats(fuseki_url, dataset_name, http_client=http_client))
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to describe datasets at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to get stats at {fuseki_url}."
             )
             raise err
 
 
-@app.command(name="backup", help="Ask the server to create a backup")
+# Disabled: `backup()` in kurra.db.fuseki is not yet implemented.
+# @app.command(name="backup", help="Ask the server to create a backup")
 def backup_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
+    dataset_name: str = typer.Argument(..., help="The name of the dataset to back up"),
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -151,8 +171,11 @@ def backup_command(
 ) -> None:
     """Ask the Fuseki server to create a backup of a dataset.
 
+    NOTE: The associated library function is not yet implemented, so this command is not currently available through the CLI.
+
     Args:
         fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        dataset_name: The name of the dataset to back up.
         username: Fuseki username, if the server requires authentication.
         password: Fuseki password, if the server requires authentication.
         timeout: Timeout per request, in seconds.
@@ -166,24 +189,25 @@ def backup_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
         try:
-            console.print(describe(fuseki_url, http_client=http_client))
+            console.print(backup(fuseki_url, dataset_name, http_client=http_client))
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to describe datasets at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to create backup of dataset {dataset_name} at {fuseki_url}."
             )
             raise err
 
 
-@app.command(name="backups_list", help="List all existing backups")
+# Disabled: related function `backup()` in kurra.db.fuseki is not yet implemented.
+# @app.command(name="backups_list", help="List all existing backups")
 def backups_list_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -191,6 +215,8 @@ def backups_list_command(
 ) -> None:
     """List all existing backups on the Fuseki server.
 
+    NOTE: The related backup library function is not yet implemented, so this command is not currently available through the CLI.
+
     Args:
         fuseki_url: Fuseki base URL. E.g. http://localhost:3030
         username: Fuseki username, if the server requires authentication.
@@ -206,24 +232,25 @@ def backups_list_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
         try:
-            console.print(describe(fuseki_url, http_client=http_client))
+            console.print(backups_list(fuseki_url, http_client=http_client))
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to describe datasets at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to list backups at {fuseki_url}."
             )
             raise err
 
 
-@app.command(name="sleep", help="Tell the server to sleep")
+# Disabled: `sleep()` in kurra.db.fuseki is not yet implemented.
+# @app.command(name="sleep", help="Tell the server to sleep")
 def sleep_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -231,6 +258,8 @@ def sleep_command(
 ) -> None:
     """Tell the Fuseki server to sleep.
 
+    NOTE: The associated library function is not yet implemented, so this command is not currently available through the CLI.
+
     Args:
         fuseki_url: Fuseki base URL. E.g. http://localhost:3030
         username: Fuseki username, if the server requires authentication.
@@ -246,33 +275,38 @@ def sleep_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
         try:
-            console.print(describe(fuseki_url, http_client=http_client))
+            console.print(sleep(fuseki_url, http_client=http_client))
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to describe datasets at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to put server to sleep at {fuseki_url}."
             )
             raise err
 
 
-@app.command(name="tasks", help="List running tasks")
+@app.command(name="tasks", help="List running tasks or get one")
 def tasks_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
+    task_name: Annotated[
+        str,
+        typer.Option("--task-name", "-n", help="The task to get"),
+    ] = None,
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ) -> None:
-    """List tasks currently running on the Fuseki server.
+    """List tasks currently running on the Fuseki server, or get one named task.
 
     Args:
         fuseki_url: Fuseki base URL. E.g. http://localhost:3030
+        task_name: The task to get. If not given, all running tasks are listed.
         username: Fuseki username, if the server requires authentication.
         password: Fuseki password, if the server requires authentication.
         timeout: Timeout per request, in seconds.
@@ -286,10 +320,10 @@ def tasks_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
         try:
-            console.print(describe(fuseki_url, http_client=http_client))
+            console.print(tasks(fuseki_url, task_name, http_client=http_client))
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to describe datasets at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to list tasks at {fuseki_url}."
             )
             raise err
 
@@ -300,10 +334,10 @@ def metrics_command(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -326,10 +360,10 @@ def metrics_command(
 
     with httpx.Client(auth=auth, timeout=timeout) as http_client:
         try:
-            console.print(describe(fuseki_url, http_client=http_client))
+            console.print(metrics(fuseki_url, http_client=http_client))
         except Exception as err:
             console.print(
-                f"[bold red]ERROR[/bold red] Failed to describe datasets at {fuseki_url}."
+                f"[bold red]ERROR[/bold red] Failed to get metrics at {fuseki_url}."
             )
             raise err
 
@@ -340,10 +374,10 @@ def describe_command(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -379,16 +413,18 @@ def create_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
-    dataset_name: str | None = typer.Argument(None, help="repository name"),
-    dataset_type: str = typer.Option(
-        "tdb2", help=f"dataset type. Options: {dataset_type_options}"
+    dataset_name: str | None = typer.Argument(
+        None, help="The name of the dataset to create"
     ),
-    config: Path | None = typer.Option(None, help="assembler file"),
+    dataset_type: str = typer.Option(
+        "tdb2", help=f"Dataset type. Options: {dataset_type_options}"
+    ),
+    config: Path | None = typer.Option(None, help="Assembler file"),
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -456,12 +492,12 @@ def delete_command(
     fuseki_url: str = typer.Argument(
         ..., help="Fuseki base URL. E.g. http://localhost:3030"
     ),
-    dataset_name: str = typer.Argument(..., help="The name of the dataset to delete."),
+    dataset_name: str = typer.Argument(..., help="The name of the dataset to delete"),
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str, typer.Option("--username", "-u", help="Fuseki username")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str, typer.Option("--password", "-p", help="Fuseki password")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
