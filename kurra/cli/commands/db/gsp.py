@@ -1,3 +1,5 @@
+"""CLI commands for the SPARQL Graph Store Protocol."""
+
 from pathlib import Path
 from typing import Annotated
 
@@ -35,7 +37,18 @@ def exists_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
-    """Checks to see if a graph exists within a database"""
+    """Check whether a graph exists in a database.
+
+    Args:
+        sparql_endpoint_url: SPARQL Endpoint URL. E.g. http://localhost:3030/ds
+        graph_identifier: The IRI or URN of the graph to check. If not set, the default graph is targeted.
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the database fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -75,7 +88,18 @@ def get_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
-    """Gets the content of a database graph"""
+    """Get the content of a database graph, printed as longturtle.
+
+    Args:
+        sparql_endpoint_url: SPARQL Endpoint URL. E.g. http://localhost:3030/ds
+        graph_identifier: The IRI or URN of the graph to fetch. If not set, the default graph is targeted.
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the database fails, other than the graph not being found.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -125,7 +149,19 @@ def put_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
-    """Add content to a database graph. This will preserve all existing content. Use post() if you wish to remove existing content."""
+    """Add content to a database graph. This will preserve all existing content. Use `post_command` if you wish to remove existing content.
+
+    Args:
+        path: The path of a file or directory of files to upload.
+        sparql_endpoint_url: SPARQL Endpoint URL. E.g. http://localhost:3030/ds
+        graph_identifier: The IRI or URN of the graph to upload into. If not set, the default graph is targeted.
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the database fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -170,7 +206,19 @@ def post_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
-    """Add content to a database graph. This will remove all existing content. Use put() if you wish to preserve existing content."""
+    """Add content to a database graph. This will remove all existing content. Use `put_command` if you wish to preserve existing content.
+
+    Args:
+        path: The path of a file or directory of files to upload.
+        sparql_endpoint_url: SPARQL Endpoint URL. E.g. http://localhost:3030/ds
+        graph_identifier: The IRI or URN of the graph to upload into. If not set, the default graph is targeted.
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the database fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -212,7 +260,18 @@ def delete_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
-    """Deletes triples from a database graph"""
+    """Delete triples from a database graph.
+
+    Args:
+        sparql_endpoint_url: SPARQL Endpoint URL. E.g. http://localhost:3030/ds
+        graph_identifier: The IRI or URN of the graph to delete from. If not set, the default graph is targeted.
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the database fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -252,7 +311,18 @@ def clear_command(
         int, typer.Option("--timeout", "-t", help="Timeout per request")
     ] = 60,
 ):
-    """Clears - removes all triples from - a database graph"""
+    """Clear (Remove all triples from) a database graph.
+
+    Args:
+        sparql_endpoint_url: SPARQL Endpoint URL. E.g. http://localhost:3030/ds
+        graph_identifier: The IRI or URN of the graph to clear. If not set, the default graph is targeted.
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+
+    Raises:
+        Exception: If the request to the database fails.
+    """
     auth = (
         (username, password) if username is not None and password is not None else None
     )
@@ -307,8 +377,21 @@ def upload_command(
     File extensions: [.nt, .nq, .ttl, .trig, .json, .jsonld, .xml]
 
     Files are uploaded into their own named graph in the format:
-    <urn:file:{file.name}>
-    E.g. <urn:file:example.ttl>
+    `<urn:file:{file.name}>`
+    E.g. `<urn:file:example.ttl>`
+
+    Args:
+        path: The path of a file or directory of files to upload.
+        sparql_endpoint: SPARQL Endpoint URL. E.g. http://localhost:3030/ds
+        graph_identifier: The IRI or URN of the graph to upload into. If set to "file", each file is uploaded into its own `urn:file:` named graph instead.
+        username: Fuseki username, if the server requires authentication.
+        password: Fuseki password, if the server requires authentication.
+        timeout: Timeout per request, in seconds.
+        disable_ssl_verification: If True, disable SSL certificate verification.
+        host_header: A value to send as the Host header, overriding the one derived from `sparql_endpoint`.
+
+    Raises:
+        Exception: If uploading any file fails.
     """
     files = []
 

@@ -1,6 +1,7 @@
 """Olis Graph Functions.
 
-See the [Olis Spec](https://olis.dev) for what Olis is and does"""
+See the [Olis Spec](https://olis.dev) for what Olis is and does.
+"""
 
 from datetime import datetime
 from pathlib import Path
@@ -18,7 +19,7 @@ BACKGROUND_GRAPH_IRI = URIRef("http://background")
 
 
 class OLIS(DefinedNamespace):
-    """The namespace for the Olis ontology"""
+    """The namespace for the Olis ontology."""
 
     _NS = Namespace("https://olis.dev/")
     _fail = True
@@ -33,7 +34,7 @@ class OLIS(DefinedNamespace):
 
 
 class OLIS_GRAPH_ROLES(DefinedNamespace):
-    """The namespace for the Olis Graph Roles vocabulary"""
+    """The namespace for the Olis Graph Roles vocabulary."""
 
     _NS = Namespace("http://olis.dev/GraphRoles/")
     _fail = True
@@ -51,20 +52,18 @@ def include(
     system_graph_source: str | Path | Dataset | Graph = None,
     include_background_graph: bool = True,
     http_client: httpx.Client | None = None,
-) -> Graph | None:
-    """Creates a Virtual Graph with IRI of including_graph_iri that contains all the graphs given in graphs_to_include_iris.
+) -> Graph | int | None:
+    """Creates a Virtual Graph with IRI of `including_graph_iri` that contains all the graphs given in `graphs_to_include_iris`.
 
     Args:
-        including_graph_iri: the IRI of the graph that will include the other graphs
-        graphs_to_include_iris: the IRIs of each graph to be included in the including graph
-        system_graph_source: the SPARQL Endpoint, file (RDFLib Graph or Dataset) or an RDFLib Graph or Dataset object or a Path to a Graph or Dataset object to both read and write System Graph info to. If None, a new System Graph object will be returned
-        include_background_graph: whether to include http://background in the subsumption
-        http_client: an optional HTTPX Client to contain credentials if needed to access the SPARQL Endpoint
+        including_graph_iri: The IRI of the graph that will include the other graphs.
+        graphs_to_include_iris: The IRIs of each graph to be included in the including graph.
+        system_graph_source: The SPARQL Endpoint, file (RDFLib Graph or Dataset), RDFLib Graph, Dataset object, or Path to a Graph or Dataset object to both read and write System Graph info to. If None, a new System Graph object will be returned.
+        include_background_graph: Whether to include http://background in the subsumption
+        http_client: An optional HTTPX client to contain credentials if needed to access the SPARQL endpoint. A new one is created if not given.
 
     Returns:
-        If a system_graph_target is given, the updates System Graph information will be written to it or a
-        new System Graph, RDFLib Graph object will be returned
-
+        The System Graph itself if `system_graph_source` is None or a local (non-HTTP) string, the HTTP status code if a remote write failed, or None otherwise.
     """
     # value check inputs
     if including_graph_iri is None:
@@ -102,14 +101,14 @@ def include(
     # get/make the system graph
     """
     To extend http://graph-a to include graph-a content and http://graph-b content:
-    
+
     include_graph("http://graph-a", ["http://graph-b"])
-    
+
     This will:
-    
+
     * learn that http://graph-a is a Virtual Graph - since it includes things
     * move any existing http://graph-a content, if it's a Real Graph, to a new Real Graph - http://graph-a-real - by convention
-    * state that http://graph-a includes http://graph-a-real and all graphs in the graphs_to_include_iris list 
+    * state that http://graph-a includes http://graph-a-real and all graphs in the graphs_to_include_iris list
     """
     system_graph = get_system_graph(system_graph_source, http_client=http_client)
 
@@ -120,7 +119,7 @@ def include(
             pop out RG content and include
     else:
         create it
-        
+
     include all graphs_to_include_iris
     """
     if (including_graph_iri, RDF.type, OLIS.RealGraph) in system_graph:
@@ -187,11 +186,13 @@ def exclude(
     graphs_to_exclude_iris: list[URIRef | str],
     system_graph_source: str | Path | Dataset | Graph = None,
     http_client: httpx.Client | None = None,
-):
-    """
-    Removed the includes statement for a Virtual Graph to a Named Graph.
+) -> Graph | int | None | ValueError:
+    """Remove the `includes` statement from a Virtual Graph to one or more Named Graphs.
 
-    See include() for parameter details
+    See `include` for parameter details.
+
+    Returns:
+        The System Graph itself if `system_graph_source` is None or a local (non-HTTP) string, the HTTP status code if a remote write failed, or None with no errors otherwise. A `ValueError` instance if `including_graph_iri` is not a known VirtualGraph.
     """
     # value check inputs
     if including_graph_iri is None:
@@ -253,8 +254,16 @@ def exclude(
 
 def validate_system_graph(
     system_graph_source: str | Path | Dataset | Graph, http_client: httpx.Client = None
-):
-    """Validates a System Graph using the Olis System Graph validator"""
+) -> tuple[bool, Graph, str, Graph]:
+    """Validate a System Graph using the Olis System Graph SHACL validator.
+
+    Args:
+        system_graph_source: The System Graph to validate - a SPARQL Endpoint, RDF file, Path, Graph, or Dataset.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+
+    Returns:
+        Tuple of the validation status, results graph, message, and summary graph.
+    """
     system_graph = get_system_graph(system_graph_source, http_client=http_client)
     v = validate(system_graph, "https://olis.dev/sg-validator")
     return v

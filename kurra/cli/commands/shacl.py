@@ -1,3 +1,5 @@
+"""CLI commands for SHACL validation and inference."""
+
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -16,7 +18,7 @@ app = typer.Typer(help="SHACL commands")
 
 
 def _parse_shacl(value: str | Path | int) -> Path | str | int:
-    """Convert a CLI SHACL value to the type expected by ``validate``."""
+    """Convert a CLI SHACL value to the type expected by `validate`."""
     if isinstance(value, (Path, int)):
         return value
     if value.isdigit():
@@ -77,7 +79,16 @@ def validate_command(
         ),
     ] = "table",
 ) -> None:
-    """Validate a given file or directory of files using a given SHACL file or directory of files."""
+    """Validate an RDF file, files, or directory of files against a SHACL file, directory, or registered validator.
+
+    Args:
+        data: The file, files, or directory of RDF files to be validated.
+        shacl: The file, directory of files, IRI of, or kurra ID for the SHACL graph to validate with.
+        hide_warnings: If True, hide SHACL results of severity Warning and Info.
+        advanced: If True, enable SHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions).
+        summary: If True, print a summary table instead of the full validation results.
+        output_format: `table` (default) to print Rich table, or `rdf` for longturtle.
+    """
     valid, g, txt, *extra_graph = validate(
         data,
         shacl,
@@ -112,7 +123,7 @@ def validate_command(
     help="Lists all known SHACL validators",
 )
 def listv_command():
-    """Lists all known SHACL validators (known to the KurrawongAI Semantic Background)"""
+    """Print a table of all known SHACL validators with ID, Name, IRI, and nested validator dependency rows."""
     l = list_local_validators()
     if l is None:
         console.print("No local validators found")
@@ -149,7 +160,7 @@ def listv_command():
     help="Synchronizes SHACL validators",
 )
 def syncv_command():
-    """Synchronizes SHACL validators"""
+    """Refresh the local SHACL validator cache from the KurrawongAI Semantic Background."""
     sync_validators()
 
     console.print("Synchronizing SHACL validators")
@@ -175,7 +186,13 @@ def infer_command(
         help="whether to include the data triples in output",
     ),
 ):
-    """Infer new triples from given data using SHACL Rules (SRL syntax only)"""
+    """Infer new triples from RDF data using a SHACL Rules (SRL) file.
+
+    Args:
+        data: The path to a Turtle (`.ttl`) file containing the data to apply the rules to.
+        rules: The path to a SHACL Rules (`.srl`) file containing the rules to apply.
+        include_base: Whether to include the original data triples in the output, as the string `"true"` or `"false"`.
+    """
     data = Path(data)
     rules = Path(rules)
 

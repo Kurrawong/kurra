@@ -1,4 +1,4 @@
-"""SPARQL functions for remote SPARQL endpoints (not local files)"""
+"""SPARQL functions for remote SPARQL endpoints (not local files)."""
 
 from pathlib import Path
 from typing import TYPE_CHECKING, overload
@@ -66,8 +66,25 @@ def query(
     return_format: LiteralType["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
     user_agent: str = USER_AGENT_STRING,
-):
-    """Pose a SPARQL query to a SPARQL Endpoint"""
+) -> "str | Graph | dict | DataFrame":
+    """Run a SPARQL query or update against a remote SPARQL endpoint.
+
+    Args:
+        sparql_endpoint: The SPARQL endpoint URL to query.
+        q: The SPARQL query or update, as a string or a path to a file containing one.
+        namespaces: Namespace prefixes to add to `q` before running it.
+        http_client: An optional HTTPX client to contain credentials if needed. A new one is created if not given.
+        return_format: `"original"` for the endpoint's raw response, `"python"` for parsed Python objects, or `"dataframe"` for a pandas DataFrame (SELECT/ASK only).
+        return_bindings_only: If True, return just the result bindings rather than the full SPARQL results structure.
+        user_agent: The User-Agent header to send.
+
+    Returns:
+        The query result, in the requested `return_format`. CONSTRUCT/DESCRIBE queries always return the endpoint's raw text.
+
+    Raises:
+        ValueError: If `sparql_endpoint` or `q` is not given, `return_format` is invalid, `return_format` is `"dataframe"` for a non-SELECT/ASK query, or pandas is not installed for `"dataframe"`.
+        RuntimeError: If the endpoint responds with an error status.
+    """
     if sparql_endpoint is None:
         raise ValueError("You must supply a sparql_endpoint")
 
