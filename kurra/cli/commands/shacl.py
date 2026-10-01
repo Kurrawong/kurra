@@ -60,28 +60,20 @@ def validate_command(
             help="Enable SHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions)",
         ),
     ] = False,
-    summary: Annotated[
-        bool,
+    return_type: Annotated[
+        Literal["basic", "summary", "provenance"],
         typer.Option(
-            "--summary",
-            "-y",
-            help="Print a summary table instead of the full validation results",
+            "--return",
+            "-r",
+            help="What to return: the full validation results, a summary table/graph, or a PROV-O provenance graph",
         ),
-    ] = False,
-    provenance: Annotated[
-        bool,
-        typer.Option(
-            "--provenance",
-            "-p",
-            help="Output a PROV-O provenance graph of the validation, as Turtle, instead of the full validation results. Ignores --format, which has no effect when this is set",
-        ),
-    ] = False,
+    ] = "basic",
     output_format: Annotated[
         Literal["table", "rdf"],
         typer.Option(
             "--format",
             "-f",
-            help="Output format: a Rich table or Long Turtle RDF. Has no effect if --provenance is set, which is always output as Turtle",
+            help="Output format: a Rich table or Long Turtle RDF. Has no effect if --return-type is provenance, which is always output as Turtle",
         ),
     ] = "table",
 ) -> None:
@@ -91,15 +83,15 @@ def validate_command(
         shacl,
         hide_warnings=hide_warnings,
         advanced=advanced,
-        return_type="provenance" if provenance else "summary" if summary else "basic",
+        return_type=return_type,
     )
     extra_graph = extra_graph[0] if extra_graph else None
 
-    if provenance:
+    if return_type == "provenance":
         console.print(extra_graph.serialize(format="longturtle"))
         return
 
-    output_graph = extra_graph if summary else g
+    output_graph = extra_graph if return_type == "summary" else g
     if output_format == "rdf":
         console.print(output_graph.serialize(format="longturtle"))
     else:
@@ -109,7 +101,7 @@ def validate_command(
             console.print("The data is NOT valid")
             console.print("The errors are:")
 
-            if summary:
+            if return_type == "summary":
                 console.print(format_shacl_summary_as_rich_table(extra_graph))
             else:
                 console.print(format_shacl_graph_as_rich_table(g))
