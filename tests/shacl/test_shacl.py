@@ -4,9 +4,10 @@ from pickle import dump, load
 
 from rdflib import Dataset, Literal, Namespace, URIRef
 from rdflib.compare import isomorphic
-from rdflib.namespace import RDF, SH
+from rdflib.namespace import PROV, RDF, SH
 
 from kurra.shacl import (
+    SH12,
     check_validator_known,
     list_local_validators,
     sync_validators,
@@ -23,11 +24,13 @@ def test_validate_simple():
     shacl_graph = load_graph(SHACL_TEST_DIR / "validator-vocpub-410.ttl")
 
     data_file = SHACL_TEST_DIR / "vocab-valid.ttl"
-    valid, g, txt, summary = validate(data_file, shacl_graph)
+    valid, g, txt = validate(data_file, shacl_graph)
     assert valid
 
     data_file2 = SHACL_TEST_DIR / "vocab-invalid.ttl"
-    valid2, g2, txt2, summary2 = validate(data_file2, shacl_graph)
+    valid2, g2, txt2, summary2 = validate(
+        data_file2, shacl_graph, return_type="summary"
+    )
     assert not valid2
     results = set(g2.subjects(RDF.type, SH.ValidationResult))
     assert len(summary2) > 0
@@ -66,7 +69,7 @@ def test_validate_simple():
         )
 
     data_file3 = SHACL_TEST_DIR / "vocab-invalid2.ttl"
-    valid3, g3, txt3, summary3 = validate(data_file3, shacl_graph)
+    valid3, g3, txt3 = validate(data_file3, shacl_graph)
     assert not valid3
 
 
@@ -87,13 +90,13 @@ def test_sync_validators():
     q = """
         PREFIX owl: <http://www.w3.org/2002/07/owl#>
         PREFIX schema: <https://schema.org/>
-        
+
         SELECT (COUNT(*) AS ?count)
         WHERE {
           <https://data.kurrawong.ai/sb/validators>
                 schema:hasPart ?o ;
           .
-          
+
           ?o a owl:Ontology .
         }
         """
@@ -139,12 +142,12 @@ def test_validate_by_id():
     """Awaiting sync_validators()"""
     sync_validators()
 
-    valid, g, txt, summary = validate(SHACL_TEST_DIR / "vocab-valid.ttl", 83)
+    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-valid.ttl", 83)
     assert (
         len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 0
     )  # Warning
 
-    valid, g, txt, summary = validate(SHACL_TEST_DIR / "vocab-invalid.ttl", 83)
+    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-invalid.ttl", 83)
     assert len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 3
 
 
@@ -152,10 +155,10 @@ def test_validate_advanced():
     shacl_graph = load_graph(SHACL_TEST_DIR / "advanced-validator.ttl")
     data_file = SHACL_TEST_DIR / "advanced-data.ttl"
 
-    valid, g, txt, summary = validate(data_file, shacl_graph)
+    valid, g, txt = validate(data_file, shacl_graph)
     assert not valid
 
-    valid, g, txt, summary = validate(data_file, shacl_graph, advanced=True)
+    valid, g, txt = validate(data_file, shacl_graph, advanced=True)
     assert valid
 
 
@@ -177,7 +180,7 @@ def test_summary(monkeypatch):
         PREFIX ex: <http://example.com/>
         PREFIX schema: <https://schema.org/>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
-        
+
         [] a ex:ValidationReportSummary ;
             ex:counts [
                 a ex:ValidationCounts ;
@@ -226,16 +229,63 @@ def test_summary(monkeypatch):
     _, _, _, summary = validate(
         SHACL_TEST_DIR / "sdo-orig.ttl",
         "https://linked.data.gov.au/def/ontpub/validator",
+        return_type="summary",
     )
 
     assert isomorphic(summary, expected)
+
+
+def test_provenance():
+    data_file = SHACL_TEST_DIR / "vocab-invalid.ttl"
+    shacl_file = SHACL_TEST_DIR / "validator-vocpub-410.ttl"
+
+    valid, g, txt, provenance = validate(
+        data_file, shacl_file, return_type="provenance"
+    )
+    assert not valid
+
+    # Can't really do expected string like summary test because of the startedAtTime and endedAtTime values
+    report_node = provenance.value(predicate=RDF.type, object=SH.ValidationReport)
+    assert report_node is not None
+    assert (report_node, SH.conforms, Literal(False)) in provenance
+
+    activity_node = provenance.value(
+        predicate=RDF.type, object=SH12.ValidationActivity
+    )
+    assert activity_node is not None
+    assert (activity_node, PROV.generated, report_node) in provenance
+    assert provenance.value(activity_node, PROV.startedAtTime) is not None
+    assert provenance.value(activity_node, PROV.endedAtTime) is not None
+
+    agent_node = provenance.value(predicate=RDF.type, object=SH12.ValidationAgent)
+    assert str(agent_node).startswith("https://pypi.org/project/pyshacl/")
+    assert (activity_node, PROV.wasAssociatedWith, agent_node) in provenance
+
+    data_graph_node = URIRef(data_file.resolve().as_uri())
+    assert (data_graph_node, RDF.type, SH12.DataGraph) in provenance
+    assert (activity_node, SH12.usedDataGraph, data_graph_node) in provenance
+
+    shapes_graph_node = URIRef(shacl_file.resolve().as_uri())
+    assert (shapes_graph_node, RDF.type, SH12.ShapesGraph) in provenance
+    assert (activity_node, SH12.usedShapesGraph, shapes_graph_node) in provenance
+
+
+def test_provenance_iri():
+    """A Semantic Background validator IRI is used as the Shapes Graph node directly"""
+    _, _, _, provenance = validate(
+        SHACL_TEST_DIR / "vocab-invalid.ttl",
+        "https://linked.data.gov.au/def/vocpub/validator",
+        return_type="provenance",
+    )
+    shapes_graph_node = URIRef("https://linked.data.gov.au/def/vocpub/validator")
+    assert (shapes_graph_node, RDF.type, SH12.ShapesGraph) in provenance
 
 
 def test_validate_iri_cold_cache(monkeypatch, tmp_path):
     """Validating by IRI with an empty validator cache syncs validators and succeeds"""
     monkeypatch.setenv("HOME", str(tmp_path))  # empty ~/.kurra, real cache untouched
 
-    valid, _, _, _ = validate(
+    valid, _, _ = validate(
         SHACL_TEST_DIR / "vocab-valid.ttl",
         "https://linked.data.gov.au/def/vocpub/validator",
     )

@@ -107,8 +107,7 @@ def _extract_data_graph_nodes(
 
 
 def _extract_shapes_graph_node(shacl: Graph | Path | str | int) -> URIRef | BNode:
-    """Identifies the Shapes Graph supplied to validate(): its Semantic Background IRI if
-    resolved via one, its file location if given as a path, otherwise a blank node."""
+    """Identifies the Shapes Graph supplied to validate(): its Semantic Background IRI if resolved via one, its file location if given as a path, otherwise a blank node."""
     if isinstance(shacl, str) and shacl.startswith("http"):
         return URIRef(shacl)
 
@@ -134,8 +133,7 @@ def _build_provenance_graph(
     started_at: datetime,
     ended_at: datetime,
 ) -> Graph:
-    """Builds a PROV-O provenance graph for a validation run, following the activity-centric
-    pattern in the SHACL 1.2 Profiling vocabulary's persisting validation results guidance."""
+    """Builds a PROV-O provenance graph for a validation run, following the activity-centric pattern in the SHACL 1.2 Profiling vocabulary's persisting validation results section."""
     pg = Graph()
     pg += report_graph
     pg.bind("prov", PROV)
@@ -159,20 +157,16 @@ def _build_provenance_graph(
     pg.add((activity_node, SH12.usedShapesGraph, shapes_graph_node))
     if report_node is not None:
         pg.add((activity_node, PROV.generated, report_node))
-    pg.add(
-        (
-            activity_node,
-            PROV.startedAtTime,
-            RDFLiteral(started_at.isoformat()[:19], datatype=XSD.dateTime),
-        )
-    )
-    pg.add(
-        (
-            activity_node,
-            PROV.endedAtTime,
-            RDFLiteral(ended_at.isoformat()[:19], datatype=XSD.dateTime),
-        )
-    )
+    pg.add((
+        activity_node,
+        PROV.startedAtTime,
+        RDFLiteral(started_at.isoformat()[:19], datatype=XSD.dateTime),
+    ))
+    pg.add((
+        activity_node,
+        PROV.endedAtTime,
+        RDFLiteral(ended_at.isoformat()[:19], datatype=XSD.dateTime),
+    ))
 
     return pg
 

@@ -33,7 +33,7 @@ def test_validate_cli_shacl_types(tmp_path, monkeypatch, shacl_value, expected_t
 
     received = {}
 
-    def fake_validate(data, shacl, hide_warnings=False, advanced=False):
+    def fake_validate(data, shacl, hide_warnings=False, advanced=False, return_type="basic"):
         received["data"] = data
         received["shacl"] = shacl
         return True, Graph(), "", Graph()
@@ -137,6 +137,37 @@ def test_validate_cli_rdf_output(
     assert result.exit_code == 0
     assert expected_value in result.output
     assert unexpected_value not in result.output
+
+
+@pytest.mark.parametrize("provenance_option", ["--provenance", "-p"])
+def test_validate_cli_provenance(tmp_path, monkeypatch, provenance_option):
+    data_path = tmp_path / "data.ttl"
+    data_path.touch()
+
+    results_graph = Graph()
+    results_graph.add((EX.report, EX.value, Literal("full result")))
+    provenance_graph = Graph()
+    provenance_graph.add((EX.activity, EX.value, Literal("provenance result")))
+    monkeypatch.setattr(
+        shacl_commands,
+        "validate",
+        lambda *args, **kwargs: (False, results_graph, "", provenance_graph),
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "shacl",
+            "validate",
+            str(data_path),
+            "--shacl",
+            "validator.ttl",
+            provenance_option,
+        ],
+    )
+    assert result.exit_code == 0
+    assert "provenance result" in result.output
+    assert "full result" not in result.output
 
 
 def shacl_valid():
