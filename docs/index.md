@@ -57,33 +57,30 @@ which will print something like:
 ╰─────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-For just the SPARQL function:
+For SPARQL command help:
 
-```bash
-kurra sparql -h
+```shell
+kurra sparql --help
+kurra sparql query --help
+kurra sparql validate --help
 ```
 
-which will print something like:
+Run a query against a local file:
 
-```bash
-Usage: kurra sparql [OPTIONS] PATH_OR_URL Q
-
-SPARQL queries to local RDF files or a database
-
-╭─ Arguments ───────────────────────────────────────────────────────────────────────╮
-│ *    path_or_url      PATH  [required]                                            │
-│ *    q                TEXT  [required]                                            │
-╰───────────────────────────────────────────────────────────────────────────────────╯
-╭─ Options ─────────────────────────────────────────────────────────────────────────╮
-│ --response-format  -f      TEXT     The response format of the SPARQL query.      │
-│                                     Either 'table' (default), 'json' or 'csv'     │
-│                                     [default: table]                              │
-│ --username         -u      TEXT     Fuseki username.                              │
-│ --password         -p      TEXT     Fuseki password.                              │
-│ --timeout          -t      INTEGER  Timeout per request [default: 60]             │
-│ --help             -h               Show this message and exit.                   │
-╰───────────────────────────────────────────────────────────────────────────────────╯
+```shell
+kurra sparql vocabulary.ttl "SELECT * WHERE { ?s ?p ?o }"
 ```
+
+Validate SPARQL query or update syntax without executing it:
+
+```shell
+kurra sparql validate "SELECT * WHERE { ?s ?p ?o }"
+kurra sparql validate query.sparql
+```
+
+The validator accepts inline SPARQL text or a file path. It prints `Valid SPARQL syntax` on success and reports
+syntax errors with a nonzero exit status. See the [SPARQL commands](api/cli/commands/sparql.md) and
+[Python API](api/sparql.md) for details.
 
 The [API reference](api/index.md) is generated from kurra's Python docstrings, so it stays aligned with the installed interfaces.
 

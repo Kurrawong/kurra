@@ -1,10 +1,11 @@
-import shutil
 from pathlib import Path
 from pickle import dump, load
 
-from rdflib import Dataset, Literal, Namespace, URIRef
+import httpx
+import pytest
+from rdflib import Graph, Literal, Namespace, URIRef
 from rdflib.compare import isomorphic
-from rdflib.namespace import PROV, RDF, SH
+from rdflib.namespace import OWL, PROV, RDF, SDO, SH
 
 from kurra.shacl import (
     SH12,
@@ -13,11 +14,54 @@ from kurra.shacl import (
     sync_validators,
     validate,
 )
-from kurra.sparql import query
 from kurra.utils import load_graph
 
 SHACL_TEST_DIR = Path(__file__).parent.resolve()
 EX = Namespace("http://example.com/")
+
+
+@pytest.fixture
+def validator_service(monkeypatch, tmp_path):
+    """Exercise HTTP and cache handling against a fixed validator catalogue."""
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    vocpub_iri = "https://linked.data.gov.au/def/vocpub/validator"
+    other_iri = "https://example.com/validator"
+    vocpub = Graph(identifier=URIRef(vocpub_iri))
+    vocpub += load_graph(SHACL_TEST_DIR / "validator-vocpub-410.ttl")
+    vocpub.add((URIRef(vocpub_iri), SDO.name, Literal("VocPub")))
+    other = Graph(identifier=URIRef(other_iri))
+    other.add((URIRef(other_iri), SDO.name, Literal("Other validator")))
+    other.add((URIRef(other_iri), OWL.imports, URIRef(vocpub_iri)))
+    validators = {vocpub_iri: vocpub, other_iri: other}
+    downloaded = []
+
+    def respond(request):
+        assert request.url.host == "fuseki.dev.kurrawong.ai"
+        if request.method == "POST":
+            assert request.url.path == "/semback/sparql"
+            return httpx.Response(
+                200,
+                json={
+                    "head": {"vars": ["p"]},
+                    "results": {
+                        "bindings": [
+                            {"p": {"type": "uri", "value": iri}} for iri in validators
+                        ]
+                    },
+                },
+            )
+        assert request.method == "GET"
+        assert request.url.path == "/semback/sparql"
+        iri = request.url.params["graph"]
+        downloaded.append(iri)
+        return httpx.Response(
+            200,
+            text=validators[iri].serialize(format="turtle"),
+            headers={"Content-Type": "text/turtle"},
+        )
+
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        yield client, validators, downloaded
 
 
 def test_validate_simple():
@@ -82,73 +126,68 @@ def test_validate_multiple_data_files():
     assert v[0]
 
 
-def test_sync_validators():
+def test_sync_validators(validator_service):
+    client, remote_validators, downloaded = validator_service
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
+    assert list_local_validators() == {}
+    known_validators = sync_validators(http_client=client)
+    assert set(known_validators) == set(remote_validators)
+    assert sorted(downloaded) == sorted(remote_validators)
 
-    # get number of SemBack validators
-    q = """
-        PREFIX owl: <http://www.w3.org/2002/07/owl#>
-        PREFIX schema: <https://schema.org/>
+    downloaded.clear()
+    assert sync_validators(http_client=client) == known_validators
+    assert downloaded == []
 
-        SELECT (COUNT(*) AS ?count)
-        WHERE {
-          <https://data.kurrawong.ai/sb/validators>
-                schema:hasPart ?o ;
-          .
-
-          ?o a owl:Ontology .
-        }
-        """
-    num_remote_validators = query(
-        "https://fuseki.dev.kurrawong.ai/semback/sparql",
-        q,
-        return_format="python",
-        return_bindings_only=True,
-    )[0]["count"]
-
-    if Path.is_dir(kurra_cache):
-        shutil.rmtree(kurra_cache)
-
-    known_validators = sync_validators()
-
-    assert len(known_validators) == num_remote_validators
-
-    d = load(open(validators_cache, "rb"))
-    d: Dataset
-    d.remove_graph(d.get_graph(URIRef("https://prez.dev/manifest-validator")))
+    removed_iri = "https://example.com/validator"
+    with validators_cache.open("rb") as f:
+        d = load(f)
+    d.remove_graph(URIRef(removed_iri))
     with open(validators_cache, "wb") as f:
         dump(d, f)
 
-    assert len(list_local_validators().keys()) == (num_remote_validators - 1)
-
-    known_validators = sync_validators()
-
-    assert len(known_validators) == num_remote_validators
+    assert set(list_local_validators()) == set(remote_validators) - {removed_iri}
+    assert sync_validators(http_client=client) == known_validators
+    assert downloaded == [removed_iri]
 
 
-def test_list_local_validators():
-    pm_cache = Path().home() / ".pm"
+def test_list_local_validators(validator_service):
+    client, remote_validators, downloaded = validator_service
+    assert list_local_validators() == {}
+    sync_validators(http_client=client)
+    downloaded.clear()
 
-    if Path.is_dir(pm_cache):
-        shutil.rmtree(pm_cache)
-
-    sync_validators()
-
-    assert len(list_local_validators().keys()) == 87
-
-
-def test_validate_by_id():
-    """Awaiting sync_validators()"""
-    sync_validators()
-
-    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-valid.ttl", 83)
+    validators = list_local_validators()
+    assert set(validators) == set(remote_validators)
+    assert validators["https://example.com/validator"] == {
+        "name": "Other validator",
+        "id": "1",
+        "imports": ["https://linked.data.gov.au/def/vocpub/validator"],
+    }
     assert (
-        len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 0
-    )  # Warning
+        validators["https://linked.data.gov.au/def/vocpub/validator"]["name"]
+        == "VocPub"
+    )
+    assert downloaded == []
 
-    valid, g, txt = validate(SHACL_TEST_DIR / "vocab-invalid.ttl", 83)
-    assert len(list(g.subjects(predicate=RDF.type, object=SH.ValidationResult))) == 3
+
+@pytest.mark.parametrize(
+    "filename, expected_valid",
+    [("vocab-valid.ttl", True), ("vocab-invalid.ttl", False)],
+)
+def test_validate_by_id(validator_service, filename, expected_valid):
+    client, remote_validators, _ = validator_service
+    validators = sync_validators(http_client=client)
+    iri = "https://linked.data.gov.au/def/vocpub/validator"
+    validator_id = int(validators[iri]["id"])
+    data_file = SHACL_TEST_DIR / filename
+
+    valid, report, _ = validate(data_file, validator_id)
+    reference_valid, reference_report, _ = validate(data_file, remote_validators[iri])
+
+    assert valid is expected_valid
+    assert valid == reference_valid
+    assert isomorphic(report, reference_report)
 
 
 def test_validate_advanced():
@@ -249,9 +288,7 @@ def test_provenance():
     assert report_node is not None
     assert (report_node, SH.conforms, Literal(False)) in provenance
 
-    activity_node = provenance.value(
-        predicate=RDF.type, object=SH12.ValidationActivity
-    )
+    activity_node = provenance.value(predicate=RDF.type, object=SH12.ValidationActivity)
     assert activity_node is not None
     assert (activity_node, PROV.generated, report_node) in provenance
     assert provenance.value(activity_node, PROV.startedAtTime) is not None

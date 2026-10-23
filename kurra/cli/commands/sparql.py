@@ -6,6 +6,8 @@ from typing import Annotated
 import httpx
 import rdflib
 import typer
+from pyparsing import ParseBaseException
+from typer.core import TyperGroup
 
 from kurra.cli.console import console
 from kurra.cli.utils import (
@@ -13,13 +15,39 @@ from kurra.cli.utils import (
     format_sparql_response_as_json,
     format_sparql_response_as_rich_table,
 )
-from kurra.sparql import query
-
-app = typer.Typer(context_settings={"terminal_width": 10000})
-# app = typer.Typer()
+from kurra.sparql import query, validate
 
 
-@app.command(name="sparql", help="SPARQL queries to local RDF files or a database")
+class SparqlGroup(TyperGroup):
+    """Keep the original positional query invocation alongside subcommands."""
+
+    def parse_args(self, ctx, args):
+        if args and not args[0].startswith("-") and args[0] not in self.commands:
+            args = ["query", *args]
+        return super().parse_args(ctx, args)
+
+
+app = typer.Typer(
+    cls=SparqlGroup,
+    context_settings={"terminal_width": 10000},
+    help="SPARQL queries to local RDF files or a database, and syntax validation.",
+)
+
+
+@app.command(name="validate")
+def validate_command(q: str) -> None:
+    """Validate Q, a SPARQL query/update string or a path to a file containing one."""
+    try:
+        validate(q)
+    except ParseBaseException as exc:
+        raise typer.BadParameter(
+            f"Invalid SPARQL syntax at line {exc.lineno}, column {exc.col}: {exc.msg}",
+            param_hint="q",
+        ) from exc
+    console.print("Valid SPARQL syntax")
+
+
+@app.command(name="query", help="SPARQL queries to local RDF files or a database")
 def sparql_command(
     path_or_url: Path,
     q: str,
@@ -30,10 +58,10 @@ def sparql_command(
         help="The response format of the SPARQL query. Either 'table' (default), 'json' or 'csv'",
     ),
     username: Annotated[
-        str, typer.Option("--username", "-u", help="Fuseki username.")
+        str | None, typer.Option("--username", "-u", help="Fuseki username.")
     ] = None,
     password: Annotated[
-        str, typer.Option("--password", "-p", help="Fuseki password.")
+        str | None, typer.Option("--password", "-p", help="Fuseki password.")
     ] = None,
     timeout: Annotated[
         int, typer.Option("--timeout", "-t", help="Timeout per request")
@@ -55,10 +83,8 @@ def sparql_command(
     if str(path_or_url).startswith("http"):
         path_or_url = str(path_or_url).replace(":/", "://")
 
-    if isinstance(q, str):
-        if len(q) < 260:
-            if Path(q).is_file():
-                q = Path(q).read_text()
+    if len(q) < 260 and Path(q).is_file():
+        q = Path(q).read_text()
 
     if response_format not in ["table", "json", "csv"]:
         raise typer.BadParameter(

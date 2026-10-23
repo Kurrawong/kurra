@@ -28,6 +28,7 @@ To build a new release:
   * `git tag 2.2.4`
   * `git push --tags`
 * make GitHub release
+  * be sure to add some release notes
   * this will trigger pypi.yml workflow to publish to PyPI
 * update version in pyproject.toml to next release alpha and push
   * with message `2.2.4 post release`

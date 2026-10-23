@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, overload
 
 import httpx
+from pyparsing import ParseBaseException
 from rdflib import Dataset, Graph
+from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
 
 from kurra.db.sparql import query as db_query
 from kurra.utils import (
@@ -22,6 +24,32 @@ from kurra.utils import (
 
 if TYPE_CHECKING:
     from pandas import DataFrame
+
+
+def validate(q: str | Path) -> None:
+    """Validate SPARQL query or update syntax without executing it.
+
+    Args:
+        q: SPARQL text, or a path to a file containing it.
+
+    Raises:
+        ParseBaseException: If neither the query nor update parser accepts the text.
+    """
+    if isinstance(q, Path):
+        q = q.read_text()
+    elif len(q) < 260 and Path(q).is_file():
+        q = Path(q).read_text()
+
+    try:
+        parseQuery(q)
+    except ParseBaseException as query_error:
+        try:
+            parseUpdate(q)
+        except ParseBaseException as update_error:
+            # Report the parser that made the most progress through the input.
+            if query_error.loc >= update_error.loc:
+                raise query_error from None
+            raise update_error from None
 
 
 @overload
@@ -89,10 +117,10 @@ def query(
     if q is None:
         raise ValueError("You must supply a query")
 
-    if isinstance(q, str):
-        if len(q) < 260:
-            if Path(q).is_file():
-                q = Path(q).read_text()
+    if isinstance(q, Path):
+        q = q.read_text()
+    elif isinstance(q, str) and len(q) < 260 and Path(q).is_file():
+        q = Path(q).read_text()
 
     if return_format not in ["original", "python", "dataframe"]:
         raise ValueError(
@@ -114,7 +142,9 @@ def query(
             )
 
         try:
-            from pandas import DataFrame
+            import pandas
+
+            pandas.DataFrame
         except ImportError:
             raise ValueError(
                 'You selected the output format "dataframe" but the pandas Python package is not installed.'

@@ -91,10 +91,10 @@ def query(
     if q is None:
         raise ValueError("You must supply a query")
 
-    if isinstance(q, str):
-        if len(q) < 260:
-            if Path(q).is_file():
-                q = Path(q).read_text()
+    if isinstance(q, Path):
+        q = q.read_text()
+    elif isinstance(q, str) and len(q) < 260 and Path(q).is_file():
+        q = Path(q).read_text()
 
     if return_format not in ["original", "python", "dataframe"]:
         raise ValueError(
@@ -103,6 +103,11 @@ def query(
 
     if namespaces is not None:
         q = add_namespaces_to_query_or_data(q, namespaces)
+
+    # Import here because kurra.sparql delegates remote requests to this module.
+    from kurra.sparql import validate
+
+    validate(q)
 
     if http_client is None:
         http_client = httpx.Client()
@@ -119,7 +124,9 @@ def query(
             )
 
         try:
-            from pandas import DataFrame
+            import pandas
+
+            pandas.DataFrame
         except ImportError:
             raise ValueError(
                 'You selected the output format "dataframe" but the pandas Python package is not installed.'
