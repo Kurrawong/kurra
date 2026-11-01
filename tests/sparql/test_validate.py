@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-import httpx
+import httpx2
 import pytest
 from pyparsing import ParseBaseException
 from rdflib import Graph
@@ -43,8 +43,8 @@ def test_validate_file(tmp_path):
 @pytest.mark.parametrize("call", [query, remote_query])
 @pytest.mark.parametrize("q", ["SELECT WHERE {", "INSERT DATA {"])
 def test_remote_rejected_before_request(call, q):
-    with httpx.Client(
-        transport=httpx.MockTransport(lambda request: pytest.fail("HTTP sent"))
+    with httpx2.Client(
+        transport=httpx2.MockTransport(lambda request: pytest.fail("HTTP sent"))
     ) as client:
         with pytest.raises((ParseBaseException, SparqlSyntaxError)):
             call("https://example.com/sparql", q, http_client=client)
@@ -55,9 +55,9 @@ def test_remote_validates_after_namespaces():
 
     def respond(request):
         requests.append(request)
-        return httpx.Response(200, json={"head": {}, "boolean": True})
+        return httpx2.Response(200, json={"head": {}, "boolean": True})
 
-    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+    with httpx2.Client(transport=httpx2.MockTransport(respond)) as client:
         query(
             "https://example.com/sparql",
             "ASK { ex:s ex:p ex:o }",
@@ -103,8 +103,10 @@ def test_cli_invalid():
 )
 def test_remote_calls_validate_once(call, q):
     with (
-        httpx.Client(
-            transport=httpx.MockTransport(lambda request: httpx.Response(200, text=""))
+        httpx2.Client(
+            transport=httpx2.MockTransport(
+                lambda request: httpx2.Response(200, text="")
+            )
         ) as client,
         patch("kurra.sparql.validate", wraps=validate) as validator,
     ):

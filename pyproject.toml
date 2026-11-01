@@ -6,7 +6,7 @@ Changelog = "https://github.com/Kurrawong/kurra/releases"
 
 [project]
 name = "kurra"
-version = "3.1.2a"
+version = "3.1.2"
 description = "A Python package of RDF data manipulation functions that can be called from the command line or other software"
 authors = [
     { name = "Edmond Chuc", email = "edmond@kurrawong.ai" },
@@ -34,7 +34,7 @@ classifiers = [
     'Topic :: Internet',
 ]
 dependencies = [
-    "httpx>=0.28.1",
+    "httpx2>=2.15.0",
     "rdflib>=7.6.0",
     "rich>=13.9.4",
     "typer>=0.27",
@@ -45,11 +45,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "mkdocstrings-python",
+    "mkdocstrings-python>=2.0.10",
     "pytest>=8.3.4",
     "ruff>=0.9.0",
-    "testcontainers>=4.9.0",
-    "zensical>=0.0.11",
+    "testcontainers>=4.15.0",
+    "zensical>=0.0.74",
 ]
 
 [build-system]

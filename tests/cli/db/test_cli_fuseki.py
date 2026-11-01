@@ -2,14 +2,13 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
-import httpx
 
+import httpx2
 from typer.testing import CliRunner
 
 from kurra.cli import app
 
 runner = CliRunner()
-from click.utils import strip_ansi
 
 
 def strip_ansi(text):
@@ -20,7 +19,6 @@ def strip_ansi(text):
 def test_fuseki_create(fuseki_container):
     port = fuseki_container.get_exposed_port(3030)
     sparql_endpoint = f"http://localhost:{port}"
-    dataset_name = "myds"
 
     result = runner.invoke(
         app,
@@ -29,7 +27,7 @@ def test_fuseki_create(fuseki_container):
             "fuseki",
             "create",
             sparql_endpoint,
-            dataset_name,
+            "myds",
             "--username",
             "admin",
             "--password",
@@ -45,7 +43,6 @@ def test_fuseki_create(fuseki_container):
 def test_fuseki_create_with_both_dataset_name_and_config_file(fuseki_container):
     port = fuseki_container.get_exposed_port(3030)
     sparql_endpoint = f"http://localhost:{port}"
-    dataset_name = "myds"
     config_file = Path(__file__).parent / "config.ttl"
 
     result = runner.invoke(
@@ -55,7 +52,7 @@ def test_fuseki_create_with_both_dataset_name_and_config_file(fuseki_container):
             "fuseki",
             "create",
             sparql_endpoint,
-            dataset_name,
+            "myds",
             "--config",
             str(config_file),
             "--username",
@@ -73,7 +70,6 @@ def test_fuseki_create_with_both_dataset_name_and_config_file(fuseki_container):
 def test_fuseki_create_with_config_file(fuseki_container):
     port = fuseki_container.get_exposed_port(3030)
     sparql_endpoint = f"http://localhost:{port}"
-    dataset_name = "myds"
     config_file = Path(__file__).parent / "config.ttl"
 
     result = runner.invoke(
@@ -267,7 +263,7 @@ def test_fuseki_tasks(fuseki_container):
     sparql_endpoint = f"http://localhost:{port}"
 
     # kurra has no function that spawns a Fuseki admin task, triggering one using the compact endpoint since it spawns a task
-    httpx.Client(auth=("admin", "admin")).post(f"{sparql_endpoint}/$/compact/ds")
+    httpx2.Client(auth=("admin", "admin")).post(f"{sparql_endpoint}/$/compact/ds")
 
     result = runner.invoke(
         app,

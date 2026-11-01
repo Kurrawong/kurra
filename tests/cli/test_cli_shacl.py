@@ -33,7 +33,9 @@ def test_validate_cli_shacl_types(tmp_path, monkeypatch, shacl_value, expected_t
 
     received = {}
 
-    def fake_validate(data, shacl, hide_warnings=False, advanced=False, return_type="basic"):
+    def fake_validate(
+        data, shacl, hide_warnings=False, advanced=False, return_type="basic"
+    ):
         received["data"] = data
         received["shacl"] = shacl
         return True, Graph(), "", Graph()

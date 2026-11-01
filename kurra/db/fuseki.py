@@ -3,7 +3,7 @@
 from io import TextIOBase
 from pathlib import Path
 
-import httpx
+import httpx2
 from rdflib import RDF, Graph, URIRef
 
 
@@ -17,7 +17,7 @@ class FusekiError(Exception):
 
 def ping(
     server_url: str,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> str:
     """Check if the Fuseki server is alive.
 
@@ -33,7 +33,7 @@ def ping(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
         close_http_client = True
 
     r = http_client.get(f"{server_url}/$/ping")
@@ -51,7 +51,7 @@ def ping(
 
 def server(
     server_url: str,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> str:
     """Get basic Fuseki server info.
 
@@ -67,7 +67,7 @@ def server(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
         close_http_client = True
 
     r = http_client.get(f"{server_url}/$/server")
@@ -87,7 +87,7 @@ def server(
 
 def status(
     server_url: str,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> str:
     """Alias for `server()`."""
     return server(server_url, http_client=http_client)
@@ -96,7 +96,7 @@ def status(
 def stats(
     server_url: str,
     name: str = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> str:
     """Request statistics for all datasets, or one named dataset, on the Fuseki server.
 
@@ -113,7 +113,7 @@ def stats(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
         close_http_client = True
 
     url = f"{server_url}/$/stats" if name is None else f"{server_url}/$/stats/{name}"
@@ -133,7 +133,7 @@ def stats(
 def backup(
     server_url: str,
     name: str,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ):
     """Ask the Fuseki server to create a backup of a dataset -- Not yet implemented.
 
@@ -151,7 +151,7 @@ def backup(
 def backups(
     server_url: str,
     name: str,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ):
     """Alias for `backup()`."""
     return backup(server_url, name, http_client)
@@ -159,7 +159,7 @@ def backups(
 
 def backups_list(
     server_url: str,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> str:
     """List all existing backups on the Fuseki server.
 
@@ -175,7 +175,7 @@ def backups_list(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
         close_http_client = True
 
     r = http_client.get(f"{server_url}/$/backups-list")
@@ -193,7 +193,7 @@ def backups_list(
 
 def sleep(
     server_url: str,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ):
     """Tell the Fuseki server to sleep -- Not yet implemented.
 
@@ -210,7 +210,7 @@ def sleep(
 def tasks(
     server_url: str,
     name: str = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> str:
     """List tasks currently running on the Fuseki server, or get one named task.
 
@@ -227,7 +227,7 @@ def tasks(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
         close_http_client = True
 
     url = f"{server_url}/$/tasks" if name is None else f"{server_url}/$/tasks/{name}"
@@ -246,7 +246,7 @@ def tasks(
 
 def metrics(
     server_url: str,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> str:
     """Get metrics for the Fuseki server.
 
@@ -262,7 +262,7 @@ def metrics(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
         close_http_client = True
 
     r = http_client.get(f"{server_url}/$/metrics")
@@ -281,7 +281,7 @@ def metrics(
 def describe(
     base_url: str,
     dataset_name: str = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> dict:
     """Describe the datasets on the Fuseki server, or a single named dataset.
 
@@ -298,7 +298,7 @@ def describe(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
         close_http_client = True
 
     headers = {"accept": "application/json"}
@@ -335,7 +335,7 @@ def create(
     sparql_endpoint: str,
     dataset_name_or_config_file: str | TextIOBase | Path,
     dataset_type: str = "tdb2",
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> str:
     """Create a new Fuseki dataset, from a name and type or an assembler config file.
 
@@ -353,7 +353,7 @@ def create(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
         close_http_client = True
 
     if isinstance(dataset_name_or_config_file, str):
@@ -403,7 +403,7 @@ def create(
 
 
 def delete(
-    base_url: str, dataset_name: str, http_client: httpx.Client | None = None
+    base_url: str, dataset_name: str, http_client: httpx2.Client | None = None
 ) -> str:
     """Delete a Fuseki dataset.
 
@@ -423,7 +423,7 @@ def delete(
 
     close_http_client = False
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
         close_http_client = True
 
     r = http_client.delete(f"{base_url}/$/datasets/{dataset_name}")

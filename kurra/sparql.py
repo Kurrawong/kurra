@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, overload
 
-import httpx
+import httpx2
 from pyparsing import ParseBaseException
 from rdflib import Dataset, Graph
 from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
@@ -58,7 +58,7 @@ def query(
     q: str | Path,
     *,
     namespaces: dict[str, str] | None,
-    http_client: httpx.Client | None,
+    http_client: httpx2.Client | None,
     return_format: Literal["original"] = "original",
     return_bindings_only: bool = False,
 ) -> str: ...
@@ -68,7 +68,7 @@ def query(
     q: str | Path,
     *,
     namespaces: dict[str, str] | None = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
     return_format: Literal["python"],
     return_bindings_only: bool = False,
 ) -> Graph: ...
@@ -80,7 +80,7 @@ def query(
     q: str | Path,
     *,
     namespaces: dict[str, str] | None = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
     return_format: Literal["dataframe"],
     return_bindings_only: bool = False,
 ) -> "DataFrame": ...
@@ -88,7 +88,7 @@ def query(
     p: Path | str | Graph | Dataset,
     q: str | Path,
     namespaces: dict[str, str] | None = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
     return_format: Literal["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
 ) -> "str | Graph | dict | DataFrame":
@@ -131,7 +131,7 @@ def query(
         q = add_namespaces_to_query_or_data(q, namespaces)
 
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
 
     statement = statement_type_for_query(q)
 
@@ -177,7 +177,7 @@ def query(
         if str(p).startswith("http"):
             close_http_client = False
             if http_client is None:
-                http_client = httpx.Client()
+                http_client = httpx2.Client()
                 close_http_client = True
 
             r = db_query(str(p), q, namespaces, http_client, return_format, False)
@@ -206,7 +206,7 @@ def query(
         if str(p).startswith("http"):
             close_http_client = False
             if http_client is None:
-                http_client = httpx.Client()
+                http_client = httpx2.Client()
                 close_http_client = True
 
             r = db_query(

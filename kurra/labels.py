@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from typing import Iterable, Literal, cast, overload
 
-import httpx
+import httpx2
 from rdflib import DCTERMS, RDFS, SDO, SKOS, Graph, URIRef
 
 from kurra.sparql import query
@@ -59,7 +59,7 @@ def get_labels(
     iris: list[URIRef],
     context: Graph | str | Path = "https://fuseki.dev.kurrawong.ai/semback/sparql",
     return_type: Literal["graph"] = "graph",
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> Graph: ...
 
 
@@ -68,7 +68,7 @@ def get_labels(
     iris: list[URIRef],
     context: Graph | str | Path,
     return_type: Literal["dict"],
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> dict[URIRef, str]: ...
 
 
@@ -76,7 +76,7 @@ def get_labels(
     iris: list[URIRef],
     context: Graph | str | Path = "https://fuseki.dev.kurrawong.ai/semback/sparql",
     return_type: Literal["graph", "dict"] = "graph",
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> Graph | dict[URIRef, str]:
     """Get labels for the given IRIs from a given context, by default the KurrawongAI Semantic Background.
 

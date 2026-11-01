@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, overload
 from typing import Literal as LiteralType
 
-import httpx
+import httpx2
 from rdflib import Graph
 
 from kurra import __version__
@@ -33,7 +33,7 @@ def query(
     sparql_endpoint: str,
     q: str | Path,
     namespaces: dict[str, str] | None = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
     return_format: LiteralType["original"] = "original",
     return_bindings_only: bool = False,
     user_agent: str = USER_AGENT_STRING,
@@ -43,7 +43,7 @@ def query(
     sparql_endpoint: str,
     q: str | Path,
     namespaces: dict[str, str] | None,
-    http_client: httpx.Client | None,
+    http_client: httpx2.Client | None,
     return_format: LiteralType["python"],
     return_bindings_only: bool = False,
     user_agent: str = USER_AGENT_STRING,
@@ -53,7 +53,7 @@ def query(
     sparql_endpoint: str,
     q: str | Path,
     namespaces: dict[str, str] | None,
-    http_client: httpx.Client | None,
+    http_client: httpx2.Client | None,
     return_format: LiteralType["dataframe"],
     return_bindings_only: bool = False,
     user_agent: str = USER_AGENT_STRING,
@@ -62,7 +62,7 @@ def query(
     sparql_endpoint: str,
     q: str | Path,
     namespaces: dict[str, str] | None = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
     return_format: LiteralType["original", "python", "dataframe"] = "original",
     return_bindings_only: bool = False,
     user_agent: str = USER_AGENT_STRING,
@@ -110,7 +110,7 @@ def query(
     validate(q)
 
     if http_client is None:
-        http_client = httpx.Client()
+        http_client = httpx2.Client()
 
     headers = {}
     headers["Content-Type"] = "application/sparql-update"

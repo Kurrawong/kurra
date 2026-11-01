@@ -6,14 +6,13 @@ See the [Olis Spec](https://olis.dev) for what Olis is and does.
 from datetime import datetime
 from pathlib import Path
 
-import httpx
+import httpx2
 from rdflib import Dataset, Graph, Literal, URIRef
 from rdflib.namespace import RDF, SDO, XSD, DefinedNamespace, Namespace
 
 from kurra.shacl import validate
 from kurra.utils import get_system_graph, put_system_graph
 
-OLIS = Namespace("https://olis.dev/")
 SYSTEM_GRAPH_IRI = URIRef("https://olis.dev/SystemGraph")
 BACKGROUND_GRAPH_IRI = URIRef("http://background")
 
@@ -51,7 +50,7 @@ def include(
     graphs_to_include_iris: list[URIRef | str],
     system_graph_source: str | Path | Dataset | Graph = None,
     include_background_graph: bool = True,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> Graph | int | None:
     """Creates a Virtual Graph with IRI of `including_graph_iri` that contains all the graphs given in `graphs_to_include_iris`.
 
@@ -185,7 +184,7 @@ def exclude(
     including_graph_iri: URIRef | str,
     graphs_to_exclude_iris: list[URIRef | str],
     system_graph_source: str | Path | Dataset | Graph = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> Graph | int | None | ValueError:
     """Remove the `includes` statement from a Virtual Graph to one or more Named Graphs.
 
@@ -231,7 +230,7 @@ def exclude(
     system_graph = get_system_graph(system_graph_source, http_client=http_client)
 
     # alter the system graph as per the inputs
-    if not (including_graph_iri, RDF.type, OLIS.VirtualGraph) in system_graph:
+    if (including_graph_iri, RDF.type, OLIS.VirtualGraph) not in system_graph:
         return ValueError(
             "The including_graph_iri is not known as a VirtualGraph in the system_graph_source"
         )
@@ -253,7 +252,7 @@ def exclude(
 
 
 def validate_system_graph(
-    system_graph_source: str | Path | Dataset | Graph, http_client: httpx.Client = None
+    system_graph_source: str | Path | Dataset | Graph, http_client: httpx2.Client = None
 ) -> tuple[bool, Graph, str, Graph]:
     """Validate a System Graph using the Olis System Graph SHACL validator.
 

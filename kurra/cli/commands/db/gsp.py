@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Annotated
 
-import httpx
+import httpx2
 import typer
 from rich.progress import track
 
@@ -53,7 +53,7 @@ def exists_command(
         (username, password) if username is not None and password is not None else None
     )
 
-    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
         try:
             console.print(
                 exists(sparql_endpoint_url, graph_identifier, http_client=http_client)
@@ -104,7 +104,7 @@ def get_command(
         (username, password) if username is not None and password is not None else None
     )
 
-    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
         try:
             r = get(sparql_endpoint_url, graph_identifier, http_client=http_client)
             if r == 404:
@@ -166,7 +166,7 @@ def put_command(
         (username, password) if username is not None and password is not None else None
     )
 
-    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
         try:
             console.print(
                 put(
@@ -223,7 +223,7 @@ def post_command(
         (username, password) if username is not None and password is not None else None
     )
 
-    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
         try:
             console.print(
                 post(
@@ -276,7 +276,7 @@ def delete_command(
         (username, password) if username is not None and password is not None else None
     )
 
-    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
         try:
             console.print(
                 delete(sparql_endpoint_url, graph_identifier, http_client=http_client)
@@ -327,7 +327,7 @@ def clear_command(
         (username, password) if username is not None and password is not None else None
     )
 
-    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
         try:
             clear(sparql_endpoint_url, graph_identifier, http_client=http_client)
         except Exception as err:
@@ -406,7 +406,7 @@ def upload_command(
 
     files = list(filter(lambda f: f.suffix in RDF_SUFFIX_MAP.keys(), files))
 
-    with httpx.Client(
+    with httpx2.Client(
         auth=auth,
         timeout=timeout,
         headers={"Host": host_header} if host_header is not None else {},

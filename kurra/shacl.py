@@ -7,9 +7,10 @@ from pickle import dump, load
 from random import choice
 from typing import Literal, overload
 
-import httpx
+import httpx2
 from pyshacl import validate as v
-from rdflib import BNode, Dataset, Graph, Literal as RDFLiteral, Namespace, URIRef
+from rdflib import BNode, Dataset, Graph, Namespace, URIRef
+from rdflib import Literal as RDFLiteral
 from rdflib.namespace import OWL, PROV, RDF, SDO, SH, XSD, DefinedNamespace
 from srl.engine import RuleEngine
 from srl.parser import SRLParser
@@ -157,16 +158,20 @@ def _build_provenance_graph(
     pg.add((activity_node, SH12.usedShapesGraph, shapes_graph_node))
     if report_node is not None:
         pg.add((activity_node, PROV.generated, report_node))
-    pg.add((
-        activity_node,
-        PROV.startedAtTime,
-        RDFLiteral(started_at.isoformat()[:19], datatype=XSD.dateTime),
-    ))
-    pg.add((
-        activity_node,
-        PROV.endedAtTime,
-        RDFLiteral(ended_at.isoformat()[:19], datatype=XSD.dateTime),
-    ))
+    pg.add(
+        (
+            activity_node,
+            PROV.startedAtTime,
+            RDFLiteral(started_at.isoformat()[:19], datatype=XSD.dateTime),
+        )
+    )
+    pg.add(
+        (
+            activity_node,
+            PROV.endedAtTime,
+            RDFLiteral(ended_at.isoformat()[:19], datatype=XSD.dateTime),
+        )
+    )
 
     return pg
 
@@ -297,13 +302,15 @@ def validate(
     if return_type == "summary":
         result.append(_summarize_validation_results(g))
     elif return_type == "provenance":
-        result.append(_build_provenance_graph(
-            g,
-            _extract_data_graph_nodes(data),
-            _extract_shapes_graph_node(shacl),
-            started_at,
-            ended_at,
-        ))
+        result.append(
+            _build_provenance_graph(
+                g,
+                _extract_data_graph_nodes(data),
+                _extract_shapes_graph_node(shacl),
+                started_at,
+                ended_at,
+            )
+        )
     return tuple(result)
 
 
@@ -352,7 +359,7 @@ def list_local_validators() -> dict[str, dict[str, int]] | None:
 
 
 def sync_validators(
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> dict[str, dict[str, str | list[str]]]:
     """Refresh the local SHACL validator cache from the Semantic Background, downloading any validators not already cached locally.
 

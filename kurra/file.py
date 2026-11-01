@@ -548,7 +548,7 @@ def hierarchy(
 def export_quads(
     path_str_or_dataset: Union[Path, str, Dataset], destination: Optional[Path] = None
 ) -> bool | str:
-    """Export triples from a given Dataset, quads string in trig format, or a quads file specified by Path. 
+    """Export triples from a given Dataset, quads string in trig format, or a quads file specified by Path.
 
     Args:
         path_str_or_dataset: A Dataset, a trig file path, or a string of trig data.

@@ -2,7 +2,7 @@ import datetime
 import json
 from pathlib import Path
 
-import httpx
+import httpx2
 import pytest
 from rdflib.namespace import SKOS
 
@@ -268,7 +268,7 @@ def test_query_db_graphdb(graphdb_container, http_client):
     assert not r
 
 
-def test_query_file():
+def test_query_file_rendered():
     q = """
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#> 
         SELECT * 
@@ -404,7 +404,7 @@ def test_auth(fuseki_container, http_client):
         SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
     )
 
-    x = httpx.get(
+    httpx2.get(
         SPARQL_ENDPOINT, params={"query": "ASK { ?s ?p ?o}"}, auth=("admin", "admin")
     )
 
@@ -559,7 +559,7 @@ def test_return_formats(fuseki_container, http_client):
         ValueError,
         match="must be either 'original', 'python' or 'dataframe'",
     ):
-        g = query(
+        query(
             SPARQL_ENDPOINT,
             "DESCRIBE <https://example.com/demo-vocabs/language-test>",
             http_client=http_client,
@@ -570,7 +570,7 @@ def test_return_formats(fuseki_container, http_client):
         ValueError,
         match='Only SELECT and ASK queries can have return_format set to "dataframe"',
     ):
-        g = query(
+        query(
             SPARQL_ENDPOINT,
             "DESCRIBE <https://example.com/demo-vocabs/language-test>",
             http_client=http_client,
@@ -597,11 +597,11 @@ def test_return_formats(fuseki_container, http_client):
 
     from pandas import DataFrame
 
-    assert type(r) == DataFrame
+    assert type(r) is DataFrame
     assert r["pl"][0] == "English prefLabel"
 
     r = query(Path(__file__).parent / "language-test.ttl", q, return_format="dataframe")
-    assert type(r) == DataFrame
+    assert type(r) is DataFrame
     assert isinstance(r["pl"][0], str)
     assert r["pl"][0] == "English prefLabel"
 

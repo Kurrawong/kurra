@@ -8,7 +8,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Union
 
-import httpx
+import httpx2
 from rdflib import (
     OWL,
     RDF,
@@ -331,7 +331,7 @@ def render_sparql_result(
                 if r["head"].get("vars") is not None:
                     for col in r["head"]["vars"]:
                         header[0] += f"{col} | "
-                        header[1] += f"--- | "
+                        header[1] += "--- | "
                     output = (
                         "| " + header[0].strip() + "\n| " + header[1].strip() + "\n"
                     )
@@ -361,7 +361,7 @@ def make_httpx_client(
     sparql_username: str | None = None,
     sparql_password: str | None = None,
     timeout: int = 60,
-) -> httpx.Client:
+) -> httpx2.Client:
     """Create an HTTPX client, with Basic Auth if a username and password are given.
 
     Args:
@@ -375,12 +375,12 @@ def make_httpx_client(
     auth = None
     if sparql_username:
         if sparql_password:
-            auth = httpx.BasicAuth(sparql_username, sparql_password)
-    return httpx.Client(auth=auth, timeout=timeout)
+            auth = httpx2.BasicAuth(sparql_username, sparql_password)
+    return httpx2.Client(auth=auth, timeout=timeout)
 
 
 def convert_sparql_json_to_python(
-    j: Union[str, bytes, httpx.Response], return_bindings_only: bool = False
+    j: Union[str, bytes, httpx2.Response], return_bindings_only: bool = False
 ) -> dict:
     """Convert a SPARQL JSON results response into native Python types.
 
@@ -395,7 +395,7 @@ def convert_sparql_json_to_python(
         r = json.loads(j)
     elif isinstance(j, bytes):
         r = json.loads(j.decode())
-    elif isinstance(j, httpx.Response):
+    elif isinstance(j, httpx2.Response):
         r = j.json()
 
     if r.get("results") is not None:  # SELECT
@@ -651,7 +651,7 @@ def add_namespaces_to_query_or_data(q: str, namespaces: dict) -> str:
 
 def get_system_graph(
     system_graph_source: str | Path | Dataset | Graph = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> Graph | int:
     """Load Olis's System Graph from a file, Graph, Dataset, or SPARQL endpoint.
 
@@ -694,7 +694,7 @@ def get_system_graph(
         # this is simplified GSP get()
         close_http_client = False
         if http_client is None:
-            http_client = httpx.Client()
+            http_client = httpx2.Client()
             close_http_client = True
 
         r = http_client.get(
@@ -725,7 +725,7 @@ def get_system_graph(
 def put_system_graph(
     system_graph: Graph,
     system_graph_source: str | Path | Dataset | Graph | None = None,
-    http_client: httpx.Client | None = None,
+    http_client: httpx2.Client | None = None,
 ) -> Graph | int | None:
     """Write a System Graph back to its file, Dataset, or SPARQL endpoint source.
 
@@ -761,7 +761,7 @@ def put_system_graph(
         # this is simplified GSP put()
         close_http_client = False
         if http_client is None:
-            http_client = httpx.Client()
+            http_client = httpx2.Client()
             close_http_client = True
 
         r = http_client.put(

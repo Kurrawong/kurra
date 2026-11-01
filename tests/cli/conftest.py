@@ -2,7 +2,7 @@ import time
 from pathlib import Path
 
 import docker
-import httpx
+import httpx2
 import pytest
 from testcontainers.core.container import DockerContainer
 
@@ -15,8 +15,6 @@ def wait_for_logs(container, text, timeout=30, interval=0.5):
     """
     client = docker.from_env()
     start_time = time.time()
-
-    logs_seen = ""
 
     while True:
         # Read logs incrementally
@@ -54,7 +52,7 @@ def fuseki_container(request: pytest.FixtureRequest):
 
 @pytest.fixture(scope="function")
 def http_client(request: pytest.FixtureRequest):
-    _http_client = httpx.Client(auth=("admin", "admin"))
+    _http_client = httpx2.Client(auth=("admin", "admin"))
 
     def cleanup():
         _http_client.close()

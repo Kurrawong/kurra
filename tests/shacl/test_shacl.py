@@ -1,7 +1,7 @@
 from pathlib import Path
 from pickle import dump, load
 
-import httpx
+import httpx2
 import pytest
 from rdflib import Graph, Literal, Namespace, URIRef
 from rdflib.compare import isomorphic
@@ -39,7 +39,7 @@ def validator_service(monkeypatch, tmp_path):
         assert request.url.host == "fuseki.dev.kurrawong.ai"
         if request.method == "POST":
             assert request.url.path == "/semback/sparql"
-            return httpx.Response(
+            return httpx2.Response(
                 200,
                 json={
                     "head": {"vars": ["p"]},
@@ -54,13 +54,13 @@ def validator_service(monkeypatch, tmp_path):
         assert request.url.path == "/semback/sparql"
         iri = request.url.params["graph"]
         downloaded.append(iri)
-        return httpx.Response(
+        return httpx2.Response(
             200,
             text=validators[iri].serialize(format="turtle"),
             headers={"Content-Type": "text/turtle"},
         )
 
-    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+    with httpx2.Client(transport=httpx2.MockTransport(respond)) as client:
         yield client, validators, downloaded
 
 

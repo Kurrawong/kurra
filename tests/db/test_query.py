@@ -1,11 +1,11 @@
-import httpx
+import httpx2
 
 from kurra.db.gsp import upload
 from kurra.sparql import query
 
 
 def test_query(fuseki_container, http_client):
-    with httpx.Client() as client:
+    with httpx2.Client():
         sparql_endpoint = (
             f"http://localhost:{fuseki_container.get_exposed_port(3030)}/ds"
         )

@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Annotated
 
-import httpx
+import httpx2
 import rdflib
 import typer
 from pyparsing import ParseBaseException
@@ -94,7 +94,7 @@ def sparql_command(
     auth = (
         (username, password) if username is not None and password is not None else None
     )
-    with httpx.Client(auth=auth, timeout=timeout) as http_client:
+    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
         r = query(path_or_url, q, http_client=http_client, return_format="python")
 
         if r == "":
