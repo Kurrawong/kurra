@@ -151,6 +151,39 @@ def test_sync_validators(validator_service):
     assert downloaded == [removed_iri]
 
 
+@pytest.mark.parametrize("requested", [[], ["https://example.com/validator"]])
+def test_sync_selected_validators(validator_service, capsys, requested):
+    client, _, downloaded = validator_service
+    validators = sync_validators(http_client=client, validator_iris=requested)
+    assert set(validators) == set(requested)
+    assert downloaded == requested
+    output = capsys.readouterr().out
+    assert f"Syncing only the {len(requested)} requested validators" in output
+    assert f"{len(requested)} will be cached" in output
+
+    downloaded.clear()
+    assert sync_validators(http_client=client, validator_iris=requested) == validators
+    assert downloaded == []
+    assert "0 will be cached" in capsys.readouterr().out
+
+
+def test_sync_selection_preserves_cache(validator_service, capsys):
+    client, remote_validators, downloaded = validator_service
+    first, second = remote_validators
+    sync_validators(http_client=client, validator_iris=[first])
+    downloaded.clear()
+    missing = "https://example.com/missing"
+    validators = sync_validators(
+        http_client=client, validator_iris=[second, second, missing]
+    )
+    assert set(validators) == set(remote_validators)
+    assert downloaded == [second]
+    assert (
+        f"Validator not in remote catalogue, skipping: {missing}"
+        in capsys.readouterr().out
+    )
+
+
 def test_list_local_validators(validator_service):
     client, remote_validators, downloaded = validator_service
     assert list_local_validators() == {}

@@ -360,11 +360,13 @@ def list_local_validators() -> dict[str, dict[str, int]] | None:
 
 def sync_validators(
     http_client: httpx2.Client | None = None,
+    validator_iris: list[str] | None = None,
 ) -> dict[str, dict[str, str | list[str]]]:
     """Refresh the local SHACL validator cache from the Semantic Background, downloading any validators not already cached locally.
 
     Args:
-        http_client: An optional HTTPX client to contain credentials if needed to access a SPARQL endpoint as context. A new one is created if not given.
+        http_client: An optional HTTPX client to contain credentials if needed to access a SPARQL endpoint as context. If not given, a client with a 30-second timeout is created for listing and downloading validators.
+        validator_iris: Only cache these validator IRIs from the remote catalogue when supplied. An empty list downloads nothing; None syncs all validators. Existing cached validators are retained.
 
     Returns:
         The refreshed local validator listing, in the same form as `list_local_validators`.
@@ -373,6 +375,10 @@ def sync_validators(
         NotImplementedError: If the Semantic Background's validator set is not yet available.
         RuntimeError: If a validator's graph could not be fetched from the SPARQL endpoint.
     """
+    if http_client is None:
+        with httpx2.Client(timeout=30) as client:
+            return sync_validators(http_client=client, validator_iris=validator_iris)
+
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
     validator_ids_cache = kurra_cache / "validator_ids.pkl"
@@ -402,9 +408,21 @@ def sync_validators(
 
     # diff the lists
     unknown_validators = list(set(remote_validators) - set(local_validators.keys()))
+    if validator_iris is not None:
+        requested_validators = set(validator_iris)
+        unknown_validators = [
+            iri for iri in unknown_validators if iri in requested_validators
+        ]
+        print(
+            f"Syncing only the {len(requested_validators)} requested validators; "
+            f"{len(unknown_validators)} will be cached"
+        )
+        for iri in sorted(requested_validators - set(remote_validators)):
+            print(f"Validator not in remote catalogue, skipping: {iri}")
 
     # prepare to cache
     if len(unknown_validators) > 0:
+        print(f"Caching {len(unknown_validators)} validators not yet cached locally")
         if not kurra_cache.exists():
             Path(kurra_cache).mkdir()
 
