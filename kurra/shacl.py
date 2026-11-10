@@ -1,5 +1,6 @@
 """SHACL functions."""
 
+from collections.abc import Sequence
 from datetime import datetime
 from importlib.metadata import version
 from pathlib import Path
@@ -18,7 +19,7 @@ from srl.parser import SRLParser
 import kurra.sparql
 from kurra.db.gsp import get as gsp_get
 from kurra.sparql import query
-from kurra.utils import load_graph, make_httpx_client
+from kurra.utils import GraphInput, load_graph, make_httpx_client
 
 EX = Namespace("http://example.com/")
 
@@ -97,10 +98,10 @@ def _load_pickle(path: Path):
 
 
 def _extract_data_graph_nodes(
-    data: Path | Graph | list[Path] | list[Graph],
+    data: GraphInput | Sequence[GraphInput],
 ) -> list[URIRef | BNode]:
     """Identifies the Data Graph(s) supplied to validate(), by file location if known."""
-    items = data if isinstance(data, list) else [data]
+    items = data if isinstance(data, Sequence) and not isinstance(data, str) else [data]
     return [
         URIRef(item.resolve().as_uri()) if isinstance(item, Path) else BNode()
         for item in items
@@ -178,7 +179,7 @@ def _build_provenance_graph(
 
 @overload
 def validate(
-    data: Path | Graph | list[Path] | list[Graph],
+    data: GraphInput | Sequence[GraphInput],
     shacl: Graph | Path | str | int,
     hide_warnings: bool = False,
     advanced: bool = False,
@@ -188,7 +189,7 @@ def validate(
 
 @overload
 def validate(
-    data: Path | Graph | list[Path] | list[Graph],
+    data: GraphInput | Sequence[GraphInput],
     shacl: Graph | Path | str | int,
     hide_warnings: bool,
     advanced: bool,
@@ -198,7 +199,7 @@ def validate(
 
 @overload
 def validate(
-    data: Path | Graph | list[Path] | list[Graph],
+    data: GraphInput | Sequence[GraphInput],
     shacl: Graph | Path | str | int,
     hide_warnings: bool,
     advanced: bool,
@@ -207,7 +208,7 @@ def validate(
 
 
 def validate(
-    data: Path | Graph | list[Path] | list[Graph],
+    data: GraphInput | Sequence[GraphInput],
     shacl: Graph | Path | str | int,
     hide_warnings: bool = False,
     advanced: bool = False,
@@ -216,7 +217,8 @@ def validate(
     """Validates a data graph using a shapes graph.
 
     Args:
-        data: The path to an RDF data file, a graph, a list of Paths or a list of Graphs to validate. List items will be merged
+        data: A local RDF file path (a string or Path), a graph, or a sequence of these inputs.
+            Multiple inputs are merged before validation.
         shacl: The SHACL shapes to validate with
         return_type: What to return alongside the validation status, results graph and message.
             "basic" (the default) returns just those three. "summary" adds a compact summary graph.
@@ -234,7 +236,6 @@ def validate(
     kurra_cache = Path().home() / ".kurra"
     validators_cache = kurra_cache / "validators.pkl"
 
-    data_graph = None
     shapes_graph = None
 
     def _get_shapes_from_iri(iri: str):
@@ -280,12 +281,22 @@ def validate(
     if shapes_graph is None:
         raise RuntimeError(f"Not able to load shapes graph: {shacl}")
 
-    if isinstance(data, (Path, Graph)):
-        data_graph = load_graph(data)
-    elif isinstance(data, list):
-        data_graph = Graph()
-        for x in data:
-            data_graph += load_graph(x)
+    def resolve_data_path(item: GraphInput) -> GraphInput:
+        if isinstance(item, str):
+            path = Path(item)
+            try:
+                if path.exists():
+                    return path
+            except OSError:
+                # A serialized RDF string need not be a valid filesystem path.
+                pass
+        return item
+
+    if isinstance(data, Sequence) and not isinstance(data, str):
+        data = [resolve_data_path(item) for item in data]
+    else:
+        data = resolve_data_path(data)
+    data_graph = load_graph(data)
 
     started_at = datetime.now()
     tf, g, msg = v(

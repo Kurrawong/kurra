@@ -7,10 +7,47 @@ from typer.testing import CliRunner
 
 from kurra.cli import app
 from kurra.cli.commands import shacl as shacl_commands
-from kurra.shacl import sync_validators
+from kurra.shacl import SH12, sync_validators, validate
 
 runner = CliRunner()
 EX = Namespace("http://example.com/")
+
+
+def test_validate_merges_local_files(tmp_path):
+    focus = tmp_path / "focus.rdf"
+    values = tmp_path / "values.rdf"
+    shapes = tmp_path / "shapes.rdf"
+    Graph().add((EX.subject, RDF.type, EX.Thing)).serialize(focus, format="xml")
+    Graph().add((EX.subject, EX.name, Literal("Example"))).serialize(
+        values, format="xml"
+    )
+    shape_graph = Graph()
+    shape_graph.add((EX.shape, RDF.type, SH.NodeShape))
+    shape_graph.add((EX.shape, SH.targetClass, EX.Thing))
+    shape_graph.add((EX.shape, SH.property, EX.propertyShape))
+    shape_graph.add((EX.propertyShape, SH.path, EX.name))
+    shape_graph.add((EX.propertyShape, SH.minCount, Literal(1)))
+    shape_graph.serialize(shapes, format="xml")
+
+    assert not validate(focus, shapes)[0]
+    assert not validate(str(focus), shapes)[0]
+    assert validate([focus, values], shapes)[0]
+    valid, _, _, provenance = validate(
+        [str(focus), values], shapes, return_type="provenance"
+    )
+    assert valid
+    assert set(provenance.objects(None, SH12.usedDataGraph)) == {
+        URIRef(focus.as_uri()),
+        URIRef(values.as_uri()),
+    }
+
+    args = ["shacl", "validate", "--shacl", str(shapes), str(focus)]
+    single = runner.invoke(app, args)
+    assert single.exit_code == 0, single.exception
+    assert "The data is NOT valid" in single.output
+    merged = runner.invoke(app, [*args, str(values)])
+    assert merged.exit_code == 0, merged.exception
+    assert "The data is valid" in merged.output
 
 
 @pytest.mark.parametrize(
