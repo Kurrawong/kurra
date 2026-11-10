@@ -14,6 +14,7 @@ from kurra.utils import (
     is_construct_or_describe_query,
     is_select_or_ask_query,
     is_update_query,
+    make_httpx_client,
     make_sparql_dataframe,
     make_system_specific_sparql_endpoint,
     sparql_statement_return_type,
@@ -110,7 +111,7 @@ def query(
     validate(q)
 
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
 
     headers = {}
     headers["Content-Type"] = "application/sparql-update"

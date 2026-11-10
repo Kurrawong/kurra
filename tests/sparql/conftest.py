@@ -2,9 +2,10 @@ import time
 from pathlib import Path
 
 import docker
-import httpx2
 import pytest
 from testcontainers.core.container import DockerContainer
+
+from kurra.utils import make_httpx_client
 
 FUSEKI_IMAGE = "ghcr.io/kurrawong/fuseki-geosparql:git-main-e642d849"
 GRAPHDB_IMAGE = "khaller/graphdb-free:10.0.0"
@@ -69,7 +70,7 @@ def fuseki_container(request: pytest.FixtureRequest):
 
 @pytest.fixture(scope="function")
 def http_client(request: pytest.FixtureRequest):
-    _http_client = httpx2.Client(auth=("admin", "admin"))
+    _http_client = make_httpx_client("admin", "admin")
 
     def cleanup():
         _http_client.close()
@@ -96,7 +97,8 @@ class GraphDBContainer(DockerContainer):
 
         while time.time() < deadline:
             try:
-                response = httpx2.get(f"{self.endpoint}/protocol")
+                with make_httpx_client(timeout=5) as client:
+                    response = client.get(f"{self.endpoint}/protocol")
                 if response.status_code == 200:
                     return
             except Exception:
@@ -116,12 +118,13 @@ def graphdb_container():
     with GraphDBContainer() as container:
         container.wait_until_ready()
 
-        response = httpx2.post(
-            f"{container.endpoint}/rest/repositories",
-            files={
-                "config": ("repo-config.ttl", REPOSITORY_CONFIG, "text/turtle"),
-            },
-        )
+        with make_httpx_client(timeout=5) as client:
+            response = client.post(
+                f"{container.endpoint}/rest/repositories",
+                files={
+                    "config": ("repo-config.ttl", REPOSITORY_CONFIG, "text/turtle"),
+                },
+            )
 
         if response.is_success:
             yield container

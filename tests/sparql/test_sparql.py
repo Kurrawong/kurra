@@ -2,7 +2,6 @@ import datetime
 import json
 from pathlib import Path
 
-import httpx2
 import pytest
 from rdflib.namespace import SKOS
 
@@ -404,9 +403,7 @@ def test_auth(fuseki_container, http_client):
         SPARQL_ENDPOINT, LANG_TEST_VOC, TESTING_GRAPH, False, http_client=http_client
     )
 
-    httpx2.get(
-        SPARQL_ENDPOINT, params={"query": "ASK { ?s ?p ?o}"}, auth=("admin", "admin")
-    )
+    http_client.get(SPARQL_ENDPOINT, params={"query": "ASK { ?s ?p ?o }"})
 
     q = "ASK {?s ?p ?o}"
     r = query(

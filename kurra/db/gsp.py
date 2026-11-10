@@ -15,6 +15,7 @@ from kurra.utils import (
     RDF_SUFFIX_MAP,
     GspType,
     load_graph,
+    make_httpx_client,
     make_system_specific_sparql_endpoint,
 )
 
@@ -40,7 +41,7 @@ def exists(
 
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     ssse = make_system_specific_sparql_endpoint(
@@ -101,7 +102,7 @@ def get(
 
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     ssse = make_system_specific_sparql_endpoint(
@@ -168,7 +169,7 @@ def put(
 
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     ssse = make_system_specific_sparql_endpoint(
@@ -228,7 +229,7 @@ def post(
 
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     ssse = make_system_specific_sparql_endpoint(
@@ -281,7 +282,7 @@ def delete(
 
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     ssse = make_system_specific_sparql_endpoint(

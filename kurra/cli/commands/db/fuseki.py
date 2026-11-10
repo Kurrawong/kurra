@@ -3,7 +3,6 @@
 from pathlib import Path
 from typing import Annotated
 
-import httpx2
 import typer
 
 from kurra.cli.console import console
@@ -21,6 +20,7 @@ from kurra.db.fuseki import (
     stats,
     tasks,
 )
+from kurra.utils import make_httpx_client
 
 app = typer.Typer(help="Fuseki database commands")
 
@@ -53,11 +53,7 @@ def ping_command(
     Raises:
         Exception: If the request to the Fuseki server fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(ping(fuseki_url, http_client=http_client))
         except Exception as err:
@@ -93,11 +89,7 @@ def server_command(
     Raises:
         Exception: If the request to the Fuseki server fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(server(fuseki_url, http_client=http_client))
         except Exception as err:
@@ -138,11 +130,7 @@ def stats_command(
     Raises:
         Exception: If the request to the Fuseki server fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(stats(fuseki_url, dataset_name, http_client=http_client))
         except Exception as err:
@@ -183,11 +171,7 @@ def backup_command(
     Raises:
         Exception: If the request to the Fuseki server fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(backup(fuseki_url, dataset_name, http_client=http_client))
         except Exception as err:
@@ -226,11 +210,7 @@ def backups_list_command(
     Raises:
         Exception: If the request to the Fuseki server fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(backups_list(fuseki_url, http_client=http_client))
         except Exception as err:
@@ -269,11 +249,7 @@ def sleep_command(
     Raises:
         Exception: If the request to the Fuseki server fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(sleep(fuseki_url, http_client=http_client))
         except Exception as err:
@@ -314,11 +290,7 @@ def tasks_command(
     Raises:
         Exception: If the request to the Fuseki server fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(tasks(fuseki_url, task_name, http_client=http_client))
         except Exception as err:
@@ -354,11 +326,7 @@ def metrics_command(
     Raises:
         Exception: If the request to the Fuseki server fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(metrics(fuseki_url, http_client=http_client))
         except Exception as err:
@@ -394,11 +362,7 @@ def describe_command(
     Raises:
         Exception: If the request to the Fuseki server fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(describe(fuseki_url, http_client=http_client))
         except Exception as err:
@@ -447,10 +411,6 @@ def create_command(
         typer.BadParameter: If both `dataset_name` and `config` are given, if neither is given, or if `dataset_type` is not a valid option.
         Exception: If the request to the Fuseki server fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
     if dataset_name and config:
         raise typer.BadParameter("Only dataset name or --config is allowed, not both.")
 
@@ -460,7 +420,7 @@ def create_command(
         )
 
     if dataset_name:
-        with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+        with make_httpx_client(username, password, timeout=timeout) as http_client:
             try:
                 console.print(
                     create(
@@ -477,7 +437,7 @@ def create_command(
             raise typer.BadParameter(
                 "Either dataset name or assembler config file must be provided."
             )
-        with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+        with make_httpx_client(username, password, timeout=timeout) as http_client:
             try:
                 console.print(create(fuseki_url, config, http_client=http_client))
             except Exception as err:
@@ -515,11 +475,7 @@ def delete_command(
     Raises:
         FusekiError: If the dataset fails to delete.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(delete(fuseki_url, dataset_name, http_client=http_client))
         except FusekiError as err:

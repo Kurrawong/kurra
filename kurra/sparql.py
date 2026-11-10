@@ -18,6 +18,7 @@ from kurra.utils import (
     is_select_or_ask_query,
     is_update_query,
     load_graph,
+    make_httpx_client,
     make_sparql_dataframe,
     statement_type_for_query,
 )
@@ -131,7 +132,7 @@ def query(
         q = add_namespaces_to_query_or_data(q, namespaces)
 
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
 
     statement = statement_type_for_query(q)
 
@@ -177,7 +178,7 @@ def query(
         if str(p).startswith("http"):
             close_http_client = False
             if http_client is None:
-                http_client = httpx2.Client()
+                http_client = make_httpx_client()
                 close_http_client = True
 
             r = db_query(str(p), q, namespaces, http_client, return_format, False)
@@ -206,7 +207,7 @@ def query(
         if str(p).startswith("http"):
             close_http_client = False
             if http_client is None:
-                http_client = httpx2.Client()
+                http_client = make_httpx_client()
                 close_http_client = True
 
             r = db_query(

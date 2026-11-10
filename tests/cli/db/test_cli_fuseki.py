@@ -3,10 +3,10 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-import httpx2
 from typer.testing import CliRunner
 
 from kurra.cli import app
+from kurra.utils import make_httpx_client
 
 runner = CliRunner()
 
@@ -263,7 +263,8 @@ def test_fuseki_tasks(fuseki_container):
     sparql_endpoint = f"http://localhost:{port}"
 
     # kurra has no function that spawns a Fuseki admin task, triggering one using the compact endpoint since it spawns a task
-    httpx2.Client(auth=("admin", "admin")).post(f"{sparql_endpoint}/$/compact/ds")
+    with make_httpx_client("admin", "admin") as client:
+        client.post(f"{sparql_endpoint}/$/compact/ds")
 
     result = runner.invoke(
         app,

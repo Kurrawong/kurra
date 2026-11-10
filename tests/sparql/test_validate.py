@@ -10,6 +10,7 @@ from typer.testing import CliRunner
 from kurra.cli import app
 from kurra.db.sparql import query as remote_query
 from kurra.sparql import query, validate
+from kurra.utils import make_httpx_client
 
 
 @pytest.mark.parametrize(
@@ -43,7 +44,7 @@ def test_validate_file(tmp_path):
 @pytest.mark.parametrize("call", [query, remote_query])
 @pytest.mark.parametrize("q", ["SELECT WHERE {", "INSERT DATA {"])
 def test_remote_rejected_before_request(call, q):
-    with httpx2.Client(
+    with make_httpx_client(
         transport=httpx2.MockTransport(lambda request: pytest.fail("HTTP sent"))
     ) as client:
         with pytest.raises((ParseBaseException, SparqlSyntaxError)):
@@ -57,7 +58,7 @@ def test_remote_validates_after_namespaces():
         requests.append(request)
         return httpx2.Response(200, json={"head": {}, "boolean": True})
 
-    with httpx2.Client(transport=httpx2.MockTransport(respond)) as client:
+    with make_httpx_client(transport=httpx2.MockTransport(respond)) as client:
         query(
             "https://example.com/sparql",
             "ASK { ex:s ex:p ex:o }",
@@ -103,7 +104,7 @@ def test_cli_invalid():
 )
 def test_remote_calls_validate_once(call, q):
     with (
-        httpx2.Client(
+        make_httpx_client(
             transport=httpx2.MockTransport(
                 lambda request: httpx2.Response(200, text="")
             )

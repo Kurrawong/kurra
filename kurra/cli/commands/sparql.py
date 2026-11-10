@@ -3,7 +3,6 @@
 from pathlib import Path
 from typing import Annotated
 
-import httpx2
 import rdflib
 import typer
 from pyparsing import ParseBaseException
@@ -16,6 +15,7 @@ from kurra.cli.utils import (
     format_sparql_response_as_rich_table,
 )
 from kurra.sparql import query, validate
+from kurra.utils import make_httpx_client
 
 
 class SparqlGroup(TyperGroup):
@@ -91,10 +91,7 @@ def sparql_command(
             "response_format must be either 'table' (default), 'json' or 'csv'"
         )
 
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         r = query(path_or_url, q, http_client=http_client, return_format="python")
 
         if r == "":

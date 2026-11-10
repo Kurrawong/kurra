@@ -360,7 +360,11 @@ def render_sparql_result(
 def make_httpx_client(
     sparql_username: str | None = None,
     sparql_password: str | None = None,
-    timeout: int = 60,
+    timeout: int = 120,
+    *,
+    headers: dict[str, str] | None = None,
+    verify: bool = True,
+    transport: httpx2.BaseTransport | None = None,
 ) -> httpx2.Client:
     """Create an HTTPX client, with Basic Auth if a username and password are given.
 
@@ -368,15 +372,19 @@ def make_httpx_client(
         sparql_username: The username for Basic Auth.
         sparql_password: The password for Basic Auth.
         timeout: The client's request timeout, in seconds.
+        headers: Optional default request headers.
+        verify: Whether to verify TLS certificates.
+        transport: An optional custom HTTP transport.
 
     Returns:
         A configured HTTPX Client.
     """
     auth = None
-    if sparql_username:
-        if sparql_password:
-            auth = httpx2.BasicAuth(sparql_username, sparql_password)
-    return httpx2.Client(auth=auth, timeout=timeout)
+    if sparql_username is not None and sparql_password is not None:
+        auth = httpx2.BasicAuth(sparql_username, sparql_password)
+    return httpx2.Client(
+        auth=auth, timeout=timeout, headers=headers, verify=verify, transport=transport
+    )
 
 
 def convert_sparql_json_to_python(
@@ -694,7 +702,7 @@ def get_system_graph(
         # this is simplified GSP get()
         close_http_client = False
         if http_client is None:
-            http_client = httpx2.Client()
+            http_client = make_httpx_client()
             close_http_client = True
 
         r = http_client.get(
@@ -761,7 +769,7 @@ def put_system_graph(
         # this is simplified GSP put()
         close_http_client = False
         if http_client is None:
-            http_client = httpx2.Client()
+            http_client = make_httpx_client()
             close_http_client = True
 
         r = http_client.put(

@@ -18,7 +18,7 @@ from srl.parser import SRLParser
 import kurra.sparql
 from kurra.db.gsp import get as gsp_get
 from kurra.sparql import query
-from kurra.utils import load_graph
+from kurra.utils import load_graph, make_httpx_client
 
 EX = Namespace("http://example.com/")
 
@@ -376,7 +376,7 @@ def sync_validators(
         RuntimeError: If a validator's graph could not be fetched from the SPARQL endpoint.
     """
     if http_client is None:
-        with httpx2.Client(timeout=30) as client:
+        with make_httpx_client() as client:
             return sync_validators(http_client=client, validator_iris=validator_iris)
 
     kurra_cache = Path().home() / ".kurra"

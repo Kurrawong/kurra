@@ -14,7 +14,7 @@ from kurra.shacl import (
     sync_validators,
     validate,
 )
-from kurra.utils import load_graph
+from kurra.utils import load_graph, make_httpx_client
 
 SHACL_TEST_DIR = Path(__file__).parent.resolve()
 EX = Namespace("http://example.com/")
@@ -60,7 +60,7 @@ def validator_service(monkeypatch, tmp_path):
             headers={"Content-Type": "text/turtle"},
         )
 
-    with httpx2.Client(transport=httpx2.MockTransport(respond)) as client:
+    with make_httpx_client(transport=httpx2.MockTransport(respond)) as client:
         yield client, validators, downloaded
 
 

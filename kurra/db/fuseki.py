@@ -6,6 +6,8 @@ from pathlib import Path
 import httpx2
 from rdflib import RDF, Graph, URIRef
 
+from kurra.utils import make_httpx_client
+
 
 class FusekiError(Exception):
     """An error that occurred while interacting with Fuseki."""
@@ -33,7 +35,7 @@ def ping(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     r = http_client.get(f"{server_url}/$/ping")
@@ -67,7 +69,7 @@ def server(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     r = http_client.get(f"{server_url}/$/server")
@@ -113,7 +115,7 @@ def stats(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     url = f"{server_url}/$/stats" if name is None else f"{server_url}/$/stats/{name}"
@@ -175,7 +177,7 @@ def backups_list(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     r = http_client.get(f"{server_url}/$/backups-list")
@@ -227,7 +229,7 @@ def tasks(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     url = f"{server_url}/$/tasks" if name is None else f"{server_url}/$/tasks/{name}"
@@ -262,7 +264,7 @@ def metrics(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     r = http_client.get(f"{server_url}/$/metrics")
@@ -298,7 +300,7 @@ def describe(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     headers = {"accept": "application/json"}
@@ -353,7 +355,7 @@ def create(
     """
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     if isinstance(dataset_name_or_config_file, str):
@@ -423,7 +425,7 @@ def delete(
 
     close_http_client = False
     if http_client is None:
-        http_client = httpx2.Client()
+        http_client = make_httpx_client()
         close_http_client = True
 
     r = http_client.delete(f"{base_url}/$/datasets/{dataset_name}")

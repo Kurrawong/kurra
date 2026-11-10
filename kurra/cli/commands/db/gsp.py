@@ -3,13 +3,12 @@
 from pathlib import Path
 from typing import Annotated
 
-import httpx2
 import typer
 from rich.progress import track
 
 from kurra.cli.console import console
 from kurra.db.gsp import clear, delete, exists, get, post, put, upload
-from kurra.utils import RDF_SUFFIX_MAP
+from kurra.utils import RDF_SUFFIX_MAP, make_httpx_client
 
 app = typer.Typer(help="Graph Store Protocol commands")
 
@@ -49,11 +48,7 @@ def exists_command(
     Raises:
         Exception: If the request to the database fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(
                 exists(sparql_endpoint_url, graph_identifier, http_client=http_client)
@@ -100,11 +95,7 @@ def get_command(
     Raises:
         Exception: If the request to the database fails, other than the graph not being found.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             r = get(sparql_endpoint_url, graph_identifier, http_client=http_client)
             if r == 404:
@@ -162,11 +153,7 @@ def put_command(
     Raises:
         Exception: If the request to the database fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(
                 put(
@@ -219,11 +206,7 @@ def post_command(
     Raises:
         Exception: If the request to the database fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(
                 post(
@@ -272,11 +255,7 @@ def delete_command(
     Raises:
         Exception: If the request to the database fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             console.print(
                 delete(sparql_endpoint_url, graph_identifier, http_client=http_client)
@@ -323,11 +302,7 @@ def clear_command(
     Raises:
         Exception: If the request to the database fails.
     """
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
-    with httpx2.Client(auth=auth, timeout=timeout) as http_client:
+    with make_httpx_client(username, password, timeout=timeout) as http_client:
         try:
             clear(sparql_endpoint_url, graph_identifier, http_client=http_client)
         except Exception as err:
@@ -400,14 +375,11 @@ def upload_command(
     else:
         files += path.glob("**/*")
 
-    auth = (
-        (username, password) if username is not None and password is not None else None
-    )
-
     files = list(filter(lambda f: f.suffix in RDF_SUFFIX_MAP.keys(), files))
 
-    with httpx2.Client(
-        auth=auth,
+    with make_httpx_client(
+        username,
+        password,
         timeout=timeout,
         headers={"Host": host_header} if host_header is not None else {},
         verify=False if disable_ssl_verification else True,
