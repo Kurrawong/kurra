@@ -148,7 +148,6 @@ def query(
         headers=headers,
         content=str(q),
         follow_redirects=True,
-        timeout=25,
     )
 
     status_code = r.status_code
@@ -160,7 +159,6 @@ def query(
             headers=headers,
             params={"query": str(q)},
             follow_redirects=True,
-            timeout=25,
         )
 
         status_code = r.status_code
