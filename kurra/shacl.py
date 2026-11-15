@@ -329,12 +329,15 @@ def validate(
 
     shapes_graph = None
 
-    def _get_shapes_from_iri(iri: str):
-        local_validators = list_local_validators()
-        for local_validator in local_validators.keys():
-            if iri == local_validator:
-                cv = _load_pickle(validators_cache)
-                return cv.graph(URIRef(iri))
+    def _get_shapes_from_iri(iri: str) -> Graph | None:
+        if not validators_cache.is_file():
+            return None
+        cached: Dataset = _load_pickle(validators_cache)
+        identifier = URIRef(iri)
+        return next(
+            (graph for graph in cached.graphs() if graph.identifier == identifier),
+            None,
+        )
 
     def _get_shapes_from_id(id: str | int):
         id = int(id)
