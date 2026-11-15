@@ -59,7 +59,7 @@ def validate_command(
         typer.Option(
             "--advanced",
             "-a",
-            help="Enable SHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions)",
+            help="Enable pySHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions)",
         ),
     ] = False,
     return_type: Annotated[
@@ -78,6 +78,13 @@ def validate_command(
             help="Output format: a Rich table or Long Turtle RDF. Has no effect if --return-type is provenance, which is always output as Turtle",
         ),
     ] = "table",
+    use_rudof: Annotated[
+        bool,
+        typer.Option(
+            "-x",
+            help="If present, Rudof (https://rudof-project.github.io) is used for SHACL validation instead of pySHACL.",
+        ),
+    ] = False,
 ) -> None:
     """Validate an RDF file, files, or directory of files against a SHACL file, directory, or registered validator.
 
@@ -95,6 +102,7 @@ def validate_command(
         hide_warnings=hide_warnings,
         advanced=advanced,
         return_type=return_type,
+        use_rudof=use_rudof,
     )
     extra_graph = extra_graph[0] if extra_graph else None
 
@@ -124,8 +132,8 @@ def validate_command(
 )
 def listv_command():
     """Print a table of all known SHACL validators with ID, Name, IRI, and nested validator dependency rows."""
-    l = list_local_validators()
-    if l is None:
+    validators = list_local_validators()
+    if validators is None:
         console.print("No local validators found")
         return
 
@@ -135,10 +143,12 @@ def listv_command():
     t.add_column("IRI")
 
     def add_rows_with_deps(iri: str, prefix: str = "", connector: str = ""):
-        t.add_row(l[iri]["id"], f"{prefix}{connector}{l[iri]['name']}", iri)
+        t.add_row(
+            validators[iri]["id"], f"{prefix}{connector}{validators[iri]['name']}", iri
+        )
 
         children = [
-            child for child in l[iri]["imports"] if child in l
+            child for child in validators[iri]["imports"] if child in validators
         ]  # skips non-validator imports, but could skip unregistered validators or validators skipped by incomplete syncs
         for i, child in enumerate(children):
             last = i == len(children) - 1
@@ -149,7 +159,7 @@ def listv_command():
                 "└── " if last else "├── ",
             )
 
-    for iri in l:
+    for iri in validators:
         add_rows_with_deps(iri)
 
     console.print(t)

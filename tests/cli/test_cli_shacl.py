@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -5,6 +6,7 @@ from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, SH
 from typer.testing import CliRunner
 
+import kurra.shacl
 from kurra.cli import app
 from kurra.cli.commands import shacl as shacl_commands
 from kurra.shacl import SH12, sync_validators, validate
@@ -13,7 +15,11 @@ runner = CliRunner()
 EX = Namespace("http://example.com/")
 
 
-def test_validate_merges_local_files(tmp_path):
+@pytest.mark.parametrize("use_rudof", [False, True])
+def test_validate_merges_local_files(tmp_path, monkeypatch, use_rudof):
+    if use_rudof:
+        pytest.importorskip("pyrudof")
+
     focus = tmp_path / "focus.rdf"
     values = tmp_path / "values.rdf"
     shapes = tmp_path / "shapes.rdf"
@@ -29,25 +35,62 @@ def test_validate_merges_local_files(tmp_path):
     shape_graph.add((EX.propertyShape, SH.minCount, Literal(1)))
     shape_graph.serialize(shapes, format="xml")
 
-    assert not validate(focus, shapes)[0]
-    assert not validate(str(focus), shapes)[0]
-    assert validate([focus, values], shapes)[0]
+    if use_rudof:
+        load_graph = kurra.shacl.load_graph
+
+        def load_shapes_only(source):
+            assert source == shapes, "Rudof must load the data files directly"
+            return load_graph(source)
+
+        monkeypatch.setattr(kurra.shacl, "load_graph", load_shapes_only)
+
+    assert not validate(focus, shapes, use_rudof=use_rudof)[0]
+    assert not validate(str(focus), shapes, use_rudof=use_rudof)[0]
+    assert validate([focus, values], shapes, use_rudof=use_rudof)[0]
     valid, _, _, provenance = validate(
-        [str(focus), values], shapes, return_type="provenance"
+        [str(focus), values], shapes, return_type="provenance", use_rudof=use_rudof
     )
     assert valid
+    agent = "pyrudof" if use_rudof else "pyshacl"
+    assert str(
+        provenance.value(predicate=RDF.type, object=SH12.ValidationAgent)
+    ).startswith(f"https://pypi.org/project/{agent}/")
     assert set(provenance.objects(None, SH12.usedDataGraph)) == {
         URIRef(focus.as_uri()),
         URIRef(values.as_uri()),
     }
 
     args = ["shacl", "validate", "--shacl", str(shapes), str(focus)]
+    if use_rudof:
+        args.append("-x")
     single = runner.invoke(app, args)
     assert single.exit_code == 0, single.exception
     assert "The data is NOT valid" in single.output
     merged = runner.invoke(app, [*args, str(values)])
     assert merged.exit_code == 0, merged.exception
     assert "The data is valid" in merged.output
+
+
+def test_validate_cli_rudof_missing(monkeypatch):
+    monkeypatch.setitem(sys.modules, "pyrudof", None)
+    fixtures = Path(__file__).resolve().parents[1] / "shacl"
+    data = fixtures / "vocab-valid.ttl"
+    shapes = fixtures / "validator-vocpub-410.ttl"
+
+    with pytest.warns(UserWarning, match="falling back to pySHACL"):
+        result = runner.invoke(
+            app, ["shacl", "validate", str(data), "-s", str(shapes), "-x"]
+        )
+    assert result.exit_code == 0, result.exception
+    assert "The data is valid" in result.output
+
+    with pytest.warns(UserWarning, match="falling back to pySHACL"):
+        valid, _, _, provenance = validate(
+            data, shapes, use_rudof=True, return_type="provenance"
+        )
+    assert valid
+    agent = provenance.value(predicate=RDF.type, object=SH12.ValidationAgent)
+    assert str(agent).startswith("https://pypi.org/project/pyshacl/")
 
 
 @pytest.mark.parametrize(
@@ -71,7 +114,12 @@ def test_validate_cli_shacl_types(tmp_path, monkeypatch, shacl_value, expected_t
     received = {}
 
     def fake_validate(
-        data, shacl, hide_warnings=False, advanced=False, return_type="basic"
+        data,
+        shacl,
+        hide_warnings=False,
+        advanced=False,
+        return_type="basic",
+        use_rudof=False,
     ):
         received["data"] = data
         received["shacl"] = shacl

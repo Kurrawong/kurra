@@ -1,5 +1,6 @@
 """SHACL functions."""
 
+import warnings
 from collections.abc import Sequence
 from datetime import datetime
 from importlib.metadata import version
@@ -134,6 +135,7 @@ def _build_provenance_graph(
     shapes_graph_node: URIRef | BNode,
     started_at: datetime,
     ended_at: datetime,
+    engine: str = "pyshacl",
 ) -> Graph:
     """Builds a PROV-O provenance graph for a validation run, following the activity-centric pattern in the SHACL 1.2 Profiling vocabulary's persisting validation results section."""
     pg = Graph()
@@ -143,7 +145,7 @@ def _build_provenance_graph(
 
     report_node = pg.value(predicate=RDF.type, object=SH.ValidationReport)
 
-    agent_node = URIRef(f"https://pypi.org/project/pyshacl/{version('pyshacl')}/")
+    agent_node = URIRef(f"https://pypi.org/project/{engine}/{version(engine)}/")
     pg.add((agent_node, RDF.type, SH12.ValidationAgent))
 
     for data_graph_node in data_graph_nodes:
@@ -177,6 +179,85 @@ def _build_provenance_graph(
     return pg
 
 
+def _validate_with_rudof(
+    data: GraphInput | Sequence[GraphInput], shapes_graph: Graph
+) -> tuple[bool, Graph, str]:
+    from pyrudof import (
+        RDFFormat,
+        ReaderMode,
+        ResultShaclValidationFormat,
+        Rudof,
+        RudofConfig,
+        ShaclFormat,
+        ShaclValidationMode,
+    )
+
+    def as_turtle(graph: Graph) -> str:
+        if isinstance(graph, Dataset) and not graph.default_union:
+            union = Graph()
+            union.addN((s, p, o, union) for s, p, o, _ in graph.quads())
+            graph = union
+        return graph.serialize(format="turtle")
+
+    rudof = Rudof(RudofConfig())
+    rudof.read_shacl(as_turtle(shapes_graph), ShaclFormat.Turtle)
+    formats = {
+        ".rdf": RDFFormat.RdfXml,
+        ".xml": RDFFormat.RdfXml,
+        ".owl": RDFFormat.RdfXml,
+        ".nt": RDFFormat.NTriples,
+        ".n3": RDFFormat.N3,
+        ".nq": RDFFormat.NQuads,
+        ".trig": RDFFormat.TriG,
+        ".json": RDFFormat.JsonLd,
+        ".jsonld": RDFFormat.JsonLd,
+    }
+    items = data if isinstance(data, (list, tuple)) else [data]
+    for item in items:
+        if not isinstance(item, Path):
+            rudof.read_data(
+                as_turtle(load_graph(item)),
+                RDFFormat.Turtle,
+                reader_mode=ReaderMode.Strict,
+                merge=True,
+            )
+            continue
+        if not item.exists():
+            raise FileNotFoundError(f"Graph path does not exist: {item}")
+        paths = sorted(item.glob("*.ttl")) if item.is_dir() else [item]
+        for path in paths:
+            if path.is_file():
+                rudof.read_data(
+                    path,
+                    formats.get(path.suffix.lower(), RDFFormat.Turtle),
+                    base=path.resolve().as_uri(),
+                    reader_mode=ReaderMode.Strict,
+                    merge=True,
+                )
+    report = rudof.validate_shacl(ShaclValidationMode.Native)
+    graph = Graph().parse(
+        data=rudof.serialize_shacl_validation_results(
+            ResultShaclValidationFormat.Turtle
+        ),
+        format="turtle",
+    )
+    # Match pySHACL's allow_warnings=True handling of non-violation results.
+    report_node = graph.value(predicate=RDF.type, object=SH.ValidationReport)
+    results = list(graph.objects(report_node, SH.result))
+    conforms = report.conforms or (
+        bool(results)
+        and all(
+            graph.value(result, SH.resultSeverity) in (SH.Info, SH.Warning)
+            for result in results
+        )
+    )
+    graph.set((report_node, SH.conforms, RDFLiteral(conforms)))
+    message = rudof.serialize_shacl_validation_results(
+        ResultShaclValidationFormat.Details
+    )
+    return conforms, graph, message
+
+
 @overload
 def validate(
     data: GraphInput | Sequence[GraphInput],
@@ -184,6 +265,8 @@ def validate(
     hide_warnings: bool = False,
     advanced: bool = False,
     return_type: Literal["basic"] = "basic",
+    *,
+    use_rudof: bool = False,
 ) -> tuple[bool, Graph, str]: ...
 
 
@@ -194,6 +277,8 @@ def validate(
     hide_warnings: bool,
     advanced: bool,
     return_type: Literal["summary"],
+    *,
+    use_rudof: bool = False,
 ) -> tuple[bool, Graph, str, Graph]: ...
 
 
@@ -204,6 +289,8 @@ def validate(
     hide_warnings: bool,
     advanced: bool,
     return_type: Literal["provenance"],
+    *,
+    use_rudof: bool = False,
 ) -> tuple[bool, Graph, str, Graph]: ...
 
 
@@ -213,6 +300,8 @@ def validate(
     hide_warnings: bool = False,
     advanced: bool = False,
     return_type: Literal["basic", "summary", "provenance"] = "basic",
+    *,
+    use_rudof: bool = False,
 ):
     """Validates a data graph using a shapes graph.
 
@@ -220,6 +309,8 @@ def validate(
         data: A local RDF file path (a string or Path), a graph, or a sequence of these inputs.
             Multiple inputs are merged before validation.
         shacl: The SHACL shapes to validate with
+        advanced: Enable pySHACL's advanced features. This setting does not apply to Rudof.
+        use_rudof: If true, use Rudof if installed; otherwise warn and use pySHACL.
         return_type: What to return alongside the validation status, results graph and message.
             "basic" (the default) returns just those three. "summary" adds a compact summary graph.
             "provenance" adds a PROV-O provenance graph, per the SHACL 1.2 Profiling vocabulary's
@@ -296,12 +387,26 @@ def validate(
         data = [resolve_data_path(item) for item in data]
     else:
         data = resolve_data_path(data)
-    data_graph = load_graph(data)
+    if use_rudof:
+        started_at = datetime.now()
+        try:
+            tf, g, msg = _validate_with_rudof(data, shapes_graph)
+        except ModuleNotFoundError as exc:
+            if exc.name != "pyrudof":
+                raise
+            warnings.warn(
+                "pyrudof is not installed; falling back to pySHACL. "
+                'To enable Rudof, install "kurra[rudof]".',
+                stacklevel=2,
+            )
+            use_rudof = False
 
-    started_at = datetime.now()
-    tf, g, msg = v(
-        data_graph, shacl_graph=shapes_graph, allow_warnings=True, advanced=advanced
-    )
+    if not use_rudof:
+        data_graph = load_graph(data)
+        started_at = datetime.now()
+        tf, g, msg = v(
+            data_graph, shacl_graph=shapes_graph, allow_warnings=True, advanced=advanced
+        )
     ended_at = datetime.now()
 
     if hide_warnings:
@@ -320,6 +425,7 @@ def validate(
                 _extract_shapes_graph_node(shacl),
                 started_at,
                 ended_at,
+                engine="pyrudof" if use_rudof else "pyshacl",
             )
         )
     return tuple(result)

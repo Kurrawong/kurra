@@ -60,6 +60,9 @@ build-backend = "hatchling.build"
 kurra = "kurra.cli:app"
 
 [project.optional-dependencies]
+rudof = [
+    "pyrudof>=0.3.39",
+]
 dataframe = [
     "pandas>=2.3.3",
 ]
