@@ -16,6 +16,20 @@ run from the [Taskfile.yml](https://taskfile.dev/) task runner.
 
 The documentation is [Zensical](https://zensical.org/), the updated version of [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/).
 
+### SHACL speed regression test
+
+On the benchmark machine, with the VocPub validator already cached (run `kurra shacl syncv` if needed), run:
+
+```sh
+uv sync --extra rudof
+KURRA_MINERALS_TTL=/path/to/minerals.ttl uv run --extra rudof pytest -q -s tests/shacl/test_shacl_speed.py
+```
+
+The test checks the median of three default-report validations against the measured baselines: 8.42 s for pySHACL
+and 1.30 s for Rudof. It allows 5% for run-to-run timing variation. Timing depends on the machine and the cached
+validator. The test is skipped unless
+`KURRA_MINERALS_TTL` is set.
+
 ### Releasing
 
 To build a new release:
