@@ -44,6 +44,18 @@ def reformat_command(
         "-o",
         help="the name of the file you want to write the reformatted content to",
     ),
+    context: str | None = typer.Option(
+        None,
+        "--context",
+        "-t",
+        help="A JSON-LD context as inline JSON or a path to a JSON file.",
+    ),
+    indent: int = typer.Option(
+        4,
+        "--indent",
+        min=0,
+        help="Number of spaces used to indent compacted JSON-LD output.",
+    ),
 ) -> None:
     """Reformat one RDF file or every RDF file in a directory to a given format.
 
@@ -52,12 +64,32 @@ def reformat_command(
         check: If True, check whether files will be changed by this command without applying the effect.
         output_format: The RDF serialization to write. See `RDF_FILE_SUFFIXES` for the available formats.
         output_filename: The name of the file to write the reformatted content to.
+        context: An inline JSON-LD context or a path to a context file, supplied
+            with `--context` or `-t`. Validated before writing. Prefix mappings
+            shorten IRIs in Turtle/N3; JSON-LD output is compacted with PyLD.
+        indent: Nonnegative indentation for compacted JSON-LD output. Defaults
+            to 4 spaces. Only applies when a context and JSON-LD output are selected.
 
     Raises:
         SystemExit: With status 1, if `check` is set and reformatting would change a file.
     """
+    context_value = context
+    if context is not None:
+        # JSON objects can be longer than the filesystem's filename limit.
+        # Only attempt a path lookup when the value does not look like JSON.
+        if not context.lstrip().startswith(("{", "[", '"')) and context != "null":
+            context_value = Path(context)
     try:
-        reformat(file_or_dir, check, output_format, output_filename)
+        reformat(
+            file_or_dir,
+            check,
+            output_format,
+            output_filename,
+            context=context_value,
+            indent=indent,
+        )
+    except (ValueError, OSError) as err:
+        raise typer.BadParameter(str(err)) from err
     except FailOnChangeError as err:
         print(err)
         sys.exit(1)

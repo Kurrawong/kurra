@@ -1,9 +1,11 @@
 """RDF file manipulation functions."""
 
 import itertools
+import json
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
+from pyld import jsonld
 from rdflib import Dataset, Graph, URIRef
 from rdflib.namespace import DCTERMS, OWL, RDF, RDFS, SKOS
 
@@ -20,6 +22,38 @@ from kurra.utils import (
 
 class FailOnChangeError(Exception):
     """Raised when running format, if `check` is set and the file would change as a result of the operation."""
+
+
+def _read_context(context: dict | str | Path) -> tuple[dict, dict]:
+    """Read and validate a JSON-LD context and resolve its prefix mappings."""
+    if isinstance(context, Path):
+        context = context.read_text(encoding="utf-8")
+    if isinstance(context, str):
+        try:
+            context = json.loads(context)
+        except json.JSONDecodeError as error:
+            raise ValueError("context must contain valid JSON") from error
+    if not isinstance(context, dict):
+        raise ValueError("context must be a JSON-LD context object")
+    if "@context" in context:
+        if set(context) != {"@context"}:
+            raise ValueError("context must contain only a JSON-LD context statement")
+        statement = context
+    else:
+        statement = {"@context": context}
+    try:
+        processor = jsonld.JsonLdProcessor()
+        options = {"processingMode": "json-ld-1.1"}
+        initial = processor.process_context(None, None, options)
+        resolved = processor.process_context(initial, statement["@context"], options)
+    except jsonld.JsonLdError as error:
+        raise ValueError("context must be a valid JSON-LD context statement") from error
+    prefixes = {
+        term: definition["@id"]
+        for term, definition in resolved["mappings"].items()
+        if definition and definition.get("_prefix")
+    }
+    return statement, prefixes
 
 
 def merge(
@@ -104,6 +138,8 @@ def do_format(
     content: str,
     output_format: RDF_FILE_SUFFIXES.keys() = "longturtle",
     input_format: str | None = None,
+    context: dict | str | Path | None = None,
+    indent: int = 4,
 ) -> Tuple[str, bool]:
     """Reformat RDF content to a given serialization format.
 
@@ -111,6 +147,8 @@ def do_format(
         content: The RDF content to reformat, as a string.
         output_format: The RDFLib serialization format to write.
         input_format: The RDFLib format of `content`. Detected automatically if not given.
+        context: A JSON-LD context object, JSON string, or path to a JSON file.
+        indent: Indentation for compacted JSON-LD output. Defaults to 4 spaces.
 
     Returns:
         A tuple of the reformatted content and whether it changed from the input.
@@ -120,6 +158,7 @@ def do_format(
             "Unsupported output_format. It must be one of "
             f"{', '.join(RDF_FILE_SUFFIXES)}"
         )
+    statement, prefixes = _read_context(context) if context is not None else (None, {})
     if output_format in ["turtle", "longturtle", "ttl", "nt", "n3"]:
         lines = content.split("\n")
         comments = []
@@ -139,6 +178,9 @@ def do_format(
             header = "\n".join(comments) + "\n"
         else:
             header = ""
+        if output_format != "nt":
+            for prefix, namespace in prefixes.items():
+                graph.bind(prefix, namespace, override=True, replace=True)
         new_content = header + graph.serialize(format=output_format, canon=True)
     else:
         clean_content = ""
@@ -167,6 +209,10 @@ def do_format(
             graph = flattened
         new_content = graph.serialize(format=output_format, canon=True)
 
+    if output_format == "json-ld" and statement is not None:
+        document = json.loads(content if input_format == "json-ld" else new_content)
+        new_content = json.dumps(jsonld.compact(document, statement), indent=indent)
+
     changed = content != new_content
     return new_content, changed
 
@@ -176,6 +222,8 @@ def _format_file(
     check: bool = False,
     output_format: RDF_FILE_SUFFIXES.keys() = "longturtle",
     output_filename: Path = None,
+    context: dict | str | Path | None = None,
+    indent: int = 4,
 ) -> bool:
     """Inner format function - not to be used directly"""
     if output_format not in RDF_FILE_SUFFIXES:
@@ -204,7 +252,11 @@ def _format_file(
         content = fread.read()
 
         content, changed = do_format(
-            content, output_format, input_format=_format_for_suffix(path.suffix)
+            content,
+            output_format,
+            input_format=_format_for_suffix(path.suffix),
+            context=context,
+            indent=indent,
         )
         if check:
             raise FailOnChangeError(
@@ -223,6 +275,8 @@ def reformat(
     check: bool,
     output_format: RDF_FILE_SUFFIXES.keys() = "longturtle",
     output_filename: Path = None,
+    context: dict | str | Path | None = None,
+    indent: int = 4,
 ) -> None:
     """Reformat one RDF file or every RDF file in a directory to a given format.
 
@@ -231,12 +285,21 @@ def reformat(
         check: If True, check whether files will be changed by this command without applying the effect.
         output_format: The RDFLib serialization format to write.
         output_filename: The name of the file to write the reformatted content to. Only valid when `path` is a single file.
+        context: A JSON-LD context dict (wrapped in `@context` or a bare mapping),
+            JSON string, or Path to a JSON file. Prefixes are bound for Turtle/N3
+            output; JSON-LD output is compacted with PyLD's `compact()`.
+            Validated before writing; applied to every file in directory mode.
+        indent: Indentation for compacted JSON-LD output. Defaults to 4 spaces.
+            Only applies when `context` is given and `output_format` is `json-ld`.
 
     Raises:
-        ValueError: If `output_filename` is given while reformatting a directory.
+        ValueError: If `output_filename` is given while reformatting a directory,
+            or the context is not valid JSON or a valid JSON-LD context statement.
         FailOnChangeError: If `check` is True and reformatting a directory would change any file.
     """
     path = Path(path).resolve()
+    if context is not None:
+        context, _ = _read_context(context)
 
     if path.is_dir():
         if output_filename is not None:
@@ -258,6 +321,8 @@ def reformat(
                     check,
                     output_format=output_format,
                     output_filename=output_filename,
+                    context=context,
+                    indent=indent,
                 )
                 if changed:
                     changed_files.append(file)
@@ -285,6 +350,8 @@ def reformat(
                 check,
                 output_format=output_format,
                 output_filename=output_filename,
+                context=context,
+                indent=indent,
             )
         except FailOnChangeError as err:
             print(err)

@@ -1,12 +1,121 @@
+import json
 import subprocess
 from pathlib import Path
 
+import pytest
 from rdflib import Graph
 from typer.testing import CliRunner
 
 from kurra.cli.commands.file import app
 
 runner = CliRunner()
+
+
+@pytest.mark.parametrize("context_source", ["inline", "file"])
+@pytest.mark.parametrize("indent", [None, 2])
+@pytest.mark.parametrize("context_option", ["--context", "-t"])
+def test_reformat_cli_context_and_indent(
+    tmp_path, context_source, indent, context_option
+):
+    source = tmp_path / "source.nt"
+    source.write_text(
+        '<http://example.com/alice> <http://example.com/name> "Alice" .\n',
+        encoding="utf-8",
+    )
+    context = {"@context": {"ex": "http://example.com/"}}
+    argument = json.dumps(context)
+    if context_source == "file":
+        context_path = tmp_path / "context.jsonld"
+        context_path.write_text(argument, encoding="utf-8")
+        argument = str(context_path)
+    destination = tmp_path / "result.jsonld"
+    args = [
+        "reformat",
+        str(source),
+        "-f",
+        "json-ld",
+        "-o",
+        str(destination),
+        context_option,
+        argument,
+    ]
+    if indent is not None:
+        args.extend(["--indent", str(indent)])
+
+    result = runner.invoke(app, args)
+
+    assert result.exit_code == 0, result.output
+    document = json.loads(destination.read_text())
+    assert document == {**context, "@id": "ex:alice", "ex:name": "Alice"}
+    assert destination.read_text() == json.dumps(
+        document, indent=4 if indent is None else indent
+    )
+
+
+def test_reformat_cli_context_prefixes(tmp_path):
+    source = tmp_path / "source.nt"
+    source.write_text(
+        '<http://example.com/alice> <http://example.com/name> "Alice" .\n',
+        encoding="utf-8",
+    )
+    destination = tmp_path / "result.n3"
+
+    result = runner.invoke(
+        app,
+        [
+            "reformat",
+            str(source),
+            "-f",
+            "n3",
+            "-o",
+            str(destination),
+            "--context",
+            '{"@context": {"ex": "http://example.com/"}}',
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert 'ex:alice ex:name "Alice"' in destination.read_text()
+    assert Graph().parse(source).isomorphic(Graph().parse(destination, format="n3"))
+
+
+@pytest.mark.parametrize(
+    "context",
+    [
+        '{"@context": {"ex": 42}}',
+        "{invalid json",
+        "missing-context.jsonld",
+    ],
+)
+def test_reformat_cli_invalid_context(tmp_path, context):
+    source = tmp_path / "source.nt"
+    source.write_text('<http://example.com/a> <http://example.com/p> "v" .\n')
+    destination = tmp_path / "result.jsonld"
+
+    result = runner.invoke(
+        app,
+        [
+            "reformat",
+            str(source),
+            "-f",
+            "json-ld",
+            "-o",
+            str(destination),
+            "--context",
+            context,
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "Invalid value" in result.output
+    assert not destination.exists()
+
+
+def test_reformat_cli_rejects_negative_indent(tmp_path):
+    result = runner.invoke(app, ["reformat", str(tmp_path), "--indent", "-1"])
+
+    assert result.exit_code == 2
+    assert "Invalid value" in result.output
 
 
 def test_merge_cli_lists_output_formats():

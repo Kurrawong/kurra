@@ -1,3 +1,4 @@
+import json
 import warnings
 from pathlib import Path
 from textwrap import dedent
@@ -15,6 +16,132 @@ from kurra.file import (
     reformat,
 )
 from kurra.utils import DEFAULT_GRAPH_IRI, load_graph
+
+
+@pytest.mark.parametrize("context_kind", ["dict", "string", "path", "bare"])
+def test_reformat_basic_compaction(tmp_path, context_kind):
+    # Adapted from W3C json-ld-api compact/0002, used by PyLD's test suite:
+    # https://github.com/w3c/json-ld-api/tree/main/tests/compact
+    mapping = {
+        name: f"http://example.com/{name}"
+        for name in ["t1", "t2", "term1", "term2", "term3", "term4", "term5"]
+    }
+    context = {"@context": mapping}
+    document = [
+        {
+            "@id": "http://example.com/id1",
+            "@type": ["http://example.com/t1"],
+            "http://example.com/term1": ["v1"],
+            "http://example.com/term2": [
+                {"@value": "v2", "@type": "http://example.com/t2"}
+            ],
+            "http://example.com/term3": [{"@value": "v3", "@language": "en"}],
+            "http://example.com/term4": [4],
+            "http://example.com/term5": [50, 51],
+        }
+    ]
+    expected = {
+        **context,
+        "@id": "http://example.com/id1",
+        "@type": "t1",
+        "term1": "v1",
+        "term2": {"@value": "v2", "@type": "t2"},
+        "term3": {"@value": "v3", "@language": "en"},
+        "term4": 4,
+        "term5": [50, 51],
+    }
+    if context_kind == "string":
+        context = json.dumps(context)
+    elif context_kind == "path":
+        context_path = tmp_path / "context.jsonld"
+        context_path.write_text(json.dumps(context), encoding="utf-8")
+        context = context_path
+    elif context_kind == "bare":
+        context = mapping
+    source = tmp_path / "source.jsonld"
+    source.write_text(json.dumps(document), encoding="utf-8")
+    destination = tmp_path / "result.jsonld"
+
+    reformat(source, False, "json-ld", destination, context=context)
+
+    assert json.loads(destination.read_text()) == expected
+    assert destination.read_text() == json.dumps(
+        json.loads(destination.read_text()), indent=4
+    )
+
+
+def test_reformat_compacts_types_and_prefixes(tmp_path):
+    # Based on W3C json-ld-api compact/0005 (@type and prefix compaction).
+    source = tmp_path / "source.ttl"
+    source.write_text(
+        "<http://example.com/alice> a <http://example.com/Person> ; "
+        '<http://example.com/name> "Alice" .',
+        encoding="utf-8",
+    )
+    destination = tmp_path / "result.jsonld"
+    context = {"@context": {"ex": "http://example.com/"}}
+
+    reformat(source, False, "json-ld", destination, context=context, indent=2)
+
+    result = json.loads(destination.read_text())
+    assert result == {
+        **context,
+        "@id": "ex:alice",
+        "@type": "ex:Person",
+        "ex:name": "Alice",
+    }
+    assert destination.read_text() == json.dumps(result, indent=2)
+
+
+@pytest.mark.parametrize("output_format", ["longturtle", "turtle", "n3"])
+def test_reformat_adds_context_prefixes(tmp_path, output_format):
+    source = tmp_path / "source.ttl"
+    source.write_text(
+        "PREFIX ex: <http://example.com/>\n"
+        'ex:alice <https://example.org/vocab/name> "Alice" ; '
+        "<https://example.org/vocab/knows> <https://example.net/people/bob> .",
+        encoding="utf-8",
+    )
+    destination = tmp_path / "result.ttl"
+    context = {
+        "@context": {
+            "vocab": "https://example.org/vocab/",
+            "people": {"@id": "https://example.net/people/", "@prefix": True},
+        }
+    }
+
+    reformat(source, False, output_format, destination, context=context)
+
+    output = destination.read_text()
+    assert 'vocab:name "Alice"' in output
+    assert "vocab:knows people:bob" in output
+    assert "vocab: <https://example.org/vocab/>" in output
+    assert "people: <https://example.net/people/>" in output
+    assert Graph().parse(source).isomorphic(Graph().parse(destination))
+
+
+@pytest.mark.parametrize(
+    "context",
+    [
+        "not json",
+        "[]",
+        42,
+        {"@context": {"ex": 42}},
+        {"@context": {"ex": {"@id": "http://example.com/", "@prefix": "yes"}}},
+        {"@context": {}, "other": "value"},
+    ],
+)
+def test_reformat_rejects_invalid_context_before_writing(tmp_path, context):
+    source = tmp_path / "source.ttl"
+    original = '<http://example.com/a> <http://example.com/p> "value" .'
+    source.write_text(original, encoding="utf-8")
+    destination = tmp_path / "result.ttl"
+
+    with pytest.raises(ValueError, match="context"):
+        reformat(source, False, output_filename=destination, context=context)
+
+    assert source.read_text() == original
+    assert not destination.exists()
 
 
 def test_merge_prints_turtle(tmp_path, capsys):
@@ -424,7 +551,7 @@ def test_sparql():
 def test_prefixes():
     input_file = Path(__file__).parent / "prefixes-test.ttl"
     output_file = Path(__file__).parent / "prefixes-test-out.ttl"
-    comparison = dedent(
+    _comparison = dedent(
         """
         PREFIX ex: <http://example.com/>
         PREFIX other: <http://other.com/>
