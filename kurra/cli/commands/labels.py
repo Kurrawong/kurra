@@ -6,13 +6,69 @@ from sys import stdout
 from typing import Annotated, Literal
 
 import typer
+from rdflib import URIRef
+from rich.table import Table
+from rich.text import Text
 
 from kurra.cli.console import console
-from kurra.labels import find_missing_labels, get_labels, jsonld_context
+from kurra.labels import (
+    find_duplicate_labels,
+    find_missing_labels,
+    get_labels,
+    jsonld_context,
+)
 from kurra.utils import load_graph
 
 app = typer.Typer(help="Labelling commands")
-from rich.table import Table
+
+
+@app.command(name="duplicates", help="Find nodes with distinct names or descriptions")
+def find_duplicate_labels_command(
+    p: Annotated[
+        Path,
+        typer.Argument(exists=True, help="The RDF file or directory to scan"),
+    ],
+    names_or_descriptions: Annotated[
+        Literal["names", "descriptions"],
+        typer.Option(
+            "--names-or-descriptions", "-n", help="The annotation type to check"
+        ),
+    ] = "names",
+    additional_annotation_predicates: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--additional-annotation-predicates",
+            "-a",
+            help="An additional annotation predicate IRI; repeat for multiple IRIs",
+        ),
+    ] = None,
+) -> None:
+    """Print nodes with multiple distinct annotation literals as a table.
+
+    Args:
+        p: The RDF file or directory to scan.
+        names_or_descriptions: Check names (default) or descriptions.
+        additional_annotation_predicates: Additional predicate IRIs, supplied by
+            repeating the option.
+    """
+    duplicates = find_duplicate_labels(
+        p,
+        names_or_descriptions,
+        [URIRef(iri) for iri in additional_annotation_predicates or []],
+    )
+    if not duplicates:
+        console.print(f"No nodes with duplicate {names_or_descriptions}")
+        return
+
+    table = Table(show_header=True, header_style="b")
+    table.add_column("Node")
+    table.add_column(names_or_descriptions.capitalize())
+    for node, values in sorted(duplicates.items(), key=lambda item: str(item[0])):
+        table.add_row(
+            Text(node.n3()),
+            Text("\n".join(sorted(value.n3() for value in values))),
+        )
+    console.print(table)
 
 
 @app.command(name="find", help="Find IRIs missing labels")

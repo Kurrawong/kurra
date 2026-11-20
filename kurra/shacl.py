@@ -302,13 +302,14 @@ def validate(
     return_type: Literal["basic", "summary", "provenance"] = "basic",
     *,
     use_rudof: bool = False,
-):
+) -> tuple[bool, Graph, str] | tuple[bool, Graph, str, Graph]:
     """Validates a data graph using a shapes graph.
 
     Args:
         data: A local RDF file path (a string or Path), a graph, or a sequence of these inputs.
             Multiple inputs are merged before validation.
         shacl: The SHACL shapes to validate with
+        hide_warnings: If True, remove Warning and Info results from the report.
         advanced: Enable pySHACL's advanced features. This setting does not apply to Rudof.
         use_rudof: If true, use Rudof if installed; otherwise warn and use pySHACL.
         return_type: What to return alongside the validation status, results graph and message.
@@ -317,8 +318,9 @@ def validate(
             persisting validation results guidance.
 
     Returns:
-        The validation status, results graph and message, plus a summary graph or a provenance
-        graph if requested via return_type.
+        tuple[bool, Graph, str] | tuple[bool, Graph, str, Graph]: The validation status,
+            results graph and message, plus a summary graph or a provenance graph if
+            requested via return_type.
 
     Raises:
         ValueError: If a given local validator ID is out of range.

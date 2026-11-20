@@ -6,12 +6,58 @@ from typing import Iterable, Literal, cast, overload
 
 import httpx2
 from rdflib import DCTERMS, RDFS, SDO, SKOS, Graph, URIRef
+from rdflib import Literal as RDFLiteral
+from rdflib.term import IdentifiedNode
 
 from kurra.sparql import query
 from kurra.utils import build_values_clause, is_class, iter_iris, load_graph
 
 # Common label predicates
 LABEL_PREDICATES = [RDFS.label, SDO.name, SKOS.prefLabel, DCTERMS.title]
+DESCRIPTION_PREDICATES = [
+    SDO.description,
+    RDFS.comment,
+    DCTERMS.description,
+    SKOS.definition,
+]
+
+
+def find_duplicate_labels(
+    p: Path | str | Graph,
+    names_or_descriptions: Literal["names", "descriptions"] = "names",
+    additional_annotation_predicates: list[URIRef] | None = None,
+) -> dict[IdentifiedNode, set[RDFLiteral]]:
+    """Find nodes with more than one distinct name or description literal.
+
+    Args:
+        p: An RDF file path, directory, RDF string, or Graph to scan.
+        names_or_descriptions: Use name predicates by default, or description predicates.
+        additional_annotation_predicates: Extra annotation predicate IRIs to search.
+            Defaults to no additional predicates.
+
+    Returns:
+        A dict mapping each affected node to its distinct literals across the selected
+        predicates. Literal spelling, datatype, and language distinguish values as
+        stored in the graph. Identical values on different predicates count once.
+
+    Raises:
+        ValueError: If names_or_descriptions is neither "names" nor "descriptions".
+    """
+    if names_or_descriptions not in ("names", "descriptions"):
+        raise ValueError('names_or_descriptions must be "names" or "descriptions"')
+
+    predicates = set(
+        LABEL_PREDICATES if names_or_descriptions == "names" else DESCRIPTION_PREDICATES
+    )
+    predicates.update(additional_annotation_predicates or [])
+    graph = load_graph(p)
+    labels: dict[IdentifiedNode, set[RDFLiteral]] = {}
+    for predicate in predicates:
+        for subject, value in graph.subject_objects(predicate):
+            if isinstance(subject, IdentifiedNode) and isinstance(value, RDFLiteral):
+                labels.setdefault(subject, set()).add(value)
+
+    return {node: values for node, values in labels.items() if len(values) > 1}
 
 
 def find_missing_labels(

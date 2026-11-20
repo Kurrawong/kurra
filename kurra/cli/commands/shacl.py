@@ -93,8 +93,11 @@ def validate_command(
         shacl: The file, directory of files, IRI of, or kurra ID for the SHACL graph to validate with.
         hide_warnings: If True, hide SHACL results of severity Warning and Info.
         advanced: If True, enable SHACL Advanced Features (SHACL Rules, SPARQL-based constraints/targets/functions).
-        summary: If True, print a summary table instead of the full validation results.
-        output_format: `table` (default) to print Rich table, or `rdf` for longturtle.
+        return_type: `basic` (default) for full results, `summary` for a compact report,
+            or `provenance` for a PROV-O provenance graph.
+        output_format: `table` (default) to print a Rich table, or `rdf` for longturtle.
+            Provenance is always output as longturtle.
+        use_rudof: If True, use Rudof if installed; otherwise warn and use pySHACL.
     """
     valid, g, txt, *extra_graph = validate(
         data,
