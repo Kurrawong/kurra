@@ -321,13 +321,13 @@ def test_provenance():
     assert report_node is not None
     assert (report_node, SH.conforms, Literal(False)) in provenance
 
-    activity_node = provenance.value(predicate=RDF.type, object=SH12.ValidationActivity)
+    activity_node = provenance.value(predicate=RDF.type, object=SH12.ShaclActivity)
     assert activity_node is not None
     assert (activity_node, PROV.generated, report_node) in provenance
     assert provenance.value(activity_node, PROV.startedAtTime) is not None
     assert provenance.value(activity_node, PROV.endedAtTime) is not None
 
-    agent_node = provenance.value(predicate=RDF.type, object=SH12.ValidationAgent)
+    agent_node = provenance.value(predicate=RDF.type, object=SH12.ShaclAgent)
     assert str(agent_node).startswith("https://pypi.org/project/pyshacl/")
     assert (activity_node, PROV.wasAssociatedWith, agent_node) in provenance
 

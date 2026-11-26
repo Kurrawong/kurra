@@ -33,8 +33,8 @@ class SH12(DefinedNamespace):
 
     DataGraph: URIRef
     ShapesGraph: URIRef
-    ValidationAgent: URIRef
-    ValidationActivity: URIRef
+    ShaclAgent: URIRef
+    ShaclActivity: URIRef
     usedDataGraph: URIRef
     usedShapesGraph: URIRef
 
@@ -146,7 +146,7 @@ def _build_provenance_graph(
     report_node = pg.value(predicate=RDF.type, object=SH.ValidationReport)
 
     agent_node = URIRef(f"https://pypi.org/project/{engine}/{version(engine)}/")
-    pg.add((agent_node, RDF.type, SH12.ValidationAgent))
+    pg.add((agent_node, RDF.type, SH12.ShaclAgent))
 
     for data_graph_node in data_graph_nodes:
         pg.add((data_graph_node, RDF.type, SH12.DataGraph))
@@ -154,7 +154,8 @@ def _build_provenance_graph(
     pg.add((shapes_graph_node, RDF.type, SH12.ShapesGraph))
 
     activity_node = BNode()
-    pg.add((activity_node, RDF.type, SH12.ValidationActivity))
+    pg.add((activity_node, RDF.type, SH12.ShaclActivity))
+    pg.add((activity_node, SDO.description, RDFLiteral("Validation Activity")))
     pg.add((activity_node, PROV.wasAssociatedWith, agent_node))
     for data_graph_node in data_graph_nodes:
         pg.add((activity_node, SH12.usedDataGraph, data_graph_node))

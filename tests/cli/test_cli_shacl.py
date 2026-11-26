@@ -53,7 +53,7 @@ def test_validate_merges_local_files(tmp_path, monkeypatch, use_rudof):
     assert valid
     agent = "pyrudof" if use_rudof else "pyshacl"
     assert str(
-        provenance.value(predicate=RDF.type, object=SH12.ValidationAgent)
+        provenance.value(predicate=RDF.type, object=SH12.ShaclAgent)
     ).startswith(f"https://pypi.org/project/{agent}/")
     assert set(provenance.objects(None, SH12.usedDataGraph)) == {
         URIRef(focus.as_uri()),
@@ -89,7 +89,7 @@ def test_validate_cli_rudof_missing(monkeypatch):
             data, shapes, use_rudof=True, return_type="provenance"
         )
     assert valid
-    agent = provenance.value(predicate=RDF.type, object=SH12.ValidationAgent)
+    agent = provenance.value(predicate=RDF.type, object=SH12.ShaclAgent)
     assert str(agent).startswith("https://pypi.org/project/pyshacl/")
 
 
